@@ -1,0 +1,741 @@
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<META NAME="Generator" CONTENT="Microsoft Word 97">
+<TITLE>To do:</TITLE>
+<META NAME="Template" CONTENT="C:\Program Files\Microsoft Office\Templates\Normal.dot">
+</HEAD>
+<BODY LINK="#0000ff" VLINK="#800080">
+
+<B><FONT FACE="Arial" SIZE=4><P ALIGN="CENTER">Documentation for the Particle System API</P>
+</B></FONT><FONT SIZE=2><P ALIGN="CENTER">By David K. McAllister</P>
+<P ALIGN="CENTER"></FONT><A HREF="mailto:davemc@cs.unc.edu"><FONT SIZE=2>davemc@cs.unc.edu</FONT></A></P>
+<FONT SIZE=2><P ALIGN="CENTER">Version 1.11</P>
+<P ALIGN="CENTER">February 2, 1999</P>
+</FONT><B><FONT FACE="Arial" SIZE=4><P>Introduction</P>
+</B></FONT><FONT SIZE=2><P>The Particle System Application Programmer Interface (API) is a set of functions that allow C++ programs to simulate the dynamics of particles. The Particle System API is intended for special effects in interactive and non-interactive graphics applications, not for scientific simulation, although principles of Newtonian physics have been used to implement the particle dynamics where applicable. The style of the API is intended to be similar to that of OpenGL (from Silicon Graphics, Inc. and the OpenGL Architecture Review Board). OpenGL is currently the standard 3D graphics API because of its cleanness, clarity, and ability to represent a variety of graphics hardware while completely abstracting the hardware away from the application programmer.</P>
+<P>This API consists of four sets of functions. These are calls that set the current state of the library, calls that act on groups of particles (these functions are called Actions), calls that operate on and manage particle groups, and calls that create and operate on action lists. The documentation is divided into four sections for the four kinds of functions.</P>
+</FONT><FONT FACE="Arial"><P>Particles</P>
+</FONT><FONT SIZE=2><P>For the purposes of the Particle System API, a particle is not just a very tiny speck. Particles can be drawn as anything - water droplets, birds, tumbleweeds, even people. The Particle System API is generally useful for operating on many similar objects that all move and change according to the same basic rules, no matter what the objects and rules are.</P>
+<P>A particle in the abstract sense used by the API is merely an entity with a small set of attributes such as position and color that ultimately dictate the particle's behavior and appearance. Here are the particle attributes: The position, represented as three floats, tells where the particle is. The color is represented as three floats. The velocity consists of three floats telling the direction and speed of the particle's movement. The size is one float representing how large the particle is for purposes of drawing. At present, the size attribute does not affect the particle's behavior (under gravity, for example), and should not be interpreted as mass in particle physics equations. The age attribute is one float representing the amount of time since the particle's creation. The secondary position, or <I>positionB</I> attribute, specifies another position in space for this particle. It usually represents the particle's initial position, or the particle's destination. See <B>pRestore</B> for a use of <I>positionB</I>. </P>
+</FONT><FONT FACE="Arial"><P>Particle Groups</P>
+</FONT><FONT SIZE=2><P>A particle group is a system of particles that are all acted on together. </P>
+<P>It can be considered a dynamic geometric object. </P>
+<P>The dynamics are provided by the particle actions. From the point of view of the graphics system, a particle group is just another model to be drawn. The Particle Groups section of the documentation explains the functions that create and deal with particle groups.</P>
+</FONT><FONT FACE="Arial"><P>State</P>
+</FONT><FONT SIZE=2><P>As in OpenGL, some calls actually do something and some calls modify the current settings (the current state) that describe the behavior of the calls that do something. Each of the following calls modifies the current state of the Particle System API. Most elements of the current state are used to specify attributes of particles to be created. </P>
+</FONT><FONT FACE="Arial"><P>Actions</P>
+</FONT><FONT SIZE=2><P>Actions are the core of the Particle System API. They are the functions in the API that directly manipulate the state of particles in particle groups. They perform effects such as gravity, explosions, bouncing, etc. to all particles in the current particle group. A program typically creates and initializes one or more particle groups, then at run time it calls particle actions to animate the particles and finally calls a <B>pDrawGroup</B> function to draw the group of particles onto the screen.</P>
+<P>The Particle System API uses a discrete time approximation to all actions. See <B>pTimeStep</B> for information on improving simulation quality by varying the time step, <I>dt</I>.</P>
+</FONT><FONT FACE="Arial"><P>Action Lists</P>
+</FONT><FONT SIZE=2><P>Action lists are blocks of actions that are applied together to a particle group. They are conceptually similar to scripts or procedures. They can also be thought of as similar to display lists in OpenGL. An action list abstracts the specifics of a particular effect and allows complex effects to be treated as primitives like actions (except that an action list cannot be an action within another action list). Action lists also allow effects to be simulated much more efficiently on certain parallel machines, such as PixelFlow. Also, action lists can be optimized by a particular implementation of the Particle System API. For example, common sequences of actions can be detected and replaced by efficient code that handles all those actions in one pass.</P>
+</FONT><FONT FACE="Arial"><P>Domains</P>
+</FONT><FONT SIZE=2><P>A Domain is a representation of a region of space. For example, the <B>pSource</B> action uses a domain to describe the volume in which a particle's random initial position will be. The <B>pSink</B> and <B>pBounce</B> actions use domains to describe a volume in space for particles to die when they enter, or to bounce off, respectively. Domains are used as parameters to many functions within the API. See the Domains section of this document for more.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>Many functions in the Particle System API take arguments with default values. This is a feature of C++ that may be new to many people. For example, in <B>pSize</B>(float <I>s1</I>, float <I>s2</I> = -1.0), the parameter <I>s2</I> has a default value of -1.0. This means that <B>pSize</B> can be called with either one parameter or two. When called with two, the parameters are the values for <I>s1</I> and <I>s2</I>. When called with one parameter, it is the value of <I>s1</I>. The value of <I>s2</I> in such a function call is the default value, -1.0. Only parameters starting with the right-hand end of the parameter list can have default values specified. Likewise, when calling functions that have default values for parameters at the end of the list, all values specified will be applied to parameters starting with the left. This means that there is no way to specify a value for a parameter at the end of the list without specifying values for all parameters to its left.</P></DIR>
+
+</FONT><B><FONT FACE="Arial" SIZE=4><P>State Setting Calls</P>
+</B></FONT><FONT SIZE=2><P>This is a description of all calls that set the current state of the Particle System API. These state values dictate the properties of particles to be created by <B>pSource</B> or <B>pVertex</B>. The one exception is <B>pTimeStep</B>.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>When particles are created within a <B>pNewActionList</B> / <B>pEndActionList</B> block, they will receive attributes from the state that was current when the action list was created. When in immediate mode (not creating or calling an action list), particles are created with attributes from the current state.</P>
+<P>The initial color domain, modifiable by <B>pColor</B>,  is: <B>PDPoint</B>, 1.0, 1.0, 1.0, that is, white. The initial alpha value is 1.0.</P>
+<P>The initial velocity domain, modifiable by <B>pVelocity</B>, is: <B>PDPoint</B>, 0.0, 0.0, 0.0, or no velocity.</P>
+<P>The initial positionB domain, modifiable by <B>pVertexB</B>, is: <B>PDPoint</B>, 0.0, 0.0, 0.0, however positionB is initially set to track particle position.</P>
+<P>The initial size range, modifiable by <B>pSize</B>, is 1.0 to 1.0.</P>
+<P>The initial starting age, modifiable by <B>pStartingAge</B>, is 0.0.</P><DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pColor</B>(float <I>red</I>, float <I>green</I>, float <I>blue</I>, float <I>alpha</I> = 1.0f)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Specify the color of new particles.</P>
+</FONT><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>See the documentation of Domains for a discussion of color spaces in the Particle System API.</P>
+<P>If rendering is to be done by a method other than the <B>pDrawGroup</B> calls, the particle color does not necessarily need to be used to represent color. It can be interpreted as an arbitrary 3 vector.</P><DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pColorD</B>(float <I>alpha</I>, <B>PDomainEnum</B> <I>dtype</I>, float <I>a0</I>=0.0f, float <I>a1</I>=0.0f, float <I>a2</I>=0.0f, float <I>a3</I>=0.0f, float <I>a4</I>=0.0f, float <I>a5</I>=0.0f, float <I>a6</I>=0.0f, float <I>a7</I>=0.0f, float <I>a8</I>=0.0f)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Specify the color domain of new particles.</P>
+</FONT><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>See the documentation of Domains for an explanation of the other arguments.</P><DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pSize</B>(float <I>s1</I>, float <I>s2</I> = -1.0)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Specify the size range of new particles.</P>
+</B><P>The special value of <I>s2</I>, -1.0, means to set <I>s2</I> equal to <I>s1</I>. Since the default value of <I>s2</I> is –1.0, this makes it possible to set the size of particles to an exact value instead of a range by specifying only a single parameter.</P><DIR>
+<DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pStartingAge</B>(float <I>age</I>)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Specify the initial age of new particles.</P>
+</B><P>This value can be positive, zero, or negative.</P><DIR>
+<DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pTimeStep</B>(float <I>newDT</I>)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Specify the time step length.</P>
+</B><P>The Particle System API uses a discrete time approximation to all actions. This means that actions are applied to the particles at a particular instant in time as if the action's effect accumulated over a small time interval, <I>dt</I>, with the world being constant over the interval. The clock is then "ticked" by the length of the interval and the actions can then be reapplied with the particles having their updated values. This is the standard method of doing almost all time-varying simulations in computer science.</P>
+<P>How does the time step, <I>dt</I>, relate to the application's frame rate? The easiest method is to apply the actions once per frame. If the application prefers to keep time in terms of seconds, <I>dt</I> can be set to (1 / frames_per_second). But more often, it is easier for a time unit to be one frame instead of one second. In this case, <I>dt</I> should be 1.0, which is the default.</P>
+<P>For higher quality, the application can apply particle actions more than once per frame. This provides smoother, more realistic results in many subtle ways. Suppose the application wanted to compute three animation steps for each rendered frame. Set <I>dt</I> to 1/3 its previous value using <B>pTimeStep</B>, then loop three times over all the action code that gets executed per frame, including the calls to <B>pMove</B>. If using action lists, this can be simply a loop over the <B>pCallActionList</B> call. The run-time results should be about the same, but with fewer discrete approximation artifacts. Surprisingly enough, the actions themselves usually take a small percentage of the CPU time, so using a finer step size usually does not impact frame rate very much.</P>
+<P>In terms of numerical integration, particle actions can be thought of as the first derivative of unknown functions dictating the particle attributes over time. In order to compute the particle attributes, these derivative functions must be integrated. Since closed form integration doesn't make sense for most actions, Euler's method is used instead. Euler's method is simply the method just described - the evaluation of the derivative functions at a particular time and then incrementing the current particle values by these derivative results times <I>dt</I>. In Euler's method, the smaller the <I>dt</I>, the more accurate the results.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>Unlike with other state setting calls, action lists execute using the current <I>dt</I> value set by <B>pTimeStep</B>, rather than the time step value that was current when the action list was created. Making action lists independent of time step size allows the time step to be changed without recompiling the action list.</P><DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pVelocity</B>(float <I>x</I>, float <I>y</I>, float <I>z</I>)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Specify the initial velocity of new particles.</P>
+</B><P>This is shorthand for <B>pVelocityD</B>(<B>PDPoint, </B><I>x</I>, <I>y</I>, <I>z</I>).</P><DIR>
+<DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pVelocityD</B>(<B>PDomainEnum</B> <I>dtype</I>, float <I>a0</I>=0.0f, float <I>a1</I>=0.0f, float <I>a2</I>=0.0f, float <I>a3</I>=0.0f, float <I>a4</I>=0.0f, float <I>a5</I>=0.0f, float <I>a6</I>=0.0f, float <I>a7</I>=0.0f, float <I>a8</I>=0.0f)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Specify the initial velocity domain of new particles.</P>
+</FONT><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>See the documentation of Domains for an explanation of the other arguments.</P><DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pVertexB</B>(float <I>x</I>, float <I>y</I>, float <I>z</I>)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Specify the secondary position of new particles.</P>
+</B><P>This is shorthand for <B>pVertexBD</B>(<B>PDPoint</B>, <I>x</I>, <I>y</I>, <I>z</I>).</P><DIR>
+<DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pVertexBD</B>(<B>PDomainEnum</B> <I>dtype</I>, float <I>a0</I> = 0.0f, float <I>a1</I> = 0.0f, float <I>a2</I> = 0.0f, float <I>a3</I> = 0.0f, float <I>a4</I> = 0.0f, float <I>a5</I> = 0.0f, float <I>a6</I> = 0.0f, float <I>a7</I> = 0.0f, float <I>a8</I> = 0.0f)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Specify the secondary position domain of new particles.</P>
+</B><P>Set the domain from which the <I>positionB</I> of each particle will be randomly chosen when it is created. But if <B>pVertexBTracks</B> is set to true (the default), then the <I>positionB</I> will instead be the same as the initial particle position.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>See the documentation of Domains for an explanation of the other arguments.</P><DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pVertexBTracks</B>(bool <I>doCopy</I>)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Specify how the secondary position of each new particle is chosen.</P>
+</B><P>Specify how the <I>positionB</I> of each new particle emitted will be chosen. The positionB is the destination position or initial position of particles. See <B>pRestore</B> for a use of positionB.</P>
+<P>If <I>doCopy</I> is true then when a particle is created its <I>positionB</I> will be the same as its initial particle position (the default).</P>
+<P>If <I>doCopy</I> is false then when a particle is created its <I>positionB</I> will be chosen from the <I>VertexB</I> domain.</P>
+</FONT><B><FONT FACE="Arial" SIZE=4><P>Actions</P>
+</B></FONT><FONT SIZE=2><P>Actions modify the position, color, velocity, size, age, and secondary position of particles. All actions apply to the current particle group, as set by <B>pCurrentGroup</B>.</P>
+<P>Remember that the amount of effect of an action call depends on the time step size, <I>dt</I>, as set by <B>pTimeStep</B>. See <B>pTimeStep</B> for an explanation of time steps.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>Some functions have parameters with a default value of P_EPS. P_EPS is a very small floating point constant that is most often used as the default value of the <I>epsilon</I> parameter to actions that accelerate particles relative to the inverse square of their distance from something. If that distance is very small, the amount of acceleration is very big. Since all actions are computed using Euler's method, this can cause unsatisfying results in which particles are accelerated way too much. So this <I>epsilon</I> parameter is added to the distance before taking its inverse square, thus keeping the acceleration within reasonable limits. By varying <I>epsilon</I>, you specify what is reasonable. Larger <I>epsilon</I> make particles accelerate less.</P><DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pBounce</B>(float <I>friction</I>, float <I>resilience</I>, float <I>cutoff</I>, <B>PDomainEnum</B> <I>dtype</I>, float <I>a0</I> = 0.0f, float <I>a1</I> = 0.0f, float <I>a2</I> = 0.0f, float <I>a3</I> = 0.0f, float <I>a4</I> = 0.0f, float <I>a5</I> = 0.0f, float <I>a6</I> = 0.0f, float <I>a7</I> = 0.0f, float <I>a8</I> = 0.0f)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Bounce particles off a domain of space.</P>
+</B><P>Particles are tested to see whether they will pass from being outside the specified domain to being inside it if the next <B>pMove</B> action were to occur now. If they would pass through the surface of the domain, they are instead bounced off it. That is, their velocity vector is decomposed into components normal to the surface and tangent to the surface. The direction of the normal component is reversed, and the components are recomposed into a new velocity heading away from the surface.</P>
+<P>The normal component is multiplied by the <I>resilience</I> parameter and the tangential component, if its magnitude is greater than <I>cutoff</I>, is multiplied by (1 - the <I>friction</I> parameter) when being composed into the new velocity vector.</P>
+<P>The <I>cutoff</I> parameter can allow particles to glide smoothly along a surface without sticking.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>Since particles are tested to see whether they would pass through the domain if <B>pMove</B> were called now, it is best to have <B>pBounce</B> be the last action that modifies a particle's velocity before calling <B>pMove</B>. Also, actions such as <B>pRandomDisplace</B> and <B>pVortex</B> that modify a particle's position directly, rather than modifying its velocity vector, may yield unsatisfying results when used with <B>pBounce</B>.</P>
+<P>At present the only domains for which <B>pBounce</B> is implemented are <B>PDSphere</B>,<B> PDTriangle</B> and <B>PDPlane</B>. For spheres, the particle is always forced out of the sphere. For triangles, the particles bounce off either side of the triangle. For planes, particles bounce off either side of the diamond-shaped patch whose corners are <I>o</I>, <I>o</I>+<I>u</I>, <I>o</I>+<I>u</I>+<I>v</I>, and <I>o</I>+<I>v</I>. See the documentation on domains for an explanation.</P>
+<P>See the documentation of Domains for an explanation of the other arguments.</P>
+<B><P>pBounce</B> doesn't work correctly with small time step sizes for particle sliding along a surface. The <I>friction</I> and <I>resilience</I> parameters should not be scaled by <I>dt</I>, since a bounce happens instantaneously. On the other hand, they should be scaled by <I>dt</I> because particles sliding along a surface will hit more often if <I>dt</I> is smaller. If you have any suggestions, let me know.</P><DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pCopyVertexB</B>(bool <I>copy_pos</I> = true, bool <I>copy_vel</I> = false)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Set the secondary position from current position.</P>
+</B><P>If <I>copy_pos</I> is true, sets the <I>positionB</I> of each particle in the current particle group to be equal to the current position of that particle. This makes each particle "remember" this position so it can later return to it using <B>pRestore</B>. If <I>copy_vel</I> is true, sets the <I>velocityB</I> of each particle in the current particle group to be equal to the current velocity of that particle. This is useful for computing the orientation of the particle when rendering it using <B>pDrawGroupl</B>.</P><DIR>
+<DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pDamping</B>(float <I>damping_x</I>, float <I>damping_y</I>, float <I>damping_z</I>, float <I>vlow</I> = 0.0f, float <I>vhigh</I> = P_MAXFLOAT)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Simulate air by slowing down particle velocities.</P>
+</B><P>If a particle's velocity magnitude is within <I>vlow</I> and <I>vhigh</I>, then multiply each component of the velocity by the respective damping constant. Typically, the three components of <I>damping</I> will have the same value.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>There are no bounds on the damping constants. Thus, by giving values greater than 1.0 they may be used to speed up particles in stead of slow them down.</P><DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pExplosion</B>(float <I>center_x</I>, float <I>center_y</I>, float <I>center_z</I>, float <I>velocity</I>, float <I>magnitude</I>, float <I>lifetime</I>, float <I>epsilon</I> = P_EPS, float <I>age</I> = 0.0f)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>An Explosion.</P>
+</B><P>Causes an explosion by accelerating all particles away from the <I>center</I>. Particles in the shock wave are accelerated away from the <I>center</I> by an amount proportional to <I>magnitude</I>. As with most acceleration actions, the amount of acceleration falls off inversely with (<I>r</I>^2). But when <I>r</I> is small, the acceleration would be infinite, so <I>epsilon</I> is always added to <I>r</I>.</P>
+<P>The shock wave of the explosion travels outward from the <I>center</I> at the specified <I>velocity</I>. The shock wave has a thickness of <I>lifetime</I>, which is the amount of time for which the shock wave will affect any piece of space.</P>
+<I><P>age</I> is used to calculate the radius of the shock wave. For <B>pExplosion</B> calls in action lists, <I>age</I> is the initial age of the explosion. It is incremented by <I>dt</I> after each call. For immediate mode, <I>age</I> is the current age of the explosion, and it is up to the application to increment the <I>age</I> parameter for each call to <B>pExlosion.</P><DIR>
+<DIR>
+<DIR>
+<DIR>
+
+</B><P>void <B>pFollow</B>(float <I>grav</I> = 1.0f, float <I>epsilon</I> = P_EPS)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Accelerate toward the next particle in the group.</P>
+</B><P>This allows snaky effects where the particles follow each other. Each particle is accelerated toward the next particle in the group by an amount proportional to <I>grav</I>. As with most acceleration actions, the amount of acceleration falls off inversely with (<I>r</I>^2). But when <I>r</I> is small, the acceleration would be infinite, so <I>epsilon</I> is always added to <I>r</I>.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>The <B>pFollow</B> action does not affect the last particle in the group. This allows controlled effects where the last particle in the group is killed after each time step and replaced by a new particle at a slightly different position. See <B>pKillOld</B> to learn how to kill the last particle in the group after each step.</P><DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pGravitate</B>(float <I>grav</I> = 1.0f, float <I>epsilon</I> = P_EPS)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Accelerate each particle toward each other particle.</P>
+</B><P>Each particle is accelerated toward each other particle in the group by an amount proportional to <I>grav</I>. As with most acceleration actions, the amount of acceleration falls off inversely with (<I>r</I>^2). But when r is small, the acceleration would be infinite, so <I>epsilon</I> is always added to <I>r</I>.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>This action is more computationally intensive than the others are because each particle is affected by each other particle.</P>
+<P>This action can cause particles to conform to a certain shape. Define the shape using a few particles as control points. Place them in particular locations and keep them there each frame by killing them with <B>pKillOld</B> and replacing them with <B>pVertex</B>. See <B>pKillOld</B> to learn how to kill the last particles in the group after each step.</P><DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pGravity</B>(float <I>dir_x</I>, float <I>dir_y</I>, float <I>dir_z</I>)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Accelerate particles in the given direction.</P>
+</B><P>The gravity acceleration vector is simply added to the velocity vector of each particle at each time step. The magnitude of the gravity vector is the acceleration due to gravity. For example, <B>pGravity</B>(0, 0, -9.8) specifies gravity in the negative Z direction.</P><DIR>
+<DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pJet</B>(float <I>center_x</I>, float <I>center_y</I>, float <I>center_z</I>, float <I>grav</I> = 1.0f, float <I>epsilon</I> = P_EPS, float <I>maxRadius</I> = P_MAXFLOAT)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Accelerate particles that are near the center of the jet.</P>
+</B><P>For each particle, chooses an acceleration vector from the domain and applies it to the particle's velocity. The amount of acceleration applied is directly proportional to <I>grav</I>. As with most acceleration actions, the amount of acceleration falls off inversely with (<I>r</I>^2). But when r is small, the acceleration would be infinite, so <I>epsilon</I> is always added to <I>r</I>.</P>
+<P>The domain from which acceleration vectors are chosen is the current velocity domain.</P>
+<I><P>maxRadius</I> defines the sphere of influence of this action. No particle further than <I>maxRadius</I> from the center is affected.</P><DIR>
+<DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pKillOld</B>(float <I>ageLimit</I>, bool <I>kill_less_than</I> = false)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Remove old particles.</P>
+</B><P>Removes all particles older than <I>ageLimit</I>. But if <I>kill_less_than</I> is true, it instead removes all particles newer than <I>ageLimit</I>. <I>ageLimit</I> is not clamped, so negative values are ok. This can be used in conjunction with <B>pStartingAge</B>(-n) to create and then kill a particular set of particles.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>In order to kill a particular particle, set <B>pStartingAge</B> to a number that will never be a typical age for any other particle in the group, for example -10.0. Then emit the particle using <B>pSource</B> or <B>pVertex</B>. Then do the rest of the particle actions and finally call <B>pKillOld</B>(-8.0, true) to kill the special particle because it is the only one with an age less than -8.0.</P><DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pKillSlow</B>(float <I>speedLimit</I>, bool <I>kill_less_than</I> = true)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Remove slow particles.</P>
+</B><P>Removes all particles whose velocity magnitudes are less than <I>speedLimit</I>. But if <I>kill_less_than</I> is false, it instead removes all particles whose velocity magnitudes are faster than <I>speedLimit</I>.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES </P><DIR>
+
+</B></FONT><FONT SIZE=2><P>This action is similar to <B>pSinkVelocity</B>, but it considers the magnitude of the velocity only.</P><DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pMove</B>()</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Move particle positions based on velocities.</P>
+</B><P>This action actually updates the particle positions by adding the current velocity to the current position. This is typically the last particle action performed in an iteration of a particle simulation, and typically only occurs once per action list.</P>
+<P>The velocity is multiplied by the time step length, <I>dt</I>, before being added to the position. This implements Euler's method of numerical integration with a constant, but specifiable step size. See <B>pTimeStep</B> for more on varying the step size.</P><DIR>
+<DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pOrbitLine</B>(float <I>p_x</I>, float <I>p_y</I>, float <I>p_z</I>, float <I>axis_x</I>, float <I>axis_y</I>, float <I>axis_z</I>, float <I>grav</I> = 1.0f, float <I>epsilon</I> = P_EPS, float <I>maxRadius</I> = P_MAXFLOAT)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Accelerate toward the closest point on the given line.</P>
+</B><I><P>p</I> and <I>axis</I> define an infinite line, where <I>p</I> can be any point on the line and <I>axis</I> is any vector parallel to the line. For each particle, this action computes the vector to the closest point on the line, and accelerates the particle in the vector direction. The amount of acceleration applied is directly proportional to <I>grav</I>. As with most acceleration actions, the amount of acceleration falls off inversely with (<I>r</I>^2). But when <I>r</I> is small, the acceleration would be infinite, so <I>epsilon</I> is always added to <I>r</I>.</P>
+<I><P>maxRadius</I> defines the infinite cylinder of influence of this action. No particle further than <I>maxRadius</I> from the line is affected.</P><DIR>
+<DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pOrbitPoint</B>(float <I>center_x</I>, float <I>center_y</I>, float <I>center_z</I>, float <I>grav</I> = 1.0f, float <I>epsilon</I> = P_EPS, float <I>maxRadius</I> = P_MAXFLOAT)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Accelerate toward the given center point.</P>
+</B><P>For each particle, this action computes the vector to the center point, and accelerates the particle in the vector direction. The amount of acceleration applied is directly proportional to <I>grav</I>. As with most acceleration actions, the amount of acceleration falls off inversely with (<I>r</I>^2). But when <I>r</I> is small, the acceleration would be infinite, so <I>epsilon</I> is always added to <I>r</I>.</P>
+<I><P>maxRadius</I> defines the sphere of influence of this action. No particle further than <I>maxRadius</I> from the <I>center</I> is affected.</P><DIR>
+<DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pRandomAccel</B>(<B>PDomainEnum</B> <I>dtype</I>, float <I>a0</I> = 0.0f, float <I>a1</I> = 0.0f, float <I>a2</I> = 0.0f, float <I>a3</I> = 0.0f, float <I>a4</I> = 0.0f, float <I>a5</I> = 0.0f, float <I>a6</I> = 0.0f, float <I>a7</I> = 0.0f, float <I>a8</I> = 0.0f)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Accelerate particles in random directions.</P>
+</B><P>For each particle, chooses an acceleration vector from the specified domain and adds it to the particle's velocity.</P>
+<P>Reducing the time step, <I>dt</I>, will make a higher probability of being near the original velocity after unit time. Smaller <I>dt</I> approach a normal distribution of velocity vectors instead of a square wave distribution.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>See the documentation of Domains for an explanation of the other arguments.</P><DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pRandomDisplace</B>(<B>PDomainEnum</B> <I>dtype</I>, float <I>a0</I> = 0.0f, float <I>a1</I> = 0.0f, float <I>a2</I> = 0.0f, float <I>a3</I> = 0.0f, float <I>a4</I> = 0.0f, float <I>a5</I> = 0.0f, float <I>a6</I> = 0.0f, float <I>a7</I> = 0.0f, float <I>a8</I> = 0.0f)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Immediately displace particle positions.</P>
+</B><P>For each particle, chooses a displacement vector from the specified domain and adds it to the particle's position.</P>
+<P>Reducing the time step, <I>dt</I>, will make a higher probability of being near the original position after unit time. Smaller <I>dt</I> approach a normal distribution of particle positions instead of a square wave distribution.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>Since this action moves particle positions, unsatisfying results may occur when used with the <B>pBounce</B> action. In particular, particles may be displaced to the opposite side of the bounce surface without bouncing off it.</P>
+<P>See the documentation of Domains for an explanation of the other arguments.</P><DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pRandomVelocity</B>(<B>PDomainEnum</B> <I>dtype</I>, float <I>a0</I> = 0.0f, float <I>a1</I> = 0.0f, float <I>a2</I> = 0.0f, float <I>a3</I> = 0.0f, float <I>a4</I> = 0.0f, float <I>a5</I> = 0.0f, float <I>a6</I> = 0.0f, float <I>a7</I> = 0.0f, float <I>a8</I> = 0.0f)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Immediately assign a random velocity.</P>
+</B><P>For each particle, sets the particle's velocity vector to a random vector in the specified domain.</P>
+<P>This function is not affected by <I>dt</I>. If you can think of an appropriate way for this to vary with <I>dt</I>, let me know.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>See the documentation of Domains for an explanation of the other arguments.</P><DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pRestore</B>(float <I>timeLeft</I>)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Over time, restore particles to their secondary positions.</P>
+</B><P>Computes a new velocity for each particle that will make the particle arrive at its <I>positionB</I> at the specified amount of time in the future. The curved path that the particles take is a parametric quadratic. Once the specified amount of time has passed, the particles are clamped to their <I>positionB</I> and their velocities are set to 0 to freeze them in place.</P>
+<P>If <B>pRestore</B> is called in immediate mode, it is the application's responsibility to decrease <I>timeLeft</I> by <I>dt</I> on each call. When in an action list, <I>timeLeft</I> gets decremented automatically.</P>
+<P>The <I>positionB</I> attribute of each particle is typically the particle's position when it was created, or it can be specified within a domain. This is controlled by <B>pVertexBTracks</B>, <B>pVertexB</B>, and <B>pVertexBD</B>. The <I>positionB</I> can be set at any time to the particle's current position using the <B>pCopyVertexB</B> action.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</FONT><FONT SIZE=2><P>pRestore</B>(0) is the opposite of <B>pCopyVertexB</B> - it sets each particle's position to be equal to its positionB. However, this has the side effect of setting each particle's velocity to 0.</P><DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pSink</B>(bool <I>kill_inside</I>, <B>PDomainEnum</B> <I>dtype</I>, float <I>a0</I> = 0.0f, float <I>a1</I> = 0.0f, float <I>a2</I> = 0.0f, float <I>a3</I> = 0.0f, float <I>a4</I> = 0.0f, float <I>a5</I> = 0.0f, float <I>a6</I> = 0.0f, float <I>a7</I> = 0.0f, float <I>a8</I> = 0.0f)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Kill particles with positions on wrong side of the specified domain.</P>
+</B><P>If <I>kill_inside</I> is true, deletes all particles inside the given domain. If <I>kill_inside</I> is false, deletes all particles outside the given domain.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>See the documentation of Domains for an explanation of the other arguments.</P><DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pSinkVelocity</B>(bool <I>kill_inside</I>, <B>PDomainEnum</B> <I>dtype</I>, float <I>a0</I> = 0.0f, float <I>a1</I> = 0.0f, float <I>a2</I> = 0.0f, float <I>a3</I> = 0.0f, float <I>a4</I> = 0.0f, float <I>a5</I> = 0.0f, float <I>a6</I> = 0.0f, float <I>a7</I> = 0.0f, float <I>a8</I> = 0.0f)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Kill particles with velocities on wrong side of the specified domain.</P>
+</B><P>If <I>kill_inside</I> is true, deletes all particles whose velocity vectors are inside the given domain. If <I>kill_inside</I> is false, deletes all particles whose velocity vectors are outside the given domain.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>See the documentation of Domains for an explanation of the other arguments.</P><DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pSource</B>(float <I>particleRate</I>, <B>PDomainEnum</B> <I>dtype</I>, float <I>a0</I> = 0.0f, float <I>a1</I> = 0.0f, float <I>a2</I> = 0.0f, float <I>a3</I> = 0.0f, float <I>a4</I> = 0.0f, float <I>a5</I> = 0.0f, float <I>a6</I> = 0.0f, float <I>a7</I> = 0.0f, float <I>a8</I> = 0.0f)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Add particles in the specified domain.</P>
+</B><P>Adds new particles to the current particle group. The particle positions are chosen from the given domain. The particle colors, sizes, initial ages, velocities, and secondary positions are chosen according to their current domains. See <B>pColor</B>, <B>pColorD</B>, <B>pSize</B>, <B>pStartingAge, pVelocity</B>, <B>pVelocityD</B>, <B>pVertexB</B>, <B>pVertexBD</B>, and <B>pVertexBTracks</B>.</P>
+<P>When <B>pSource</B> is called within an action list, the particle attribute domains used are those that were current when the <B>pSource</B> command was called within the <B>pNewActionList</B> / <B>pEndActionList</B> block instead of when <B>pCallActionList</B> is called. Note that this is unlike OpenGL.</P>
+<I><P>particleRate</I> is the number of particles to add per unit time. If <I>particleRate</I> / <I>dt</I> is a fraction then <B>pSource</B> adjusts the number of particles to add during this time step so that the average number added per unit time is <I>particleRate</I>.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>If too few particles seem to be added each frame, it is probably because the particle group is already full. If this is bad, you can grow the group using <B>pSetMaxParticles</B>.</P>
+<P>See the documentation of Domains for an explanation of the other arguments.</P><DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pTargetColor</B>(float <I>color_x</I>, float <I>color_y</I>, float <I>color_z</I>, float <I>alpha</I>, float <I>scale</I>)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Change color of all particles toward the specified color.</P>
+</B><P>Modifies the color and alpha of each particle to be <I>scale</I> percent of the way closer to the specified <I>color</I> and <I>alpha</I>.<I> scale</I> is multiplied by <I>dt</I> before scaling the sizes. Thus, using smaller <I>dt</I> causes a slightly faster approach to the target color.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>This action makes all colors tend toward the specified, uniform color. Future versions will have more actions that modify color. Please send me suggestions (perhaps with sample implementations).</P><DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pTargetSize</B>(float <I>destSize</I>, float <I>scale</I>)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Gradually grow particle sizes toward specified size.</P>
+</B><P>Modifies the size of each particle to be <I>scale</I> percent of the way closer to the specified <I>destSize</I>. This makes sizes grow asymptotically closer to the given size. <I>scale</I> is multiplied by <I>dt</I> before scaling the sizes. Thus, using smaller <I>dt</I> causes a slightly faster approach to the target size.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>This action makes all sizes tend toward the specified, uniform size. Future versions will have more actions that modify size. Please send me suggestions (perhaps with sample implementations).</P><DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pVertex</B>(float <I>x</I>, float <I>y</I>, float <I>z</I>)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Add a single particle at the specified location.</P>
+</B><P>When called within a <B>pNewActionList</B> / <B>pEndActionList</B> block, this action is a shorthand for:</P>
+<B><P>pSource</B>(1, <B>PDPoint</B>, <I>x</I>, <I>y</I>, <I>z</I>).</P>
+<P>However, when called in immediate mode, this action uses a slightly faster method to add a single particle to the current particle group. Also, when in immediate mode, exactly one particle will be added per call, instead of an average of 1 / <I>dt</I> particles being added. Particle attributes are chosen according to their current domains, as with <B>pSource</B>.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>This call is patterned after the <B>glVertex</B> calls. It is useful for creating a particle group with exactly specified initial positions. For example, you can specify a geometrical model using <B>pVertex</B> calls, and then explode or deform it.</P>
+<DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pVortex</B>(float <I>center_x</I>, float <I>center_y</I>, float <I>center_z</I>, float <I>axis_x</I>, float <I>axis_y</I>, float <I>axis_z</I>, float <I>magnitude</I>, float <I>tightness </I>= 1.0f, float <I>maxRadius</I> = P_MAXFLOAT)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Swirl particles around a vortex.</P>
+</B><I><P>center</I> and <I>axis</I> define an infinite line, where <I>center</I> represents the tip of the vortex and <I>axis</I> is any vector parallel to the line. All particles are rotated about the line by an amount <I>theta</I> = <I>magnitude</I> / (<I>r</I>^<I>tightness</I>), where <I>r</I> is the distance from the vortex tip to the particle, so particles closer to the tip are rotated faster.</P>
+<I><P>maxRadius</I> defines the sphere of influence of this action. No particle further than <I>maxRadius</I> from the vortex center is affected.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P> <B>pVortex</B> immediately displaces particle positions, unlike most actions which affect particle velocities, so unsatisfying results may occur when using the <B>pVortex</B> action with the <B>pBounce</B> action. In particular, particles may be displaced to the opposite side of the bounce surface without bouncing off it.</P>
+<B><P>pVortex</B> currently does not pull the particles toward the axis or pull them up or down along the axis. This will be saved for a future release. If you write a sample implementation of these features, feel free to send it to me.</P></DIR>
+
+</FONT><B><FONT FACE="Arial" SIZE=4><P>Particle Group Calls</P>
+</B></FONT><FONT SIZE=2><P>A particle group is first created using <B>pGenParticleGroups</B>, which will return the identifying number of the generated particle group. Unless otherwise specified, all other commands operate on the current particle group. You specify which group is current using <B>pCurrentGroup</B>. The maximum number of particles in the group is specified using <B>pSetMaxParticles</B>. The particle group is then acted upon using the functions listed in the <B>Actions</B>. Some actions will add particles to the particle group, and others will modify the particles in other ways. Typically, a series of actions will be applied to each particle group once (or more) per rendered frame. The particles are then actually drawn. This is similar to the process of rendering a display list in OpenGL, and should be done at the same stage of the application's execution as drawing geometry. To draw a particle group in OpenGL, the application calls one of the <B>pDrawGroup</B> functions. Alternatively, the application can get a copy of the particle data using <B>pGetParticles</B> and use it for other rendering or processing methods. When a particle group is no longer needed, it is deleted using <B>pDeleteParticleGroups</B>.</P><DIR>
+<DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pCopyGroup</B>(int <I>p_group_num</I>, int <I>index</I> = 0, int <I>copy_count</I> = P_MAXINT)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Copy particles from the specified group into the current group.</P>
+</B><P>Copy particles from the specified particle group, <I>p_group_num</I>, to the current particle group. Only <I>copy_count</I> particles, starting with number <I>index</I> are copied. Of course, the number of particles actually copied is bounded by the available space in the current particle group, and the number of particles actually in the source particle group. The particles are added in order to the end of the current group. <I>index</I> is the index of the first particle in the source particle group to be copied.</P><DIR>
+<DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pCurrentGroup</B>(int <I>p_group_num</I>)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Change which group is current.</P>
+</B><P>Makes <I>p_group_num</I> be the current particle group to which all actions and commands apply.</P><DIR>
+<DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pDeleteParticleGroups</B>(int <I>p_group_num</I>, int <I>p_group_count</I>)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Delete one or more consecutive particle groups.</P>
+</B><P>Deletes <I>p_group_count</I> particle groups, with <I>p_group_num</I> being the particle group number of the first one. The groups must be numbered sequentially, and must all exist. This removes the specified particle groups from existence. It does not merely change the number of existing particles or the maximum size of the group.</P><DIR>
+<DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pDrawGroupl</B>(int <I>dlist</I>, bool <I>const_size</I> = false, bool <I>const_color</I> = false, bool <I>const_rotation</I> = false)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Draw each particle as a model using OpenGL display lists.</P>
+</B><P>Calls the given OpenGL display list, <I>dlist</I>, once for each particle in the particle group. The display list typically contains only geometry (<B>glBegin</B> / <B>glEnd</B> blocks). Before the display list is drawn for each particle, the OpenGL state is changed. First, the display list is translated to the particle's position. Next, if <I>const_size</I> is false, the matrix stack is modified to scale the display list by the particle's size. Then, if <I>const_rotation</I> is false, the matrix is rotated so that the display list's positive X axis points in the direction of the particle's velocity vector. Finally, if <I>const_color</I> is false, the OpenGL current color is set to the particle's color. If <I>const_color</I> is true, then the OpenGL current color is set only once before drawing any particles. If <I>const_size</I> is true, then no scaling is ever done. If <I>const_rotation</I> is true then no rotation is ever done. This is useful for symmetrical models such as spheres.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>The OpenGL current color is left in an undefined state following a call to <B>pDrawGroupl</B>.</P>
+<P>This command operates on the OpenGL matrix stack, but does not change the matrix mode. It is the application's responsibility to ensure that the matrix mode is correct, usually by calling <B>glMatrixMode</B>(GL_MODELVIEW) first.</P>
+<P>Models containing multiple colors can be drawn by constructing a display list that first draws the geometry that will be in the particle color, then changes the color (by calling <B>glColor</B>), then draws geometry in the new color. For example, this could be used to draw balloons of many different colors that each have a white string.</P>
+<P>Another way to draw particles that allows greater flexibility than <B>pDrawGroupl</B> is for the application to get the particle data using <B>pGetParticles</B>, and then draw it using any desired method.</P><DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pDrawGroupp</B>(int <I>primitive</I>, bool <I>const_size</I> = false, bool <I>const_color</I> = false)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Draw a particle group using OpenGL primitives.</P>
+</B><P>This is the fastest OpenGL-based method of drawing particles. The exact results depend on the OpenGL <I>primitive</I> type specified. When <I>primitive</I> equals GL_POINTS or any value other than GL_LINES, each particle becomes a single vertex in an OpenGL <B>glBegin</B> / <B>glEnd</B> block. For GL_LINES, each particle becomes a line specified by two vertices - the particle's position and the particle's position minus velocity, yielding a line in the direction that the particle is travelling.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>The OpenGL current color is left in an undefined state following a call to <B>pDrawGroupp</B>.</P>
+<P>At present, GL_LINES is the only primitive handled as a special case. If you have suggestions for sensible, general ways to handle other OpenGL primitives, please tell me.</P>
+<P>See also <B>pDrawGroupl</B>.</P><DIR>
+<DIR>
+<DIR>
+
+<P>int <B>pGenParticleGroups</B>(int <I>p_group_count</I> = 1, int <I>max_particles</I> = 0)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Create particle groups, each with max_particles allocated.</P>
+</B><P>Generates <I>p_group_count</I> new particle groups and returns the particle group number of the first one. The groups are numbered sequentially, beginning with the number returned. Each particle group is set to have at most <I>max_particles</I> particles. Call <B>pSetMaxParticles</B> to change this.</P>
+<P>Particle group numbers of groups that have been deleted (using <B>pDeleteParticleGroups</B>) may be reused by <B>pGenParticleGroups</B>.</P><DIR>
+<DIR>
+<DIR>
+<DIR>
+
+<P>int <B>pGetGroupCount</B>()</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Returns the number of particles existing in the current group.</P>
+</B><P>What the summary says.</P><DIR>
+<DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pGetParticles</B>(int <I>index</I>, int <I>count</I>, float *<I>verts</I>, float *<I>color</I> = NULL, float *<I>vel</I> = NULL, float *<I>size</I> = NULL)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Copy particles from the current group to application memory.</P>
+</B><P>Copies <I>count</I> particles beginning with the <I>index</I>-th particle in the current particle group into application memory. </P><DIR>
+<DIR>
+<DIR>
+<DIR>
+
+<P>int <B>pSetMaxParticles</B>(int <I>max_count</I>)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Change the maximum number of particles in the current group.</P>
+</B><P>If necessary, this will delete particles from the end of the particle group, but no other particles will be deleted.</P>
+</FONT><B><FONT FACE="Arial" SIZE=4><P>Action List Calls</P>
+</B></FONT><FONT SIZE=2><P>These calls create and operate on action lists, which are scripts of many actions to be applied together as a block to the current particle group. An action list is first created using <B>pGenActionLists</B>, and is then defined by calling particle action functions between a call to <B>pNewActionList</B> and a call to <B>pEndActionList</B>. Once the action list is created, it is run via <B>pCallActionList</B>. Thus, an action list is sort of a higher-level action. Complex behaviors can be stored in an action list and then called later, even as part of another action list. Action lists cannot be edited. They can only be created or destroyed. To destroy an action list, call <B>pDeleteActionLists</B>.</P>
+</FONT><B><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>When particles are created within a <B>pNewActionList</B> / <B>pEndActionList</B> block, they will receive attributes from the state that was current when the action list was created. When in immediate mode (not creating or calling an action list), particles are created with attributes from the current state.</P>
+<P>The time step length, <I>dt</I>, uses the value that is current when <B>pCallActionList</B> is executed, not the value of <I>dt</I> when the action list was created. This allows <I>dt</I> to be modified without recompiling action lists. Maybe this isn't a good idea. If it should be the other way in the future, let me know.</P><DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pCallActionList</B>(int <I>action_list_num</I>)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Apply the specified action list to the current particle group.</P><DIR>
+<DIR>
+<DIR>
+<DIR>
+
+</B><P>void <B>pDeleteActionLists</B>(int <I>action_list_num</I>, int <I>action_list_count</I> = 1)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Delete one or more consecutive action lists.</P>
+</B><P>Deletes <I>action_list_count</I> action lists, with <I>action_list_num</I> being the list number of the first one. The lists must be numbered sequentially, and must all exist. This removes the specified action lists from existence.</P><DIR>
+<DIR>
+<DIR>
+<DIR>
+
+<P>void <B>pEndActionList</B>()</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>End the creation of a new action list.</P><DIR>
+<DIR>
+<DIR>
+<DIR>
+
+</B><P>int <B>pGenActionLists</B>(int <I>action_list_count</I> = 1)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Generate empty action lists.</P><DIR>
+<DIR>
+<DIR>
+<DIR>
+
+</B><P>void <B>pNewActionList</B>(int <I>action_list_num</I>)</P></DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<B><P>Begin the creation of the specified action list.</P>
+</FONT><FONT FACE="Arial" SIZE=2><P>NOTES</P><DIR>
+
+</B></FONT><FONT SIZE=2><P>If called on an action list that has previously been defined, the previous contents of the action list are destroyed and the action list will be created anew. This is as with <B>glNewList</B> in OpenGL.</P></DIR>
+
+</FONT><B><FONT FACE="Arial" SIZE=4><P>Domains</P>
+</B></FONT><FONT SIZE=2><P>A Domain is a representation of a region of space. For example, the <B>pSource</B> action uses a domain to describe the volume in which a particle will be created. A random point within the domain is chosen as the initial position of the particle. The <B>pSink</B> and <B>pBounce</B> actions use domains to describe a volume in space for particles to die when they enter, or to bounce off, respectively.</P>
+<P>Domains are also used to describe velocities. Picture the velocity vector as having its tail at the origin and its tip being in the domain.</P>
+<P>Finally, domains can be used to describe colors. For drawing with OpenGL, the full color space is 0.0 -&gt; 1.0 in the red, green, and blue axes. For example, the domain <B>PDLine</B>, 1, 0, 0, 1, 1, 0 will choose points on a line between red and yellow. Points outside the 0.0 -&gt; 1.0 range will not be clamped, but eventually will be clamped deep within the OpenGL pipeline.</P>
+<P>Since data from particle systems can be used by more than just the OpenGL renderer, the floating point triple used for color can mean different things to different consumers of the data. For example, if a software renderer used colors on the range 0 -&gt; 255, the domain used to choose the colors can be on that range. The color space does not even need to be thought of as RGB, but will be for use in OpenGL.</P>
+<P>Several types of domains can be specified. The two basic abstract operations on a domain are <B>Generate</B>, which returns a random point in the domain, and <B>Within</B>, which tells whether a given point is within the domain. Functions such as <B>pSource</B> that take a domain as an argument take it in the form of a <B>PDomainEnum</B>, followed by nine floats. The <B>PDomainEnum</B> is one of the symbolic constants listed below, such as <B>PDPoint</B>. The nine floats mean different things for each type of domain, as described below. Not all domains require all nine floats. You only need to specify the first few values that are relevant to that domain type.</P>
+<B><P>PDPoint&#9;</B><I>x, y, z</P>
+</I><P>This domain is a single point.</P>
+<B><P>Generate</B> always returns this point. <B>Within</B> always returns false.</P>
+<B><P>PDLine&#9;</B><I>x1, y1, z1, x2, y2, z2</P>
+</I><P>These are the endpoints of a line segment.</P>
+<B><P>Generate</B> returns a random point on this segment. <B>Within</B> always returns false.</P>
+<B><P>PDTriangle&#9;</B><I>x0, y0, z0, x1, y1, z1, x2, y2, z2</P>
+</I><P>These are the vertices of a triangle. The triangle can be used to define an arbitrary geometrical model and bounce particles off it, generate particles on its surface (and explode them), etc.</P>
+<B><P>Generate</B> returns a random point in the triangle. <B>Within </B>always returns false. [This must eventually change so we can sink particles that enter/exit a model. Suggestions?]</P>
+<B><P>PDPlane&#9;</B><I>ox, oy, oz, ux, uy, uz, vx, vy, vz</P>
+</I><P>The point <I>o</I> is a point on the plane. <I>u</I> and <I>v</I> are (non-parallel) basis vectors in the plane. They don't need to be normal or orthogonal.</P>
+<B><P>Generate</B> returns a random point in the diamond-shaped patch whose corners are <I>o</I>, <I>o</I>+<I>u</I>, <I>o</I>+<I>u</I>+<I>v</I>, and <I>o</I>+<I>v.</I> <B>Within</B> returns true if the point is in the positive half-space of the plane (in the plane or on the side that the normal (<I>u</I> cross <I>v</I>) points to).</P>
+<B><P>PDBox&#9;</B><I>x1, y1, z1, x2, y2, z2</P>
+</I><P>These are the minima and maxima of an axis-aligned box. It doesn't matter which of each coordinate is min and which is max.</P>
+<B><P>Generate</B> returns a random point in this box. <B>Within</B> returns true if the point is in the box.</P>
+<B><P>PDSphere&#9;</B><I>ox, oy, oz, radius1, radius2</I> = 0.0</P>
+<P>The point <I>o</I> is the center of the sphere. <I>radius1</I> is the outer radius of the shell and <I>radius2</I> is the inner radius.</P>
+<B><P>Generate</B> returns a random point in the thick shell at a distance between <I>radius1</I> to <I>radius2</I> from point <I>o</I>. If <I>radius2</I> is 0, then it is the whole sphere. <B>Within</B> returns true if the point lies within the thick shell at a distance between <I>radius1</I> to <I>radius2</I> from point <I>o</I>.</P>
+<B><P>PDCylinder&#9;</B><I>x1, y1, z1, x2, y2, z2, radius1, radius2</I> = 0.0</P>
+<P>The two points are the endpoints of the axis of the cylinder. <I>radius1</I> is the outer radius, and <I>radius2</I> is the inner radius for a cylindrical shell. <I>radius2</I> = 0 for a solid cylinder with no empty space in the middle.</P>
+<B><P>Generate</B> returns a random point in the cylindrical shell. <B>Within</B> returns true if the point is within the cylindrical shell.</P>
+<B><P>PDCone&#9;&#9;</B><I>x1, y1, z1, x2, y2, z2, radius1, radius2</I> = 0.0</P>
+<P>The first point is the apex of the cone and the second is the other endpoint of the axis of the cone. <I>radius1</I> is the radius of the base of the cone. <I>radius2</I> is the radius of the base of a cone to subtract from the first cone to create a conical shell. This is similar to the cylindrical shell, which can be thought of as a large cylinder with a smaller cylinder subtracted from the middle. Both cones share the same apex and axis, which implies that the thickness of the conical shell tapers to 0 at the apex.<I> radius2</I> = 0 for a solid cone with no empty space in the middle.</P>
+<B><P>Generate</B> returns a random point in the conical shell. <B>Within</B> returns true if a point is within the conical shell.</P>
+<B><P>PDBlob&#9;</B><I>x, y, z, stdev</P>
+</I><P>The point<I> x, y, z</I> is the center of a normal probability density of standard deviation <I>stdev</I>. The density is radially symmetrical. The blob domain allows for some very natural-looking effects because there is no sharp, artificial-looking boundary at the edge of the domain.</P>
+<B><P>Generate</B> returns a point with normal probability density. <B>Within</B> has a probability of returning true equal to the probability density at the specified point.</P>
+</FONT><B><FONT FACE="Arial" SIZE=4><P>Appendix</P>
+</FONT><I><FONT FACE="Arial"><P>Acknowledgements</P>
+</B></I></FONT><FONT SIZE=2><P>Code for some of the particle actions and several concepts regarding the structure of the API are thanks to Jonathan P. Leech, </FONT><A HREF="mailto:ljp@sgi.com"><FONT SIZE=2>ljp@sgi.com</FONT></A><FONT SIZE=2>. See also:</P>
+<P>Jonathan Leech and Russell M. Taylor II, "Interactive Modeling Using Particle Systems", Proceedings of the 2nd Conference on Discrete Element Methods, MIT, spring 1993, pp. 105-116.</P>
+<P>Thanks to Mark Allen of NASA Ames Research Center for finding bugs, making suggestions and implementing the particle length attribute.</P>
+<P>Thanks to Jason Pratt of CMU Stage 3 research group (makers of ALICE) for adding the PDTriangle domain. This is a powerful feature that should have been there the whole time.</P>
+</FONT><B><I><FONT FACE="Arial"><P>To Do</P>
+</B></I></FONT><FONT SIZE=2><P>Add a centralize flag to explosion</P>
+<P>For the pspray demo, have it randomly change modes occasionally.</P>
+<P>Explosion should not be scaled by <I>dt</I> since it usually hits for only an instant.</P>
+<P>Explosion wave should be gaussian instead of square wave.</P>
+<P>Test multiple particle groups better.</P>
+<P>Resolve issues commented with &quot;XXX&quot;. </P>
+<P>Change pDraw* const_ to apply_, reverse the sense of it, and make it so if false, color isn’t touched.</P>
+<P>Const_size isn’t used in pDrawGroupp.</P>
+<P>Add a TOC listing all functions.</P>
+</FONT><B><I><FONT FACE="Arial"><P>Future Versions</P>
+</I></FONT><FONT SIZE=2><P>The home page of the Particle System API is </B></FONT><A HREF="http://www.cs.unc.edu/~davemc/Particle"><FONT SIZE=2>http://www.cs.unc.edu/~davemc/Particle</FONT></A><B><FONT SIZE=2> Check back occasionally for new versions and other new developments.</P>
+
+<UL>
+</B><LI>Have a secondary color for each particle.</LI>
+<LI>Replace the <I>lifetime</I> parameter of explosions with <I>stdev</I> and make the shock wave be gaussian instead of square. This will fix the ugly stratification effects in explosions of very dense particle clouds.</LI>
+<LI>Change the particle size scalar to be a domain. This will allow greater expression of particle shape. Orientation becomes more important. How do you interpolate? Is a domain the right thing?</LI>
+<LI>How can you add user-defined particle attributes?</LI>
+<LI>Compound domains (so you can define a whole model as a single domain instead of a zillion triangle domains). This may be the answer for obstacle avoidance.</LI>
+<LI>Obstacle avoidance action – this requires more thinking about object definition. Can this be done with domains?</LI>
+<LI>Interpolate to a given velocity (like color and size interp)</LI>
+<LI>Match velocity to near neighbors</LI>
+<LI>// The above three actions will allow implementation of Craig Reynolds’ Boids algorithm.</LI>
+<B><LI>pVelocityColor</B> - color is f( velocity)</LI>
+<B><LI>pPositionColor</B> - color is f (position)</LI>
+<B><LI>pDensityColor</B> - color is f (density)</LI>
+<B><LI>pRandomColor</B> - random domain is added to color</LI>
+<B><LI>pVelocitySize</B> - size is f(velocity)</LI></UL>
+</FONT></BODY>
+</HTML>
