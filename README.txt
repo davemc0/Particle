@@ -1,17 +1,40 @@
 Particle System API
 by David McAllister
-version 1.11
-February 2, 1999 (Groundhog Day)
+version 1.21
+February 23, 2001
+
 http://www.cs.unc.edu/~davemc/Particle
+
+For some of these demos you must download and use
+
+  http://www.cs.unc.edu/~davemc/Stuff/Goodies.zip
+
+which has compiled JPEG, TIFF, PNG, and GLUT libraries and 
+
+  http://www.cs.unc.edu/~davemc/DMcTools
+
+which is my collection of graphics tools - VRML loader, image stuff,
+vector class, random number generator stop watch, matrix class, ...
+Also, you will need to download
+http://www.cs.unc.edu/~davemc/Stuff/Goodies.tar.gz to get the TIFF,
+JPEG, and GLUT libraries and includes.
+
+Running the MeltingPhoto Demo
+
+Drag any image (GIF, TIFF, JPEG, ...) onto the MeltingPhoto icon or
+specify the image's filename on the command line. When the program
+starts it will show your photo. Press 'C' or 'A' or 'J' or some other
+effect button to stir up the pixels of the image, then press 'R' to
+make it come back together. Press 'S' to start over.
 
 Running the PSpray Demo
 
 To run the PSpray demo, click on pspray.exe and the demo will start by
-drawing a fountain. It uses motion blur, which may be faster or slower
-than no motion blur. To toggle it, press 'm'. Press the right mouse
-button to see a menu of options. Many different particle effects are
-included in the demo. The menu tells what they are. Press the space
-bar to cause an explosion. Press 'f' to toggle full screen mode.
+drawing a random demo. It uses motion blur, which may be faster or
+slower than no motion blur. To toggle it, press 'm'. Press the right
+mouse button to see a menu of options. Many different particle effects
+are included in the demo. The menu tells what they are. Press the
+space bar to cause an explosion. Press 'f' to toggle full screen mode.
 
 By default, the program runs a maximum of 10000 particles. Use '+' and
 '-' to change the number of particles. I have a 400 MHz Pentium ][ and
@@ -47,13 +70,7 @@ Make a new Win32 Console Application project called PSpray. Make it
 depend on the project Particle. Add pspray.cpp to the project. In the
 C++ setting, add the particle system library folder to the include
 path, and GLUT if necessary. Then in Link settings, add particle.lib,
-glut32.lib, glu32.lib, and opengl32.lib. Or you can alternatively use
-the SGI libraries (same names but without the 32).
+glut32.lib, glu32.lib, and opengl32.lib.
 
 That's really it. If you have any questions, comments, or suggestions
 you can mail me at davemc@cs.unc.edu
-
-Changes in Version 1.11
-
-Fixed amount of bouncing to be independent of area of triangle or
-plane. I had forgotten to normalize the plane normal. Oops.

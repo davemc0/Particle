@@ -12,53 +12,84 @@
 #endif
 
 #include <GL/gl.h>
-
-extern _ParticleState _ps;
+// XXX #include <iostream.h>
 
 // Emit OpenGL calls to draw the particles. These are drawn with
 // whatever primitive type the user specified(GL_POINTS, for
 // example). The color and radius are set per primitive, by default.
 // For GL_LINES, the other vertex of the line is the velocity vector.
-void pDrawGroupp(int primitive, bool const_size, bool const_color)
+// XXX const_size is ignored.
+PARTICLEDLL_API void pDrawGroupp(int primitive, bool const_size, bool const_color)
 {
+	_ParticleState &_ps = _GetPState();
+
 	// Get a pointer to the particles in gp memory
 	ParticleGroup *pg = _ps.pgrp;
+
 	if(pg == NULL)
 		return; // ERROR
-		
+	
 	if(pg->p_count < 1)
 		return;
-
-	//if(const_color)
-	//	glColor4fv((GLfloat *)&pg->list[0].color);
 	
-	glBegin((GLenum)primitive);
-	
-	for(int i = 0; i < pg->p_count; i++)
+	if(primitive == GL_POINTS)
 	{
-		Particle &m = pg->list[i];
-		
-		// Warning: this depends on alpha following color in the Particle struct.
+		glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+		glEnableClientState(GL_VERTEX_ARRAY);
 		if(!const_color)
-			glColor4fv((GLfloat *)&m.color);
-		glVertex3fv((GLfloat *)&m.pos);
-		
-		// For lines, make a tail with the velocity vector's direction and
-		// a length of radius.
-		if(primitive == GL_LINES) {
-			pVector tail(-m.vel.x, -m.vel.y, -m.vel.z);
-			tail *= m.size;
-			tail += m.pos;
-			
-			glVertex3fv((GLfloat *)&tail);
+		{
+			glEnableClientState(GL_COLOR_ARRAY);
+			glColorPointer(4, GL_FLOAT, sizeof(Particle), &pg->list[0].color);
 		}
+		
+		glVertexPointer(3, GL_FLOAT, sizeof(Particle), &pg->list[0].pos);
+		glDrawArrays((GLenum)primitive, 0, pg->p_count);
+		glPopClientAttrib();
+		// XXX For E&S
+		glDisableClientState(GL_COLOR_ARRAY);
 	}
-	
-	glEnd();
+	else
+	{
+		// Assume GL_LINES
+		glBegin((GLenum)primitive);
+		
+		if(!const_color)
+		{
+			for(int i = 0; i < pg->p_count; i++)
+			{
+				Particle &m = pg->list[i];
+				
+				// Warning: this depends on alpha following color in the Particle struct.
+				glColor4fv((GLfloat *)&m.color);
+				glVertex3fv((GLfloat *)&m.pos);
+				
+				// For lines, make a tail with the velocity vector's direction and
+				// a length of radius.
+				pVector tail = m.pos - m.vel;			
+				glVertex3fv((GLfloat *)&tail);
+			}
+		}
+		else
+		{
+			for(int i = 0; i < pg->p_count; i++)
+			{
+				Particle &m = pg->list[i];
+				glVertex3fv((GLfloat *)&m.pos);
+				
+				// For lines, make a tail with the velocity vector's direction and
+				// a length of radius.
+				pVector tail = m.pos - m.vel;			
+				glVertex3fv((GLfloat *)&tail);
+			}
+		}
+		glEnd();
+	}
 }
 
-void pDrawGroupl(int dlist, bool const_size, bool const_color, bool const_rotation)
+PARTICLEDLL_API void pDrawGroupl(int dlist, bool const_size, bool const_color, bool const_rotation)
 {
+	_ParticleState &_ps = _GetPState();
+
 	// Get a pointer to the particles in gp memory
 	ParticleGroup *pg = _ps.pgrp;
 	if(pg == NULL)
@@ -78,7 +109,9 @@ void pDrawGroupl(int dlist, bool const_size, bool const_color, bool const_rotati
 		glTranslatef(m.pos.x, m.pos.y, m.pos.z);
 
 		if(!const_size)
-			glScalef(m.size, m.size, m.size);
+			glScalef(m.size.x, m.size.y, m.size.z);
+		else
+			glScalef(pg->list[i].size.x, pg->list[i].size.y, pg->list[i].size.z);
 
 		// Expensive! A sqrt, cross prod and acos. Yow.
 		if(!const_rotation)
@@ -113,6 +146,4 @@ void pDrawGroupl(int dlist, bool const_size, bool const_color, bool const_rotati
 
 		glPopMatrix();
 	}
-	
-	glEnd();
 }

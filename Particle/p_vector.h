@@ -1,4 +1,4 @@
-// p_vector.h
+// p_vector.h - yet another vector class.
 //
 // Copyright 1997 by Jonathan P. Leech
 // Modifications Copyright 1997-1999 by David K. McAllister
@@ -34,12 +34,12 @@ public:
 	
 	inline pVector() {}
 	
-	inline float length()
+	inline float length() const
 	{
 		return sqrtf(x*x+y*y+z*z);
 	}
 	
-	inline float length2()
+	inline float length2() const
 	{
 		return (x*x+y*y+z*z);
 	}
@@ -129,7 +129,7 @@ public:
 		return *this;
 	}
 	
-	inline pVector operator^(const pVector& b)
+	inline pVector operator^(const pVector& b) const
 	{
 		return pVector(
 			y*b.z-z*b.y,

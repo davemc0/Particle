@@ -7,6 +7,10 @@
 
 #include <particle/papi.h>
 
+// This just lets us pass vectors into the DrawGroupTex function
+// and take their cross product.
+#include <particle/p_vector.h>
+
 #include <math.h>
 #include <string.h>
 #include <time.h>
@@ -23,40 +27,269 @@ using namespace std;
 #ifdef WIN32
 #pragma warning (disable:4305) /* disable bogus conversion warnings */
 #define drand48() (((float) rand())/((float) RAND_MAX))
+#define lrand48() ((rand() << 16) ^ rand())
 #define srand48(x) srand(x)
 #endif
 
-bool doubleBuffer = true, MotionBlur = false, FreezeParticles = false;
+// #define DEPTH_TEST
+
+#define GL_ASSERT() {GLenum sci_err; while ((sci_err = glGetError()) != GL_NO_ERROR) \
+			cerr << "OpenGL error: " << (char *)gluErrorString(sci_err) << " at " << __FILE__ <<":" << __LINE__ << endl;}
+
+bool doubleBuffer = true, MotionBlur = false, FreezeParticles = false, AntiAlias = true;
 bool immediate = true, drawGround = false, DoMotion = true, FullScreen = false;
 
-int particle_handle, action_handle, maxParticles = 10000;
-int demoNum = 10, numSteps = 1, prim = GL_LINES, listID = -1;
+int particle_handle, action_handle = -1, maxParticles = 10000;
+int demoNum = 10, numSteps = 1, prim = GL_LINES, listID = -1, SpotTexID = -1;
 float BlurRate = 0.09;
+
+// Symmetric gaussian centered at origin.
+// No covariance matrix. Give it X and Y.
+inline float Gaussian2(float x, float y, float sigma)
+{
+// The sqrt of 2 pi.
+#define SQRT2PI 2.506628274631000502415765284811045253006
+	return exp(-0.5 * (x*x + y*y) / (sigma*sigma)) / (SQRT2PI * sigma);
+}
+
+void MakeGaussianSpotTexture()
+{
+#define DIM 32
+#define DIM2 (DIM>>1)
+
+	glGenTextures(1, (GLuint *)&SpotTexID);
+	glBindTexture(GL_TEXTURE_2D, SpotTexID);
+
+	float *img = new float[DIM*DIM];
+
+	for(int y=0; y<DIM; y++)
+	{
+		for(int x=0; x<DIM; x++)
+		{
+			if(x==0 || x==DIM-1 || y==0 || y==DIM-1)
+				img[y*DIM+x] = 0;
+			else
+			{
+				img[y*DIM+x] = 5. * Gaussian2(x-DIM2, y-DIM2, (DIM*0.2));
+			}
+		}
+	}
+	
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	float col[4] = {1.f, 1.f, 1.f, 1.f};
+	glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, col);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	GL_ASSERT();
+
+	gluBuild2DMipmaps(GL_TEXTURE_2D, GL_ALPHA8, DIM, DIM, GL_ALPHA, GL_FLOAT, img);
+}
+
+// Draw each particle as a screen-aligned triangle with texture.
+// Doesn't make the texture current. Just emits texcoords, if specified.
+// If size_scale is 1 and const_size is true then the textured square
+// will be 2x2 in world space (making the triangle sides be 4x4).
+// view and up must be normalized and unequal.
+
+// Draw as a splat texture on a quad.
+void DrawGroupTriSplat(const pVector &view, const pVector &up,
+					float size_scale = 1.0f, bool draw_tex=false,
+					bool const_size=false, bool const_color=false)
+{
+	int cnt = pGetGroupCount();
+	
+	if(cnt < 1)
+		return;
+	
+	pVector *ppos = new pVector[cnt];
+	float *color = const_color ? NULL : new float[cnt * 4];
+	pVector *size = const_size ? NULL : new pVector[cnt];
+	
+	pGetParticles(0, cnt, (float *)ppos, color, NULL, (float *)size);
+	
+	// Compute the vectors from the particle to the corners of its tri.
+	// 2
+	// |\      The particle is at the center of the x.
+	// |-\     V0, V1, and V2 go from there to the vertices.
+	// |x|\    The texcoords are (0,0), (2,0), and (0,2) respectively.
+	// 0-+-1   We clamp the texture so the rest is transparent.
+	
+	pVector right = view ^ up;
+	right.normalize();
+	pVector nup = right ^ view;
+	right *= size_scale;
+	nup *= size_scale;
+
+	pVector V0 = -(right + nup);
+	pVector V1 = V0 + right * 4;
+	pVector V2 = V0 + nup * 4;
+
+	//cerr << "x " << view.x << " " << view.y << " " << view.z << endl;
+	//cerr << "x " << nup.x << " " << nup.y << " " << nup.z << endl;
+	//cerr << "x " << right.x << " " << right.y << " " << right.z << endl;
+	//cerr << "x " << V0.x << " " << V0.y << " " << V0.z << endl;
+
+	glBegin(GL_TRIANGLES);
+	
+	for(int i = 0; i < cnt; i++)
+	{
+		pVector &p = ppos[i];
+		
+		if(!const_color)
+			glColor4fv((GLfloat *)&color[i*4]);
+
+		pVector sV0 = V0;
+		pVector sV1 = V1;
+		pVector sV2 = V2;
+
+		if(!const_size)
+		  {
+		    sV0 *= size[i].x;
+		    sV1 *= size[i].x;
+		    sV2 *= size[i].x;
+		  }
+
+		if(draw_tex) glTexCoord2f(0,0);
+		pVector ver = p + sV0;
+		glVertex3fv((GLfloat *)&ver);
+
+		if(draw_tex) glTexCoord2f(2,0);
+		ver = p + sV1;
+		glVertex3fv((GLfloat *)&ver);
+
+		if(draw_tex) glTexCoord2f(0,2);
+		ver = p + sV2;
+		glVertex3fv((GLfloat *)&ver);
+	}
+	
+	glEnd();
+
+	delete [] ppos;
+	if(color) delete [] color;
+	if(size) delete [] size;
+}
+
+// Draw as a splat texture on a quad.
+void DrawGroupQuadSplat(const pVector &view, const pVector &up,
+					float size_scale = 1.0f, bool draw_tex=false,
+					bool const_size=false, bool const_color=false)
+{
+	int cnt = pGetGroupCount();
+	
+	if(cnt < 1)
+		return;
+	
+	pVector *ppos = new pVector[cnt];
+	float *color = const_color ? NULL : new float[cnt * 4];
+	pVector *size = const_size ? NULL : new pVector[cnt];
+	
+	pGetParticles(0, cnt, (float *)ppos, color, NULL, (float *)size);
+	
+	// Compute the vectors from the particle to the corners of its quad.
+	//         The particle is at the center of the x.
+	// 3-2     V0, V1, V2 and V3 go from there to the vertices.
+	// |x|     The texcoords are (0,0), (1,0), (1,1), and (0,1) respectively.
+	// 0-1     We clamp the texture so the rest is transparent.
+	
+	pVector right = view ^ up;
+	right.normalize();
+	pVector nup = right ^ view;
+	right *= size_scale;
+	nup *= size_scale;
+
+	pVector V0 = -(right + nup);
+	pVector V1 = right - nup;
+	pVector V2 = right + nup;
+	pVector V3 = nup - right;
+
+	//cerr << "x " << view.x << " " << view.y << " " << view.z << endl;
+	//cerr << "x " << nup.x << " " << nup.y << " " << nup.z << endl;
+	//cerr << "x " << right.x << " " << right.y << " " << right.z << endl;
+	//cerr << "x " << V0.x << " " << V0.y << " " << V0.z << endl;
+
+	glBegin(GL_QUADS);
+	
+	for(int i = 0; i < cnt; i++)
+	{
+		pVector &p = ppos[i];
+		
+		if(!const_color)
+			glColor4fv((GLfloat *)&color[i*4]);
+
+		pVector sV0 = V0;
+		pVector sV1 = V1;
+		pVector sV2 = V2;
+		pVector sV3 = V3;
+
+		if(!const_size)
+		  {
+		    sV0 *= size[i].x;
+		    sV1 *= size[i].x;
+		    sV2 *= size[i].x;
+		    sV3 *= size[i].x;
+		  }
+
+		if(draw_tex) glTexCoord2f(0,0);
+		pVector ver = p + sV0;
+		glVertex3fv((GLfloat *)&ver);
+
+		if(draw_tex) glTexCoord2f(1,0);
+		ver = p + sV1;
+		glVertex3fv((GLfloat *)&ver);
+
+		if(draw_tex) glTexCoord2f(1,1);
+		ver = p + sV2;
+		glVertex3fv((GLfloat *)&ver);
+
+		if(draw_tex) glTexCoord2f(0,1);
+		ver = p + sV3;
+		glVertex3fv((GLfloat *)&ver);
+	}
+	
+	glEnd();
+
+	delete [] ppos;
+	if(color) delete [] color;
+	if(size) delete [] size;
+}
 
 // A fountain spraying up in the middle of the screen
 void Fountain(bool do_list = true)
 {
-	if(do_list)
-		action_handle = pGenActionLists(1);
-	
 	pVelocityD(PDCylinder, 0.0, -0.01, 0.35, 0.0, -0.01, 0.37, 0.021, 0.019);
 	pColorD(1.0, PDLine, 0.8, 0.9, 1.0, 1.0, 1.0, 1.0);
 	pSize(1.5);
+
+	static int al = -1;
+	if(al == -1)
+	{
+	  // Just a demo of nested action lists.
+		al = pGenActionLists(1);
+		pNewActionList(al);
+		pSource(150, PDLine, 0.0, 0.0, 0.401, 0.0, 0.0, 0.405);
+		pEndActionList();
+	}
+	
+	if(do_list && action_handle<0)
+		action_handle = pGenActionLists(1);
 	
 	if(do_list)
 		pNewActionList(action_handle);
 		
 	pCopyVertexB(false, true);
 
-	pSource(150, PDLine, 0.0, 0.0, 0.401, 0.0, 0.0, 0.405);
-	
+	// pSource(150, PDLine, 0.0, 0.0, 0.401, 0.0, 0.0, 0.405);
+	pCallActionList(al);
+
 	pGravity(0.0, 0.0, -0.01);
 	
-	pKillSlow(0.01);
+	pSinkVelocity(true, PDSphere, 0, 0, 0, 0.01);
 	
-	pBounce(-0.05, 0.35, 0, PDPlane, -5, -5, 0.0, 10, 0, 0, 0, 10, 0);
+	pBounce(-0.05, 0.35, 0, PDDisc, 0, 0, 0,  0, 0, 1,  5);
 	
-	pSink(false, PDPlane, 0, 0, -3, 1, 0, 0, 0, 1, 0);
+	pSink(false, PDPlane, 0,0,-3, 0,0,1);
 	
 	pMove();
 	
@@ -67,7 +300,7 @@ void Fountain(bool do_list = true)
 // A waterfall pouring down from above
 void Waterfall(bool do_list = true)
 {
-	if(do_list)
+	if(do_list && action_handle<0)
 		action_handle = pGenActionLists(1);
 	
 	pVelocityD(PDBlob, 0.03, -0.001, 0.01, 0.002);
@@ -85,14 +318,14 @@ void Waterfall(bool do_list = true)
 	
 	pKillOld(300);
 	
-	pBounce(0, 0.35, 0, PDPlane, -7, -4, 7, 3, 0, 0, 0, 3, 0);
+	pBounce(0, 0.35, 0, PDRectangle, -7, -4, 7, 3, 0, 0, 0, 3, 0);
 	
 	pBounce(0, 0.5, 0, PDSphere, -4, -2, 4, 0.2);
 	
 	pBounce(0, 0.5, 0, PDSphere, -3.5, 0, 2, 2);
 	
 	pBounce(0, 0.5, 0, PDSphere, 3.8, 0, 0, 2);
-	pBounce(-0.01, 0.35, 0, PDPlane, -25, -25, 0.0, 50, 0, 0, 0, 50, 0);
+	pBounce(-0.01, 0.35, 0, PDPlane, 0,0,0, 0,0,1);
 	
 	pSink(false, PDSphere, 0,0,0,20);
 	
@@ -109,7 +342,7 @@ void Restore(bool do_list = true)
 	static float i = 0;
 	if(do_list)
 	{
-		action_handle = pGenActionLists(1);
+		if(action_handle<0) action_handle = pGenActionLists(1);
 		pNewActionList(action_handle);
 		i = 200;
 	}
@@ -135,7 +368,7 @@ void Shape(bool do_list = true)
 		int dim = int(pow(float(maxParticles), 0.33333333));
 #define XX 8
 #define YY 12
-#define ZZ 8
+#define ZZ 9
 		
 		float dx = 2*XX / float(dim);
 		float dy = 2*YY / float(dim);
@@ -159,7 +392,7 @@ void Shape(bool do_list = true)
 			}
 		}
 		
-		action_handle = pGenActionLists(1);
+		if(action_handle<0) action_handle = pGenActionLists(1);
 		pNewActionList(action_handle);
 		pEndActionList();
 	}
@@ -168,7 +401,7 @@ void Shape(bool do_list = true)
 // A fountain spraying up in the middle of the screen
 void Atom(bool do_list = true)
 {
-	if(do_list)
+	if(do_list && action_handle<0)
 		action_handle = pGenActionLists(1);
 	
 	pVelocityD(PDSphere, 0, 0, 0, 0.2);
@@ -197,10 +430,10 @@ void Atom(bool do_list = true)
 
 void JetSpray(bool do_list = true)
 {
-	if(do_list)
+	if(do_list && action_handle<0)
 		action_handle = pGenActionLists(1);
 	
-	pVelocity(0, 0, 0);
+	pVelocityD(PDBlob, 0, 0, 0, 0.01);
 	pSize(1.5);
 	
 	if(do_list)
@@ -209,10 +442,10 @@ void JetSpray(bool do_list = true)
 	pCopyVertexB(false, true);
 
 	pColorD(1.0, PDSphere, .8, .4, .1, .1);
-	pSource(1, PDPlane, -1, -1, 0.1, 2, 0, 0, 0, 2, 0);
+	pSource(1, PDRectangle, -1, -1, 0.1, 2, 0, 0, 0, 2, 0);
 	
 	pColorD(1.0, PDSphere, .5, .4, .1, .1);
-	pSource(300, PDPlane, -10, -10, 0.1, 20, 0, 0, 0, 20, 0);
+	pSource(300, PDRectangle, -10, -10, 0.1, 20, 0, 0, 0, 20, 0);
 	
 	pGravity(0, 0, -0.01);
 	
@@ -237,9 +470,9 @@ void JetSpray(bool do_list = true)
 	pVelocityD(PDBlob, 0,0,.05, 0.01);
 	pJet(jetx, jety, jetz, 1, 0.01, 1.5);
 	
-	pBounce(0.3, 0.3, 0, PDPlane, -10, -10, 0.0, 20, 0, 0, 0, 20, 0);
+	pBounce(0.1, 0.3, 0.1, PDRectangle, -10, -10, 0.0, 20, 0, 0, 0, 20, 0);
 	
-	pSink(false, PDPlane, -10, -10, -20.0, 20, 0, 0, 0, 20, 0);
+	pSink(false, PDPlane, 0,0,-20, 0,0,1);
 	
 	pMove();
 	
@@ -247,9 +480,57 @@ void JetSpray(bool do_list = true)
 		pEndActionList();
 }
 
+void Rain(bool do_list = true)
+{
+	if(do_list && action_handle<0)
+		action_handle = pGenActionLists(1);
+
+	pVelocity(0, 0, 0);
+	pSize(1.5);
+	
+	if(do_list)
+		pNewActionList(action_handle);
+		
+	pCopyVertexB(false, true);
+
+	pColorD(1.0, PDSphere, 0.4, 0.4, 0.9, .1);
+	pSource(100, PDRectangle, -10, -10, 12, 20, 0, 0, 0, 20, 0);
+	
+	// pGravity(-0.002, 0.001, -0.01);
+	
+	pRandomAccel(PDBlob, 0, 0, -0.01, 0.003);
+
+	static float jetx=0, jety=0, jetz=0;
+	static float djx = drand48() * 0.5;
+	static float djy = drand48() * 0.5;
+	
+	if(do_list)
+	{
+		jetx = 0;
+		jety = 0;
+		djx = drand48() * 0.5;
+		djy = drand48() * 0.5;
+	}
+	
+	jetx += djx;
+	jety += djy;
+	
+	if(jetx > 10 || jetx < -10) {djx = -djx; djy += drand48() * 0.005;}
+	if(jety > 10 || jety < -10) {djy = -djy; djx += drand48() * 0.005;}
+	
+	pBounce(0.3, 0.3, 0, PDPlane, 0,0,0, 0,0,1);
+	
+	pKillOld(100);
+	
+	pMove();
+
+	if(do_list)
+		pEndActionList();
+}
+
 void Explosion(bool do_list = true)
 {
-	if(do_list)
+	if(do_list && action_handle<0)
 		action_handle = pGenActionLists(1);
 	
 	pVelocityD(PDSphere, 0,0,0,0.01,0.01);
@@ -282,7 +563,7 @@ void Explosion(bool do_list = true)
 
 void Swirl(bool do_list = true)
 {
-	if(do_list)
+	if(do_list && action_handle<0)
 		action_handle = pGenActionLists(1);
 	
 	pVelocityD(PDBlob, 0.02, -0.2, 0, 0.015);
@@ -328,9 +609,9 @@ void Swirl(bool do_list = true)
 
 void Chaos(bool do_list = true)
 {
-	if(do_list)
+	if(do_list && action_handle<0)
 		action_handle = pGenActionLists(1);
-	
+
 	pVelocityD(PDBlob, 0.02, -0.2, 0, 0.015);
 	pSize(1.0);
 	
@@ -357,7 +638,7 @@ void Chaos(bool do_list = true)
 
 	pKillOld(LifeTime);
 	
-	pColorD(1.0, PDSphere, 0.4+fabs(jetx*0.1), 0.4+fabs(jety*0.1), 0.4+fabs(jetz*0.1), 0.1);
+	pColorD(1, PDSphere, 0.4+fabs(jetx*0.1), 0.4+fabs(jety*0.1), 0.4+fabs(jetz*0.1), 0.1);
 	pSource(maxParticles / LifeTime, PDPoint, jetx, jety, jetz);
 	
 	pOrbitPoint(2, 0, 3, 0.1, 0.1, 99);
@@ -378,7 +659,7 @@ void Snake(bool do_list = true)
 {
 	if(do_list)
 	{
-		action_handle = pGenActionLists(1);
+		if(action_handle<0) action_handle = pGenActionLists(1);
 		
 		pVelocity(0, 0, 0);
 		pSize(1.0);
@@ -427,7 +708,7 @@ void Snake(bool do_list = true)
 // A fountain spraying up in the middle of the screen
 void FireFlies(bool do_list = true)
 {
-	if(do_list)
+	if(do_list && action_handle<0)
 		action_handle = pGenActionLists(1);
 	
 	pSize(1.0);
@@ -458,7 +739,7 @@ void CallDemo(bool initial)
 		pCallActionList(action_handle);
 		return;
 	}
-	
+
 	switch(demoNum)
 	{
 	case 0:
@@ -494,6 +775,9 @@ void CallDemo(bool initial)
 	case 10:
 		Chaos(initial);
 		break;
+	case 11:
+		Rain(initial);
+		break;
 	default:
 		cerr << "Bad demo number!\n";
 		break;
@@ -504,6 +788,9 @@ void Draw()
 {
 	glLoadIdentity();
 	
+	if(SpotTexID < 0)
+		MakeGaussianSpotTexture();
+
 	if(MotionBlur)
 	{
 		glMatrixMode(GL_PROJECTION);
@@ -513,7 +800,8 @@ void Draw()
 		glDrawBuffer(GL_FRONT);
 		
 		// glEnable(GL_BLEND);
-		
+		BlurRate = 1;
+
 		glColor4f(0, 0, 0, BlurRate);
 		glRectf(-1, -1, 1, 1);
 #ifdef DEPTH_TEST
@@ -534,8 +822,8 @@ void Draw()
 #endif
 	}
 	
-	static double t = -23.0;
-	static double dt = -0.05;
+	static float t = -23.0;
+	static float dt = -0.05;
 	if(DoMotion)
 		t += dt;
 	if(t < -25.0 || t > -10.0) dt = -dt;
@@ -568,9 +856,21 @@ void Draw()
 	
 	if(prim < 0)
 		pDrawGroupl(listID);
-	else
+	else if(prim < 0x100)
 		pDrawGroupp(prim);
+	else
+	{
+		pVector view = pVector(0, 0, 0) - pVector(0, t, 10);
+		view.normalize();
+		pVector up(0, 0, 1);
+		if(prim == 0x100)
+		  DrawGroupTriSplat(view, up, 0.16, true);
+		else
+		  DrawGroupQuadSplat(view, up, 0.16, true);
+	}
 	
+	GL_ASSERT();
+
 	if(doubleBuffer && !MotionBlur)
 		glutSwapBuffers();
 }
@@ -1086,12 +1386,16 @@ menu(int item)
 		demoNum = 8;
 		CallDemo(true);
 		break;
+	case 'N':
+		demoNum = 9;
+		CallDemo(true);
+		break;
 	case 'C':
 		demoNum = 10;
 		CallDemo(true);
 		break;
-	case 'N':
-		demoNum = 9;
+	case 'H':
+		demoNum = 11;
 		CallDemo(true);
 		break;
 	case 'i':
@@ -1104,11 +1408,26 @@ menu(int item)
 		if(!MotionBlur)
 			glDrawBuffer(GL_BACK);
 		break;
+	case 's':
+		AntiAlias = !AntiAlias;
+		if(AntiAlias)
+		{
+			glEnable(GL_LINE_SMOOTH);
+			glEnable(GL_POINT_SMOOTH);
+		}
+		else
+		{
+			glDisable(GL_LINE_SMOOTH);
+			glDisable(GL_POINT_SMOOTH);
+		}
+		break;
 	case 'c':
 		DoMotion = !DoMotion;
 		break;
 	case 'd':
 		prim = -1;
+		glDisable(GL_TEXTURE_2D);
+
 		if(listID < 0)
 		{
 			listID = glGenLists(1);
@@ -1124,6 +1443,32 @@ menu(int item)
 #endif
 		}
 		break;
+	case 'w':
+		{
+			static int kk = 0;
+			kk++;
+			if(kk>3)kk=0;
+			switch(kk)
+			{
+			case 0:
+				glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+				cerr << "REPLACE\n";
+				break;
+			case 1:
+				glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+				cerr << "MODULATE\n";
+				break;
+			case 2:
+				glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+				cerr << "DECAL\n";
+				break;
+			case 3:
+				glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_BLEND);
+				cerr << "BLEND\n";
+				break;
+			}
+			break;
+		}
 	case 'f':
 		FullScreen = !FullScreen;
 		if(FullScreen)
@@ -1141,15 +1486,25 @@ menu(int item)
 		break;
 	case 'p':
 		prim = GL_POINTS;
+		glDisable(GL_TEXTURE_2D);
 		break;
 	case 'l':
 		prim = GL_LINES;
+		glDisable(GL_TEXTURE_2D);
+		break;
+	case 'o':
+		prim = 0x0100;
+		glEnable(GL_TEXTURE_2D);
+		break;
+	case 'k':
+		prim = 0x0101;
+		glEnable(GL_TEXTURE_2D);
 		break;
 	case 'g':
 		drawGround = !drawGround;
 		break;
 	case 'z':
-		pKillSlow(0.001);
+		pSinkVelocity(true, PDSphere, 0, 0, 0, 0.01);
 		break;
 	case 'x':
 		FreezeParticles = !FreezeParticles;
@@ -1232,6 +1587,10 @@ int main(int argc, char **argv)
 {
 	srand48( (unsigned)time( NULL ) );
 
+	do {
+	  demoNum = lrand48() % 12;
+	} while(demoNum == 3 || demoNum == 7);
+
 	glutInit(&argc, argv);
 	Args(argc, argv);
 	
@@ -1253,8 +1612,8 @@ int main(int argc, char **argv)
 	glutCreateMenu(menu);
 	glutAddMenuEntry("h: Help on Interface", 'h');
 	glutAddMenuEntry("1: 1 step per frame", '1');
-	glutAddMenuEntry("2: 1 step per frame", '2');
-	glutAddMenuEntry("3: 1 step per frame", '3');
+	glutAddMenuEntry("2: 2 steps per frame", '2');
+	glutAddMenuEntry("3: 3 steps ...", '3');
 	glutAddMenuEntry("F: Fountain", 'F');
 	glutAddMenuEntry("A: Atom", 'A');
 	glutAddMenuEntry("J: JetSpray", 'J');
@@ -1265,10 +1624,14 @@ int main(int argc, char **argv)
 	glutAddMenuEntry("C: Chaos", 'C');
 	glutAddMenuEntry("R: Restore", 'R');
 	glutAddMenuEntry("N: Snake", 'N');
+	glutAddMenuEntry("H: Rain", 'H');
 	glutAddMenuEntry(" : Explosion", ' ');
 	glutAddMenuEntry("g: Draw ground", 'g');
+	glutAddMenuEntry("s: Toggle antialiasing", 's');
 	glutAddMenuEntry("p: Use GL_POINTS", 'p');
 	glutAddMenuEntry("l: Use GL_LINES", 'l');
+	glutAddMenuEntry("o: Use textured quad", 'o');
+	glutAddMenuEntry("k: Use textured tri", 'k');
 	glutAddMenuEntry("m: Toggle motion blur", 'm');
 	glutAddMenuEntry("c: Toggle camera motion", 'c');
 	glutAddMenuEntry("i: Toggle immed mode", 'i');
@@ -1297,7 +1660,11 @@ int main(int argc, char **argv)
 	
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	// glEnable(GL_ALPHA_TEST);
+	// glAlphaFunc(GL_GREATER, 0.5);
+
 	glClearColor(0.0, 0.0, 0.0, 0.0);
+	// glClearColor(0.5, 0.0, 1.0, 0.0);
 	
 	// Make a particle group
 	particle_handle = pGenParticleGroups(1, maxParticles);
