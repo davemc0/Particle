@@ -1,6 +1,6 @@
 // papi.h
 //
-// Copyright 1997-1998 by David K. McAllister
+// Copyright 1997-2005 by David K. McAllister
 // http://www.cs.unc.edu/~davemc/Particle
 //
 // Include this file in all applications that use the Particle System API.
@@ -11,9 +11,11 @@
 #include <stdlib.h>
 
 // This is the major and minor version number of this release of the API.
-#define P_VERSION 120
+#define P_VERSION 150
 
 #ifdef WIN32
+// Define PARTICLE_MAKE_DLL in the project file to make the DLL.
+#ifdef PARTICLE_MAKE_DLL
 #include <windows.h>
 
 #ifdef PARTICLEDLL_EXPORTS
@@ -22,6 +24,9 @@
 #define PARTICLEDLL_API __declspec(dllimport)
 #endif
 
+#else
+#define PARTICLEDLL_API
+#endif
 #else
 #define PARTICLEDLL_API
 #endif
@@ -41,17 +46,17 @@
 // Type codes for domains
 PARTICLEDLL_API enum PDomainEnum
 {
-	PDPoint = 0, // Single point
-	PDLine = 1, // Line segment
-	PDTriangle = 2, // Triangle
-	PDPlane = 3, // Arbitrarily-oriented plane
-	PDBox = 4, // Axis-aligned box
-	PDSphere = 5, // Sphere
-	PDCylinder = 6, // Cylinder
-	PDCone = 7, // Cone
-	PDBlob = 8, // Gaussian blob
-	PDDisc = 9, // Arbitrarily-oriented disc
-	PDRectangle = 10 // Rhombus-shaped planar region
+	PDPoint = 1, // Single point
+	PDLine = 2, // Line segment
+	PDTriangle = 3, // Triangle
+	PDPlane = 4, // Arbitrarily-oriented plane
+	PDBox = 5, // Axis-aligned box
+	PDSphere = 6, // Sphere
+	PDCylinder = 7, // Cylinder
+	PDCone = 8, // Cone
+	PDBlob = 9, // Gaussian blob
+	PDDisc = 10, // Arbitrarily-oriented disc
+	PDRectangle = 11 // Rhombus-shaped planar region
 };
 
 // State setting calls
@@ -63,16 +68,27 @@ PARTICLEDLL_API void pColorD(float alpha, PDomainEnum dtype,
 							 float a3 = 0.0f, float a4 = 0.0f, float a5 = 0.0f,
 							 float a6 = 0.0f, float a7 = 0.0f, float a8 = 0.0f);
 
+PARTICLEDLL_API void pAlphaD(float minAlpha, float maxAlpha);
+
 PARTICLEDLL_API void pSize(float size_x, float size_y = 1.0f, float size_z = 1.0f);
 
 PARTICLEDLL_API void pSizeD(PDomainEnum dtype,
-						  float a0 = 0.0f, float a1 = 0.0f, float a2 = 0.0f,
-						  float a3 = 0.0f, float a4 = 0.0f, float a5 = 0.0f,
-						  float a6 = 0.0f, float a7 = 0.0f, float a8 = 0.0f);
+							float a0 = 0.0f, float a1 = 0.0f, float a2 = 0.0f,
+							float a3 = 0.0f, float a4 = 0.0f, float a5 = 0.0f,
+							float a6 = 0.0f, float a7 = 0.0f, float a8 = 0.0f);
+
+PARTICLEDLL_API void pMass(float mass);
 
 PARTICLEDLL_API void pStartingAge(float age, float sigma = 1.0f);
 
 PARTICLEDLL_API void pTimeStep(float new_dt);
+
+PARTICLEDLL_API void pUpVector(float x, float y, float z);
+
+PARTICLEDLL_API void pUpVectorD(PDomainEnum dtype,
+								float a0 = 0.0f, float a1 = 0.0f, float a2 = 0.0f,
+								float a3 = 0.0f, float a4 = 0.0f, float a5 = 0.0f,
+								float a6 = 0.0f, float a7 = 0.0f, float a8 = 0.0f);
 
 PARTICLEDLL_API void pVelocity(float x, float y, float z);
 
@@ -81,12 +97,19 @@ PARTICLEDLL_API void pVelocityD(PDomainEnum dtype,
 								float a3 = 0.0f, float a4 = 0.0f, float a5 = 0.0f,
 								float a6 = 0.0f, float a7 = 0.0f, float a8 = 0.0f);
 
+PARTICLEDLL_API void pRotVelocity(float x, float y, float z);
+
+PARTICLEDLL_API void pRotVelocityD(PDomainEnum dtype,
+								   float a0 = 0.0f, float a1 = 0.0f, float a2 = 0.0f,
+								   float a3 = 0.0f, float a4 = 0.0f, float a5 = 0.0f,
+								   float a6 = 0.0f, float a7 = 0.0f, float a8 = 0.0f);
+
 PARTICLEDLL_API void pVertexB(float x, float y, float z);
 
 PARTICLEDLL_API void pVertexBD(PDomainEnum dtype,
-							  float a0 = 0.0f, float a1 = 0.0f, float a2 = 0.0f,
-							  float a3 = 0.0f, float a4 = 0.0f, float a5 = 0.0f,
-							  float a6 = 0.0f, float a7 = 0.0f, float a8 = 0.0f);
+							   float a0 = 0.0f, float a1 = 0.0f, float a2 = 0.0f,
+							   float a3 = 0.0f, float a4 = 0.0f, float a5 = 0.0f,
+							   float a6 = 0.0f, float a7 = 0.0f, float a8 = 0.0f);
 
 PARTICLEDLL_API void pVertexBTracks(bool track_vertex = true);
 
@@ -106,35 +129,35 @@ PARTICLEDLL_API void pNewActionList(int action_list_num);
 
 // Particle Group Calls
 
-PARTICLEDLL_API void pCopyGroup(int p_src_group_num, int index = 0, int copy_count = P_MAXINT);
+PARTICLEDLL_API void pCopyGroup(int p_src_group_num, size_t index = 0, size_t copy_count = P_MAXINT);
 
 PARTICLEDLL_API void pCurrentGroup(int p_group_num);
 
 PARTICLEDLL_API void pDeleteParticleGroups(int p_group_num, int p_group_count = 1);
 
-PARTICLEDLL_API void pDrawGroupl(int dlist, bool const_size = false,
-								 bool const_color = false, bool const_rotation = false);
+PARTICLEDLL_API int pGenParticleGroups(int p_group_count = 1, size_t max_particles = 0);
 
-PARTICLEDLL_API void pDrawGroupp(int primitive, bool const_size = false,
-								 bool const_color = false);
+PARTICLEDLL_API size_t pGetGroupCount();
 
-PARTICLEDLL_API int pGenParticleGroups(int p_group_count = 1, int max_particles = 0);
+PARTICLEDLL_API size_t pGetParticles(size_t index, size_t count, float *position = NULL, float *color = NULL,
+									 float *vel = NULL, float *size = NULL, float *age = NULL);
 
-PARTICLEDLL_API int pGetGroupCount();
+PARTICLEDLL_API size_t pGetParticlePointer(float *&ptr, size_t &stride, size_t &pos3Ofs, size_t &posB3Ofs,
+										   size_t &size3Ofs, size_t &vel3Ofs, size_t &velB3Ofs,
+										   size_t &color3Ofs, size_t &alpha1Ofs, size_t &age1Ofs);
 
-PARTICLEDLL_API int pGetParticles(int index, int count, float *position = NULL, float *color = NULL,
-								  float *vel = NULL, float *size = NULL, float *age = NULL);
+PARTICLEDLL_API size_t pSetMaxParticles(size_t max_count);
 
-PARTICLEDLL_API int pSetMaxParticles(int max_count);
+PARTICLEDLL_API size_t pGetMaxParticles();
 
 
 // Actions
 
 PARTICLEDLL_API void pAvoid(float magnitude, float epsilon, float look_ahead, 
-							 PDomainEnum dtype,
-							 float a0 = 0.0f, float a1 = 0.0f, float a2 = 0.0f,
-							 float a3 = 0.0f, float a4 = 0.0f, float a5 = 0.0f,
-							 float a6 = 0.0f, float a7 = 0.0f, float a8 = 0.0f);
+							PDomainEnum dtype,
+							float a0 = 0.0f, float a1 = 0.0f, float a2 = 0.0f,
+							float a3 = 0.0f, float a4 = 0.0f, float a5 = 0.0f,
+							float a6 = 0.0f, float a7 = 0.0f, float a8 = 0.0f);
 
 PARTICLEDLL_API void pBounce(float friction, float resilience, float cutoff,
 							 PDomainEnum dtype,
@@ -145,39 +168,47 @@ PARTICLEDLL_API void pBounce(float friction, float resilience, float cutoff,
 PARTICLEDLL_API void pCopyVertexB(bool copy_pos = true, bool copy_vel = false);
 
 PARTICLEDLL_API void pDamping(float damping_x, float damping_y, float damping_z,
-							 float vlow = 0.0f, float vhigh = P_MAXFLOAT);
+							  float vlow = 0.0f, float vhigh = P_MAXFLOAT);
+
+PARTICLEDLL_API void pRotDamping(float damping_x, float damping_y, float damping_z,
+								 float vlow = 0.0f, float vhigh = P_MAXFLOAT);
 
 PARTICLEDLL_API void pExplosion(float center_x, float center_y, float center_z, float velocity,
-				float magnitude, float stdev, float epsilon = P_EPS, float age = 0.0f);
+								float magnitude, float stdev, float epsilon = P_EPS, float age = 0.0f);
 
 PARTICLEDLL_API void pFollow(float magnitude = 1.0f, float epsilon = P_EPS, float max_radius = P_MAXFLOAT);
+
+PARTICLEDLL_API void pFountain();
 
 PARTICLEDLL_API void pGravitate(float magnitude = 1.0f, float epsilon = P_EPS, float max_radius = P_MAXFLOAT);
 
 PARTICLEDLL_API void pGravity(float dir_x, float dir_y, float dir_z);
 
 PARTICLEDLL_API void pJet(float center_x, float center_y, float center_z, float magnitude = 1.0f,
-						 float epsilon = P_EPS, float max_radius = P_MAXFLOAT);
+						  float epsilon = P_EPS, float max_radius = P_MAXFLOAT);
 
 PARTICLEDLL_API void pKillOld(float age_limit, bool kill_less_than = false);
 
 PARTICLEDLL_API void pMatchVelocity(float magnitude = 1.0f, float epsilon = P_EPS,
 									float max_radius = P_MAXFLOAT);
 
+PARTICLEDLL_API void pMatchRotVelocity(float magnitude = 1.0f, float epsilon = P_EPS,
+									   float max_radius = P_MAXFLOAT);
+
 PARTICLEDLL_API void pMove();
 
 PARTICLEDLL_API void pOrbitLine(float p_x, float p_y, float p_z,
-							float axis_x, float axis_y, float axis_z, float magnitude = 1.0f,
-							float epsilon = P_EPS, float max_radius = P_MAXFLOAT);
+								float axis_x, float axis_y, float axis_z, float magnitude = 1.0f,
+								float epsilon = P_EPS, float max_radius = P_MAXFLOAT);
 
 PARTICLEDLL_API void pOrbitPoint(float center_x, float center_y, float center_z,
-							 float magnitude = 1.0f, float epsilon = P_EPS,
-							 float max_radius = P_MAXFLOAT);
+								 float magnitude = 1.0f, float epsilon = P_EPS,
+								 float max_radius = P_MAXFLOAT);
 
 PARTICLEDLL_API void pRandomAccel(PDomainEnum dtype,
-								 float a0 = 0.0f, float a1 = 0.0f, float a2 = 0.0f,
-								 float a3 = 0.0f, float a4 = 0.0f, float a5 = 0.0f,
-								 float a6 = 0.0f, float a7 = 0.0f, float a8 = 0.0f);
+								  float a0 = 0.0f, float a1 = 0.0f, float a2 = 0.0f,
+								  float a3 = 0.0f, float a4 = 0.0f, float a5 = 0.0f,
+								  float a6 = 0.0f, float a7 = 0.0f, float a8 = 0.0f);
 
 PARTICLEDLL_API void pRandomDisplace(PDomainEnum dtype,
 									 float a0 = 0.0f, float a1 = 0.0f, float a2 = 0.0f,
@@ -189,20 +220,28 @@ PARTICLEDLL_API void pRandomVelocity(PDomainEnum dtype,
 									 float a3 = 0.0f, float a4 = 0.0f, float a5 = 0.0f,
 									 float a6 = 0.0f, float a7 = 0.0f, float a8 = 0.0f);
 
-PARTICLEDLL_API void pRestore(float time);
+PARTICLEDLL_API void pRandomRotVelocity(PDomainEnum dtype,
+										float a0 = 0.0f, float a1 = 0.0f, float a2 = 0.0f,
+										float a3 = 0.0f, float a4 = 0.0f, float a5 = 0.0f,
+										float a6 = 0.0f, float a7 = 0.0f, float a8 = 0.0f);
+
+PARTICLEDLL_API void pRestore(float time, bool vel = true, bool rvel = true);
 
 PARTICLEDLL_API void pShade(float color_x, float color_y, float color_z,
 							float alpha, float scale);
 
 PARTICLEDLL_API void pSink(bool kill_inside, PDomainEnum dtype,
-						  float a0 = 0.0f, float a1 = 0.0f, float a2 = 0.0f,
-						  float a3 = 0.0f, float a4 = 0.0f, float a5 = 0.0f,
-						  float a6 = 0.0f, float a7 = 0.0f, float a8 = 0.0f);
+						   float a0 = 0.0f, float a1 = 0.0f, float a2 = 0.0f,
+						   float a3 = 0.0f, float a4 = 0.0f, float a5 = 0.0f,
+						   float a6 = 0.0f, float a7 = 0.0f, float a8 = 0.0f);
 
 PARTICLEDLL_API void pSinkVelocity(bool kill_inside, PDomainEnum dtype,
-								  float a0 = 0.0f, float a1 = 0.0f, float a2 = 0.0f,
-								  float a3 = 0.0f, float a4 = 0.0f, float a5 = 0.0f,
-								  float a6 = 0.0f, float a7 = 0.0f, float a8 = 0.0f);
+								   float a0 = 0.0f, float a1 = 0.0f, float a2 = 0.0f,
+								   float a3 = 0.0f, float a4 = 0.0f, float a5 = 0.0f,
+								   float a6 = 0.0f, float a7 = 0.0f, float a8 = 0.0f);
+
+PARTICLEDLL_API void pSort(float eye_x, float eye_y, float eye_z,
+						   float look_x, float look_y, float look_z);
 
 PARTICLEDLL_API void pSource(float particle_rate, PDomainEnum dtype,
 							 float a0 = 0.0f, float a1 = 0.0f, float a2 = 0.0f,
@@ -212,18 +251,31 @@ PARTICLEDLL_API void pSource(float particle_rate, PDomainEnum dtype,
 PARTICLEDLL_API void pSpeedLimit(float min_speed, float max_speed = P_MAXFLOAT);
 
 PARTICLEDLL_API void pTargetColor(float color_x, float color_y, float color_z,
-								 float alpha, float scale);
+								  float alpha, float scale);
 
 PARTICLEDLL_API void pTargetSize(float size_x, float size_y, float size_z,
 								 float scale_x = 0.0f, float scale_y = 0.0f, float scale_z = 0.0f);
 
 PARTICLEDLL_API void pTargetVelocity(float vel_x, float vel_y, float vel_z, float scale);
 
-PARTICLEDLL_API void pVertex(float x, float y, float z);
+PARTICLEDLL_API void pTargetRotVelocity(float vel_x, float vel_y, float vel_z, float scale);
+
+PARTICLEDLL_API void pVertex(float x, float y, float z, long data = 0);
 
 PARTICLEDLL_API void pVortex(float center_x, float center_y, float center_z,
 							 float axis_x, float axis_y, float axis_z,
-							 float magnitude = 1.0f, float epsilon = P_EPS,
+							 float magnitude = 1.0f, float tightnessExponent = 1.0f,
+							 float rotSpeed = 1.0f, float epsilon = P_EPS,
 							 float max_radius = P_MAXFLOAT);
+
+typedef void (*P_PARTICLE_CALLBACK)(struct Particle &particle, void *data);
+
+PARTICLEDLL_API void pBirthCallback(P_PARTICLE_CALLBACK callback, void *data = NULL);
+PARTICLEDLL_API void pDeathCallback(P_PARTICLE_CALLBACK callback, void *data = NULL);
+
+PARTICLEDLL_API void pSort();
+
+PARTICLEDLL_API void pReset();
+PARTICLEDLL_API void pSeed(unsigned int seed);
 
 #endif

@@ -20,6 +20,8 @@ LIBSG =$(LIBDIR) -lparticle -lglut -lGL -lGLU -lXmu -lX11 -lXext -lm
 
 LDFLAGS =-IPA
 
+OBJS = PSpray.o DrawGroups.o Effects.o Monarch.o
+
 ALL = pspray
 
 all: $(ALL)
@@ -30,8 +32,8 @@ all: $(ALL)
 .cpp.o:
 	$(C++) $(CFLAGS) -c $<
 
-pspray: PSpray.o
-	$(C++) $(LDFLAGS) -o $@ PSpray.o $(LIBSG)
+pspray: $(OBJS)
+	$(C++) $(LDFLAGS) -o $@ $(OBJS) $(LIBSG)
 
 clean:
 	rm -f $(ALL)

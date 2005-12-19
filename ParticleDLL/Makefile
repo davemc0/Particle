@@ -17,7 +17,7 @@ COPT = $(MP) -ptused -O3 $(LNO) -Ofast=IP27
 
 CFLAGS = $(COPT) $(COMPFLAGS) -I. -I.. -I$(GLUT_HOME)/include
 
-POBJS =action_api.o actions.o opengl.o system.o
+POBJS =action_api.o actions.o other_api.o pDomain.o system.o
 
 ALL = libparticleMP.a SPDir
 

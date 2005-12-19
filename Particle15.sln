@@ -1,0 +1,39 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ParticleDLL", "ParticleDLL\ParticleDLL.vcproj", "{D21031F9-9E74-454F-9DA0-AB7A34424C16}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PSpray", "PSpray\PSpray.vcproj", "{195ECABA-C793-47BD-A32B-6E5E781CBF5B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D21031F9-9E74-454F-9DA0-AB7A34424C16} = {D21031F9-9E74-454F-9DA0-AB7A34424C16}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ParTest", "ParTest\ParTest.vcproj", "{253610B8-1F09-463B-A305-F243ABE4626C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D21031F9-9E74-454F-9DA0-AB7A34424C16} = {D21031F9-9E74-454F-9DA0-AB7A34424C16}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{D21031F9-9E74-454F-9DA0-AB7A34424C16}.Debug.ActiveCfg = Debug|Win32
+		{D21031F9-9E74-454F-9DA0-AB7A34424C16}.Debug.Build.0 = Debug|Win32
+		{D21031F9-9E74-454F-9DA0-AB7A34424C16}.Release.ActiveCfg = Release|Win32
+		{D21031F9-9E74-454F-9DA0-AB7A34424C16}.Release.Build.0 = Release|Win32
+		{195ECABA-C793-47BD-A32B-6E5E781CBF5B}.Debug.ActiveCfg = Debug|Win32
+		{195ECABA-C793-47BD-A32B-6E5E781CBF5B}.Debug.Build.0 = Debug|Win32
+		{195ECABA-C793-47BD-A32B-6E5E781CBF5B}.Release.ActiveCfg = Release|Win32
+		{195ECABA-C793-47BD-A32B-6E5E781CBF5B}.Release.Build.0 = Release|Win32
+		{253610B8-1F09-463B-A305-F243ABE4626C}.Debug.ActiveCfg = Debug|Win32
+		{253610B8-1F09-463B-A305-F243ABE4626C}.Debug.Build.0 = Debug|Win32
+		{253610B8-1F09-463B-A305-F243ABE4626C}.Release.ActiveCfg = Release|Win32
+		{253610B8-1F09-463B-A305-F243ABE4626C}.Release.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal
