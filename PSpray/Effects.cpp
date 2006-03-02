@@ -1,6 +1,9 @@
+
 #include "Effects.h"
+
 #include <particle/papi.h>
-#include <particle/pVector.h>
+
+#include <Image/ImageAlgorithms.h>
 
 // This is for drawing the obstacles for Shower().
 #include <GL/glut.h>
@@ -20,6 +23,8 @@ ParticleEffects::ParticleEffects(int mp)
 	particle_handle = -1;
 	action_handle = pGenActionLists(1);
 	EffectName = "NoEffect";
+    Img = NULL;
+    GravityVec = pVec(0.0f, 0.0f, -0.01f);
 }
 
 int ParticleEffects::CallDemo(int DemoNum, bool FirstTime, bool Immediate)
@@ -34,22 +39,22 @@ int ParticleEffects::CallDemo(int DemoNum, bool FirstTime, bool Immediate)
 	case  1: Balloons(FirstTime); break;
 	case  2: Fireflies(FirstTime); break;
 	case  3: Fireworks(FirstTime); break;
-	case  4: JetSpray(FirstTime); break;
-	case  5: Fountain(FirstTime); break;
-	case  6: FlameThrower(FirstTime); break;
-	case  7: Rain(FirstTime); break;
-	case  8: ShaftShape(FirstTime); break;
-	case  9: Explosion(FirstTime); break;
-	case 10: GridShape(FirstTime); break;
-	case 11: Orbit2(FirstTime); break;
-	case 12: Restore(FirstTime); break;
-	case 13: Shower(FirstTime, PDSphere); break;
-	case 14: Shower(FirstTime, PDTriangle); break;
-	case 15: Shower(FirstTime, PDRectangle); break;
-	case 16: Swirl(FirstTime); break;
-	case 17: Snake(FirstTime); break;
-	case 18: Waterfall1(FirstTime); break;
-	case 19: Waterfall2(FirstTime); break;
+	case  4: Waterfall2(FirstTime); break;
+	case  5: JetSpray(FirstTime); break;
+	case  6: Fountain(FirstTime); break;
+	case  7: FlameThrower(FirstTime); break;
+	case  8: Rain(FirstTime); break;
+	case  9: GridShape(FirstTime); break;
+	case 10: Explosion(FirstTime); break;
+	case 11: PhotoShape(FirstTime); break;
+	case 12: Orbit2(FirstTime); break;
+	case 13: Restore(FirstTime); break;
+	case 14: Shower(FirstTime, 0); break;
+	case 15: Shower(FirstTime, 1); break;
+	case 16: Shower(FirstTime, 2); break;
+	case 17: Swirl(FirstTime); break;
+	case 18: Snake(FirstTime); break;
+	case 19: Waterfall1(FirstTime); break;
 	case 20: Sphere(FirstTime); break;
 	case 21: Experimental(FirstTime); break;
 	default:
@@ -64,8 +69,8 @@ int ParticleEffects::CallDemo(int DemoNum, bool FirstTime, bool Immediate)
 // Particles orbiting a center
 void ParticleEffects::Atom(bool FirstTime)
 {
-	pVelocityD(PDSphere, 0, 0, 0, 0.2);
-	pColorD(1.0, PDBox, 0, 0, 0, 1.0, 0.5, 0.5);
+	pVelocityD(PDSphere(pVec(0, 0, 0), 0.2));
+	pColorD(PDBox(pVec(0, 0, 0), pVec(1.0, 0.5, 0.5)));
 	pSize(1.5);
 	pStartingAge(0);
 
@@ -74,16 +79,14 @@ void ParticleEffects::Atom(bool FirstTime)
 		pNewActionList(action_handle);
 	}
 
-	pCopyVertexB(false, true);
-
-	pSource(maxParticles / 100, PDSphere, 0, 0, 0, 6);
+	pSource(maxParticles / 100, PDSphere(pVec(0, 0, 0), 6));
 
 	// Orbit about the origin.
-	pOrbitPoint(0, 0, 0, 0.05, 0.5);
+	pOrbitPoint(pVec(0, 0, 0), 0.05, 0.5);
 
 	// Keep orbits from being too eccentric.
-	pSink(true, PDSphere, 0.0, 0.0, 0.0, 1.0);
-	pSink(false, PDSphere, 0.0, 0.0, 0.0, 8.0);
+	pSink(true, PDSphere(pVec(0.0, 0.0, 0.0), 1.0));
+	pSink(false, PDSphere(pVec(0.0, 0.0, 0.0), 8.0));
 
 	pMove();
 
@@ -99,8 +102,6 @@ void ParticleEffects::Balloons(bool FirstTime)
 		pNewActionList(action_handle);
 	}
 
-	pCopyVertexB(false, true);
-
 	float x=0, y=0, z=-1;
 
 	int nPar = (int)pGetGroupCount();
@@ -109,32 +110,32 @@ void ParticleEffects::Balloons(bool FirstTime)
 	float BBOX = 1.7;
 
 	pStartingAge(0, 5);
-	pVelocity(0,0,0);
+	pVelocity(pVec(0));
 	pColor(1,0,0); // These attributes don't get stored in the particle list.
-	pSource(qty, PDBox, x-BBOX, y-BBOX, z-BBOX, x+BBOX, y+BBOX, z+BBOX);
+	pSource(qty, PDBox(pVec(x-BBOX, y-BBOX, z-BBOX), pVec(x+BBOX, y+BBOX, z+BBOX)));
 
 	pColor(1,1,0);
-	pSource(qty, PDBox, x-BBOX, y-BBOX, z-BBOX, x+BBOX, y+BBOX, z+BBOX);
+	pSource(qty, PDBox(pVec(x-BBOX, y-BBOX, z-BBOX), pVec(x+BBOX, y+BBOX, z+BBOX)));
 
 	pColor(0,1,0);
-	pSource(qty, PDBox, x-BBOX, y-BBOX, z-BBOX, x+BBOX, y+BBOX, z+BBOX);
+	pSource(qty, PDBox(pVec(x-BBOX, y-BBOX, z-BBOX), pVec(x+BBOX, y+BBOX, z+BBOX)));
 
 	pColor(0,1,1);
-	pSource(qty, PDBox, x-BBOX, y-BBOX, z-BBOX, x+BBOX, y+BBOX, z+BBOX);
+	pSource(qty, PDBox(pVec(x-BBOX, y-BBOX, z-BBOX), pVec(x+BBOX, y+BBOX, z+BBOX)));
 
 	pColor(0,0,1);
-	pSource(qty, PDBox, x-BBOX, y-BBOX, z-BBOX, x+BBOX, y+BBOX, z+BBOX);
+	pSource(qty, PDBox(pVec(x-BBOX, y-BBOX, z-BBOX), pVec(x+BBOX, y+BBOX, z+BBOX)));
 
 	pColor(1,0,1);
-	pSource(qty, PDBox, x-BBOX, y-BBOX, z-BBOX, x+BBOX, y+BBOX, z+BBOX);
+	pSource(qty, PDBox(pVec(x-BBOX, y-BBOX, z-BBOX), pVec(x+BBOX, y+BBOX, z+BBOX)));
 
-	pGravity(.0005, .005, .0005);
+	pGravity(pVec(.0005, .005, .0005));
 
 	pDamping(0.9, 0.67, 0.9);
 
 	float BOX = .005;
 
-	pRandomAccel(PDBox, -BOX, -BOX, -BOX, BOX, BOX, BOX);
+	pRandomAccel(PDBox(pVec(-BOX, -BOX, -BOX), pVec(BOX, BOX, BOX)));
 	pKillOld(500);
 
 	pMove();
@@ -143,11 +144,11 @@ void ParticleEffects::Balloons(bool FirstTime)
 		pEndActionList();
 }
 
-// An explosion from the center of the universe, followed by gravity
+// An explosion from the center of the universe, followed by gravity toward a point
 void ParticleEffects::Explosion(bool FirstTime)
 {
-	pVelocityD(PDSphere, 0,0,0,0.01,0.01);
-	pColorD(1.0, PDSphere, 0.5, 0.7, 0.5, .3);
+	pVelocityD(PDSphere(pVec(0,0,0), 0.01,0.01));
+	pColorD(PDSphere(pVec(0.5, 0.7, 0.5), .3));
 	pSize(1.0);
 	pStartingAge(0);
 
@@ -158,15 +159,13 @@ void ParticleEffects::Explosion(bool FirstTime)
 		i = 0;
 	}
 
-	pCopyVertexB(false, true);
-
 	pDamping(0.999, 0.999, 0.999);
 
-	pOrbitPoint(0, 0, 0, .02, 0.5);
+	pOrbitPoint(pVec(0, 0, 0), .02, 0.5);
 
-	pExplosion(0, 0, 0, 1, 2, 3, 0.1, i+= (1.0f / float(numSteps)));
+	pExplosion(pVec(0, 0, 0), 1, 2, 3, 0.1, i+= (1.0f / float(numSteps)));
 
-	pSink(false, PDSphere, 0, 0, 0, 30);
+	pSink(false, PDSphere(pVec(0, 0, 0), 30));
 
 	pMove();
 
@@ -177,9 +176,74 @@ void ParticleEffects::Explosion(bool FirstTime)
 // Whatever junk I want to throw in here
 void ParticleEffects::Experimental(bool FirstTime)
 {
+#if 1
+    if(FirstTime) {
+		EffectName = "BounceToy";
+		pNewActionList(action_handle);
+	}
+
+    // Friction: 0 means don't slow its tangential velocity. Bigger than 0 means do.
+    // Cutoff: If less than cutoff, don't apply friction.
+    // Resilience: Scale normal velocity by this. Bigger is bouncier.
+    const float Fric = 0.5f, Res = 0.50f, Cutoff = 0.07f;
+
+    pColorD(PDLine(pVec(1,1,0), pVec(0,1,0)));
+    pVelocityD(PDDisc(pVec(0,0,0), pVec(0,1,0.1), 0.01f));
+    pSource(10, PDLine(pVec(-5,0,10), pVec(5,0,10)));
+
+    pGravity(GravityVec);
+
+    pBounce(Fric, Res, Cutoff, PDRectangle(pVec(-4,-2,6), pVec(4,0,1), pVec(0,4,0)));
+    pBounce(Fric, Res, Cutoff, PDRectangle(pVec(4,-2,8), pVec(4,0,-3), pVec(0,4,0)));
+    pBounce(Fric, Res, Cutoff, PDRectangle(pVec(-1,-2,6), pVec(2,0,-2), pVec(0,4,0)));
+    pBounce(Fric, Res, Cutoff, PDRectangle(pVec(1,-2,2), pVec(4,0,2), pVec(0,4,0)));
+    pBounce(Fric, Res, Cutoff, PDRectangle(pVec(-6,-2,6), pVec(3,0,-5), pVec(0,4,0)));
+    pBounce(Fric, Res, Cutoff, PDRectangle(pVec(6,-2,2), pVec(5,0,3), pVec(0,4,0)));
+    pBounce(Fric, Res, Cutoff, PDRectangle(pVec(4,-2,-1), pVec(5,0,1.5), pVec(0,4,0)));
+    pBounce(Fric, Res, Cutoff, PDRectangle(pVec(-3,-2,-1), pVec(5,0,-1), pVec(0,4,0)));
+    pBounce(Fric, Res, Cutoff, PDRectangle(pVec(-8,-2,-4.1), pVec(14,0,2), pVec(0,4,0)));
+    pBounce(Fric, Res, Cutoff, PDRectangle(pVec(-10,-2,5), pVec(4,0,5), pVec(0,4,0)));
+
+	pJet(PDBox(pVec(-10,-2,-6), pVec(-7,2,-1)), PDPoint(pVec(0.0,0,.15)));
+
+	pMove();
+
+    pSink(false, PDPlane(pVec(0,0,-7), pVec(0,0,1)));
+    pTargetColor(pVec(0,0,1), 1, 0.004);
+	
+	if(FirstTime)
+		pEndActionList();
+#endif
 #if 0
-	pVelocityD(PDCylinder, 0.0, -0.01, 0.35, 0.0, -0.01, 0.37, 0.021, 0.019);
-	pColorD(1.0, PDLine, 0.8, 0.9, 1.0, 1.0, 1.0, 1.0);
+    if(FirstTime) {
+		EffectName = "BounceBox";
+		pNewActionList(action_handle);
+	}
+
+    // Friction: 0 means don't slow its tangential velocity. Bigger than 0 means do.
+    // Cutoff: If less than cutoff, don't apply friction.
+    // Resilience: Scale normal velocity by this. Bigger is bouncier.
+    const float Fric = 1.0f, Res = 0.95f, Cutoff = 0.0f;
+
+    // Don't apply friction if tangential velocity < cutoff
+    // float tanscale = (vt.length2() <= cutoffSqr) ? 1.0f : oneMinusFriction;
+    // m.vel = vt * tanscale + vn * resilience;
+
+    pBounce(Fric, Res, Cutoff, PDPlane(pVec(4,0,0), pVec(1,0,0)));
+	pBounce(Fric, Res, Cutoff, PDPlane(pVec(-4,0,0), pVec(1,0,0)));
+	pBounce(Fric, Res, Cutoff, PDPlane(pVec(0,1,0), pVec(0,1,0)));
+	pBounce(Fric, Res, Cutoff, PDPlane(pVec(0,-4,0), pVec(0,1,0)));
+	pBounce(Fric, Res, Cutoff, PDPlane(pVec(0,0,4), pVec(0,0,1)));
+	pBounce(Fric, Res, Cutoff, PDPlane(pVec(0,0,0), pVec(0,0,1)));
+
+	pMove();
+
+	if(FirstTime)
+		pEndActionList();
+#endif
+#if 0
+	pVelocityD(PDCylinder(pVec(0.0, -0.01, 0.35), pVec(0.0, -0.01, 0.37), 0.021, 0.019));
+	pColorD(PDLine(pVec(0.8, 0.9, 1.0), pVec(1.0, 1.0, 1.0)));
 	pSize(1.5);
 	pStartingAge(0);
 
@@ -190,19 +254,17 @@ void ParticleEffects::Experimental(bool FirstTime)
 
 	if(FirstTime) {
 		std::cerr << "Doing compiled fountain.\n";
-		pSource(maxParticles * 0.01f, PDLine, 0.0, 0.0, 0.401, 0.0, 0.0, 0.405);
+		pSource(maxParticles * 0.01f, PDLine(pVec(0.0, 0.0, 0.401), pVec(0.0, 0.0, 0.405)));
 
 		pFountain();
 
-		pCopyVertexB(false, true);
+		pGravity(GravityVec);
 
-		pGravity(0.0, 0.0, -0.01);
+		pSinkVelocity(true, PDSphere(pVec(0, 0, 0), 0.01));
 
-		pSinkVelocity(true, PDSphere, 0, 0, 0, 0.01);
+		pBounce(-0.05, 0.35, 0, PDDisc(pVec(0, 0, 0), pVec(0, 0, 1), 5));
 
-		pBounce(-0.05, 0.35, 0, PDDisc, 0, 0, 0,  0, 0, 1,  5);
-
-		pSink(false, PDPlane, 0,0,-3, 0,0,1);
+		pSink(false, PDPlane(pVec(0,0,-3), pVec(0,0,1)));
 
 		pMove();
 	} else {
@@ -211,11 +273,12 @@ void ParticleEffects::Experimental(bool FirstTime)
 
 	if(FirstTime)
 		pEndActionList();
-#else
+#endif
+#if 0
 	//Vortex
 	pSize(1.0);
-	pVelocityD(PDPoint, 0,0,0);
-	pColorD(1.0, PDLine, .8,.8,.8, 1, 1, 1);
+	pVelocityD(PDPoint(pVec(0,0,0));
+	pColorD(1.0, PDLine(pVec(.8,.8,.8), pVec(1, 1, 1));
 	pStartingAge(0);
 
 	if(FirstTime) {
@@ -223,16 +286,14 @@ void ParticleEffects::Experimental(bool FirstTime)
 		pNewActionList(action_handle);
 	}
 
-	pCopyVertexB(false, true);
-
-	pSource(10, PDCylinder, 0,0,0, 0,0,9, 6);
+	pSource(10, PDCylinder(pVec(0,0,0), pVec(0,0,9), 6));
 
 	pDamping(.95,.95,.95);
-	pGravity(0, 0, -.01);
+	pGravity(GravityVec);
 	pVortex(0,0,-5, 0,0,13,    0.18, 1.5, 0.001, 0.5, 6);
 
 	pKillOld(1000);
-	pSink(false, PDPlane, 0,0,-1, 0,0,1);
+	pSink(false, PDPlane(pVec(0,0,-1), pVec(0,0,1)));
 
 	pMove();
 
@@ -245,8 +306,8 @@ void ParticleEffects::Experimental(bool FirstTime)
 void ParticleEffects::Fireflies(bool FirstTime)
 {
 	pSize(1.0);
-	pVelocityD(PDPoint, 0,0,0);
-	pColorD(1.0, PDLine, .1, .5, 0, .9, .9, .1);
+	pVelocityD(PDPoint(pVec(0,0,0)));
+	pColorD(PDLine(pVec(.1, .5, 0), pVec(.9, .9, .1)));
 	pStartingAge(0);
 
 	if(FirstTime) {
@@ -254,11 +315,9 @@ void ParticleEffects::Fireflies(bool FirstTime)
 		pNewActionList(action_handle);
 	}
 
-	pCopyVertexB(false, true);
+	pSource(1, PDBlob(pVec(0, 0, 2), 2));
 
-	pSource(1, PDBlob, 0, 0, 2, 2);
-
-	pRandomAccel(PDSphere, 0, 0, 0.00001, 0.002);
+	pRandomAccel(PDSphere(pVec(0, 0, 0.00001), 0.002));
 
 	pKillOld(600);
 
@@ -283,13 +342,13 @@ void ParticleEffects::Fireworks(bool FirstTime)
 
 	// Move the rockets.
 	pCurrentGroup(RocketSystem);
-	pVelocityD(PDCylinder, 0,0,0.15, 0,0,0.2, 0.11, 0.07);
-	pColorD(1, PDBox, 0,0.5,0, 1,1,1);
+	pVelocityD(PDCylinder(pVec(0,0,0.25), pVec(0,0,0.35), 0.11, 0.07));
+	pColorD(PDBox(pVec(0,0.5,0), pVec(1,1,1)));
 	pStartingAge(0);
 
-	pSource(0.02, PDDisc, 0,0,0, 0,0,1, 6);
-	pSink(false, PDPlane, 0,0,-1, 0,0,1);
-	pGravity(0,0,-0.003);
+	pSource(0.02, PDDisc(pVec(0,0,0), pVec(0,0,1), 6));
+	pSink(false, PDPlane(pVec(0,0,-1), pVec(0,0,1)));
+	pGravity(GravityVec);
 	pMove();
 
 	// Read back the position of the rockets.
@@ -301,24 +360,22 @@ void ParticleEffects::Fireworks(bool FirstTime)
 	pSize(1.0);
 	pStartingAge(0, 6);
 
-	pCopyVertexB(false, true);
-
 	for(int i=0; i<rcount; i++)
 	{
-		pVector rv(rocketv[i][0], rocketv[i][1], rocketv[i][2]);
+		pVec rv(rocketv[i][0], rocketv[i][1], rocketv[i][2]);
 		rv.normalize();
 		rv *= -0.026;
 		//cerr << i << " " <<rocketp[i][0]<<" "<<rocketp[i][1]<<" "<<rocketp[i][2]<<"\n";
 		//cerr << "c " <<rocketc[i][0]<<" "<<rocketc[i][1]<<" "<<rocketc[i][2]<<"\n";
 
-		pColorD(1.0, PDLine, rocketc[i][0], rocketc[i][1], rocketc[i][2], 1,.5,.5);
-		pVelocityD(PDBlob, rv.x, rv.y, rv.z, 0.006);
-		pSource(40, PDPoint, rocketp[i][0], rocketp[i][1], rocketp[i][2]);
+		pColorD(PDLine(pVec(rocketc[i][0], rocketc[i][1], rocketc[i][2]), pVec(1,.5,.5)));
+		pVelocityD(PDBlob(rv, 0.006));
+		pSource(40, PDPoint(pVec(rocketp[i][0], rocketp[i][1], rocketp[i][2])));
 	}
 
-	pGravity(0,0,-0.001);
-	//pDamping(0.999, 0.999, 0.999);
-	pTargetColor(0,0,0,0, 0.02);
+	pGravity(GravityVec);
+	//pDamping(pVec(0.999, 0.999, 0.999));
+	pTargetColor(pVec(0,0,0), 0, 0.02);
 	pKillOld(90);
 
 	pMove();
@@ -327,50 +384,41 @@ void ParticleEffects::Fireworks(bool FirstTime)
 // It's like a flame thrower spinning around
 void ParticleEffects::FlameThrower(bool FirstTime)
 {
-	static pVector Jet;
-	static pVector dJet;
 	static double dirAng = 0;
 
 	if(FirstTime) {
 		EffectName = "Flame Thrower";
 		double Ang = pRandf() * 2.0 * M_PI;
-		dJet = pVector(cos(Ang), sin(Ang), 0);
-		dJet *= 0.01;
+		pNewActionList(action_handle);
 	}
 
-	Jet += dJet;
 	dirAng += 0.02;
-#if 0
-	if(Jet.x > 10 || Jet.x < -10) {dJet.x = -dJet.x; dJet.y += pRandf() * 0.005;}
-	if(Jet.y > 10 || Jet.y < -10) {dJet.y = -dJet.y; dJet.x += pRandf() * 0.005;}
-#else
-	Jet = pVector(0,0,2);
-#endif
 
-	pColorD(1.0, PDLine, 0.8,0,0, 1,1,0.3);
-	pVelocityD(PDBlob, sin(dirAng)*.8,cos(dirAng)*.8,0, 0.03);
+	pColorD(PDLine(pVec(0.8,0,0), pVec(1,1,0.3)));
+	pVelocityD(PDBlob(pVec(sin(dirAng)*.8,cos(dirAng)*.8,0), 0.03));
 	pStartingAge(0);
 	pSize(1);
 
-	pCopyVertexB(false, true);
-
 	int LifeTime = 100;
 	pKillOld(LifeTime);
-	pSource(maxParticles / LifeTime, PDDisc, Jet.x, Jet.y, Jet.z, 0, 0, 1, 0.5);
-	pGravity(0, 0, .01);
-	pDamping(0.9, 0.97, 0.9);
+	pSource(maxParticles / LifeTime, PDDisc(pVec(0, 0, 2), pVec(0, 0, 1), 0.5));
+	pGravity(pVec(0, 0, .01));
+	pDamping(pVec(0.9, 0.97, 0.9));
 
 	float BOX = .017;
-	pRandomAccel(PDBox, -BOX, -BOX, -BOX, BOX, BOX, BOX);
+	pRandomAccel(PDBox(pVec(-BOX, -BOX, -BOX), pVec(BOX, BOX, BOX)));
 
 	pMove();
+
+	if(FirstTime)
+		pEndActionList();
 }
 
 // A fountain spraying up in the middle of the screen
 void ParticleEffects::Fountain(bool FirstTime)
 {
-	pVelocityD(PDCylinder, 0.0, -0.01, 0.35, 0.0, -0.01, 0.37, 0.021, 0.019);
-	pColorD(1.0, PDLine, 0.8, 0.9, 1.0, 1.0, 1.0, 1.0);
+	pVelocityD(PDCylinder(pVec(0.0, -0.01, 0.35), pVec(0.0, -0.01, 0.37), 0.021, 0.019));
+	pColorD(PDLine(pVec(0.8, 0.9, 1.0), pVec(1.0, 1.0, 1.0)));
 	pSize(1.5);
 	pStartingAge(0);
 
@@ -379,22 +427,56 @@ void ParticleEffects::Fountain(bool FirstTime)
 		pNewActionList(action_handle);
 	}
 
-	pSource(maxParticles * 0.01f, PDLine, 0.0, 0.0, 0.0, 0.0, 0.0, 0.405);
+	pSource(maxParticles * 0.01f, PDLine(pVec(0.0, 0.0, 0.0), pVec(0.0, 0.0, 0.405)));
 
-	pCopyVertexB(false, true);
+	pGravity(GravityVec);
 
-	pGravity(0.0, 0.0, -0.01);
-
-	pSinkVelocity(true, PDSphere, 0, 0, 0, 0.01);
-
-	pBounce(-0.05, 0.35, 0, PDDisc, 0, 0, 0,  0, 0, 1,  5);
-
-	pSink(false, PDPlane, 0,0,-3, 0,0,1);
+	pBounce(-0.05, 0.35, 0, PDDisc(pVec(0, 0, 0), pVec(0, 0, 1), 5));
 
 	pMove();
 
+	pSink(false, PDPlane(pVec(0,0,-3), pVec(0,0,1)));
+
+	pSinkVelocity(true, PDSphere(pVec(0, 0, 0), 0.01));
+
 	if(FirstTime)
 		pEndActionList();
+}
+
+// A bunch of particles in the shape of a photo
+void ParticleEffects::PhotoShape(bool FirstTime)
+{
+    if(Img == NULL) return;
+
+    if(FirstTime) {
+        EffectName = "PhotoShape";
+
+        pVelocityD(PDBlob(pVec(0, 0, 0), 0.001));
+        pStartingAge(0);
+        pKillOld(0);
+        pKillOld(1, true);
+        int d = sqrtf(maxParticles);
+
+        float sx = Img->w() / float(d);
+        float sy = Img->h() / float(d);
+        float sc = 1.0f;
+        float fy = 0.0f;
+        for(int y=0; y<d; y++, fy+=sy) {
+            float fx = 0.0f;
+            for(int x=0; x<d; x++, fx+=sx) {
+                f3Pixel p;
+                sample2(p, *Img, fx, fy);
+                pColor(p.r()*sc, p.g()*sc, p.b()*sc);
+                pVec v(fx, 0, fy);
+                v /= float(Img->w());
+
+                pVertex(v*6.0f - 3.0f);
+            }
+        }
+
+        pNewActionList(action_handle);
+        pEndActionList();
+    }
 }
 
 // A bunch of particles in a grid shape
@@ -403,7 +485,8 @@ void ParticleEffects::GridShape(bool FirstTime)
 	if(FirstTime) {
 		EffectName = "GridShape";
 
-		pKillOld(-1000);
+		pVelocityD(PDBlob(pVec(0, 0, 0), 0.001));
+		pKillOld(-100000);
 		int dim = int(powf(float(maxParticles), 0.33333333f));
 #define XX 8
 #define YY 12
@@ -420,11 +503,9 @@ void ParticleEffects::GridShape(bool FirstTime)
 				float x = -XX;
 				for(int j=0; j<dim; j++, x += dx) {
 					// Make the particles.
-					pVelocityD(PDBlob, 0, 0, 0, 0.001);
-					///pColor(0.5 + z*0.05, 0.5 + x*0.05, 0.5 + x*0.05);
 					pColor(j / float(dim), k / float(dim), l / float(dim));
 					pStartingAge(0);
-					pVertex(x, y, z);
+					pVertex(pVec(x, y, z));
 				}
 			}
 		}
@@ -437,43 +518,36 @@ void ParticleEffects::GridShape(bool FirstTime)
 // It's like a fan cruising around under a floor, blowing up on some ping pong balls
 void ParticleEffects::JetSpray(bool FirstTime)
 {
-	pVelocityD(PDBlob, 0, 0, 0, 0.01);
+	pVelocityD(PDBlob(pVec(0, 0, 0), 0.01));
 	pSize(1.5);
 
-	static float jetx=0, jety=0, jetz=0;
-	static float djx = pRandf() * 0.5;
-	static float djy = pRandf() * 0.5;
+	static pVec jet, dj;
 
 	if(FirstTime) {
 		EffectName = "JetSpray";
 		pNewActionList(action_handle);
-		jetx = 0;
-		jety = 0;
-		djx = pRandf() * 0.5;
-		djy = pRandf() * 0.5;
+		jet = pVec(0);
+        dj = pRandVec() * 0.5f;
+        dj.z() = 0.0f;
 	}
 
-	pCopyVertexB(false, true);
+	pColorD(PDSphere(pVec(.8, .4, .1), .1));
+	pSource(1, PDRectangle(pVec(-1, -1, 0.1), pVec(2, 0, 0), pVec(0, 2, 0)));
 
-	pColorD(1.0, PDSphere, .8, .4, .1, .1);
-	pSource(1, PDRectangle, -1, -1, 0.1, 2, 0, 0, 0, 2, 0);
+	pColorD(PDSphere(pVec(.5, .4, .1), .1));
+	pSource(300, PDRectangle(pVec(-10, -10, 0.1), pVec(20, 0, 0), pVec(0, 20, 0)));
 
-	pColorD(1.0, PDSphere, .5, .4, .1, .1);
-	pSource(300, PDRectangle, -10, -10, 0.1, 20, 0, 0, 0, 20, 0);
+	pGravity(GravityVec);
 
-	pGravity(0, 0, -0.01);
+	jet += dj;
+	if(jet.x() > 10 || jet.x() < -10) {dj.x() *= -1.0f; dj.y() += pRandf() * 0.005;}
+	if(jet.y() > 10 || jet.y() < -10) {dj.y() *= -1.0f; dj.x() += pRandf() * 0.005;}
 
-	jetx += djx;
-	jety += djy;
-	if(jetx > 10 || jetx < -10) {djx = -djx; djy += pRandf() * 0.005;}
-	if(jety > 10 || jety < -10) {djy = -djy; djx += pRandf() * 0.005;}
+	pJet(PDSphere(jet, 1.5), PDBlob(pVec(0,0,.05), 0.01));
 
-	pVelocityD(PDBlob, 0,0,.05, 0.01);
-	pJet(jetx, jety, jetz, 1, 0.01, 1.5);
+	pBounce(0.1, 0.3, 0.1, PDRectangle(pVec(-10, -10, 0.0), pVec(20, 0, 0), pVec(0, 20, 0)));
 
-	pBounce(0.1, 0.3, 0.1, PDRectangle, -10, -10, 0.0, 20, 0, 0, 0, 20, 0);
-
-	pSink(false, PDPlane, 0,0,-20, 0,0,1);
+	pSink(false, PDPlane(pVec(0,0,-20), pVec(0,0,1)));
 
 	pMove();
 
@@ -489,7 +563,7 @@ void ParticleEffects::Orbit2(bool FirstTime)
 		pNewActionList(action_handle);
 	}
 
-	pVelocityD(PDBlob, 0.02, -0.2, 0, 0.015);
+	pVelocityD(PDBlob(pVec(0.02, -0.2, 0), 0.015));
 	pSize(1.0);
 
 	static float jetx=-4, jety=0, jetz=-2.4;
@@ -506,18 +580,16 @@ void ParticleEffects::Orbit2(bool FirstTime)
 	if(jety > 10 || jety < -10) djy = -djy;
 	if(jetz > 10 || jetz < -10) djz = -djz;
 
-	pCopyVertexB(false, true);
-
 	int LifeTime = 350;
 
 	pKillOld(LifeTime);
 
-	pColorD(1, PDSphere, 0.4+fabs(jetx*0.1), 0.4+fabs(jety*0.1), 0.4+fabs(jetz*0.1), 0.1);
-	pSource(maxParticles / LifeTime, PDPoint, jetx, jety, jetz);
+	pColorD(PDSphere(pVec(0.4+fabs(jetx*0.1), 0.4+fabs(jety*0.1), 0.4+fabs(jetz*0.1)), 0.1));
+	pSource(maxParticles / LifeTime, PDPoint(pVec(jetx, jety, jetz)));
 
-	pOrbitPoint(2, 0, 3, 0.1, 0.5);
+	pOrbitPoint(pVec(2, 0, 3), 0.1, 0.5);
 
-	pOrbitPoint(-2, 0, -3, 0.1, 0.5);
+	pOrbitPoint(pVec(-2, 0, -3), 0.1, 0.5);
 
 	pDamping(0.994, 0.994, 0.994);
 
@@ -532,8 +604,8 @@ void ParticleEffects::Orbit2(bool FirstTime)
 // It kinda looks like rain hitting a parking lot
 void ParticleEffects::Rain(bool FirstTime)
 {
-	pVelocity(0, 0, 0);
-	pColorD(1.0, PDSphere, 0.4, 0.4, 0.9, .1);
+	pVelocity(pVec(0));
+	pColorD(PDSphere(pVec(0.4, 0.4, 0.9), .1));
 	pSize(1.5);
 	pStartingAge(0);
 
@@ -542,13 +614,11 @@ void ParticleEffects::Rain(bool FirstTime)
 		pNewActionList(action_handle);
 	}
 
-	pCopyVertexB(false, true);
+	pSource(100, PDRectangle(pVec(-11, -10, 12), pVec(20, 0, 0), pVec(0, 20, 0)));
 
-	pSource(100, PDRectangle, -11, -10, 12, 20, 0, 0, 0, 20, 0);
+	pRandomAccel(PDBlob(pVec(0.002, 0, -0.01), 0.003));
 
-	pRandomAccel(PDBlob, 0.002, 0, -0.01, 0.003);
-
-	pBounce(0.3, 0.3, 0, PDPlane, 0,0,0, 0,0,1);
+	pBounce(0.3, 0.3, 0, PDPlane(pVec(0,0,0), pVec(0,0,1)));
 
 	pKillOld(100);
 
@@ -568,28 +638,14 @@ void ParticleEffects::Restore(bool FirstTime)
 		i = 200;
 	}
 
-	pCopyVertexB(false, true);
+	pGravity(GravityVec);
 
-	pGravity(0.0, 0.0, -0.001);
-
-	pRestore(i-= (1.0f / float(numSteps)));
+	pRestore(i -= (1.0f / float(numSteps)));
 
 	pMove();
 
 	if(FirstTime)
 		pEndActionList();
-}
-
-// Add a bunch of particles in a shaft shape
-void ParticleEffects::ShaftShape(bool FirstTime)
-{
-	if(FirstTime) {
-		EffectName = "ShaftShape";
-	}
-
-	pVelocity(0,0,0);
-	pStartingAge(0);
-	pSource(100000, PDCylinder, 5,0,-10,5,0,10,1);
 }
 
 // A sheet of particles falling down, avoiding various-shaped obstacles
@@ -613,32 +669,30 @@ void ParticleEffects::Shower(bool FirstTime, int SteerShape)
 	if(jetx > 1 || jetx < 0) {djx = -djx; djy += pRandf() * 0.0005;}
 	if(jety > 2 || jety < -2) {djy = -djy; djx += pRandf() * 0.0005;}
 
-	pVelocity(0, 0, 0);
+	pVelocity(pVec(0));
 	pSize(1.5);
 	pStartingAge(0);
 	pColor(jetx, jety, 1);
 
-	pCopyVertexB(false, true);
+	pSource(120, PDLine(pVec(-5,jety,8), pVec(5,jety,8)));
 
-	pSource(120, PDLine, -5,jety,8, 5,jety,8);
-
-	pGravity(0.0, 0.0, -0.004);
+	pGravity(GravityVec);
 
 	glColor3f(1,1,0);
-	if(SteerShape == PDSphere) {
-		pAvoid(0.2, 1.0, 20, PDSphere, 0,0,0, 1.1);
+	if(SteerShape == 0) {
+		pAvoid(0.2, 1.0, 20, PDSphere(pVec(0,0,0), 1.1));
 
 		glutSolidSphere(1, 16, 8);
-	} else if(SteerShape == PDTriangle) {
-		pAvoid(2, 1.0, 20, PDTriangle, 0,-1,0, 2,0,0, 0,2,0);
+	} else if(SteerShape == 1) {
+		pAvoid(2, 1.0, 20, PDTriangle(pVec(0,-1,0), pVec(2,0,0), pVec(0,2,0)));
 
 		glBegin(GL_TRIANGLES);
 		glVertex3f(0,-1,0);
 		glVertex3f(2,0,0);
 		glVertex3f(0,2,0);
 		glEnd();
-	} else if(SteerShape == PDRectangle) {
-		pAvoid(2, 1.0, 20, PDRectangle, 0,-1,0, 2,1,0, 0,2,0);
+	} else if(SteerShape == 2) {
+		pAvoid(2, 1.0, 20, PDRectangle(pVec(0,-1,0), pVec(2,1,0), pVec(0,2,0)));
 
 		glBegin(GL_QUADS);
 		glVertex3f(0,-1,0);
@@ -646,8 +700,8 @@ void ParticleEffects::Shower(bool FirstTime, int SteerShape)
 		glVertex3f(2,2,0);
 		glVertex3f(0,1,0);
 		glEnd();
-	} else if(SteerShape == PDPlane) {
-		pAvoid(2, 1.0, 20, PDPlane, 0,0,0, 0,0,1);
+	} else if(SteerShape == 3) {
+		pAvoid(2, 1.0, 20, PDPlane(pVec(0,0,0), pVec(0,0,1)));
 
 		glBegin(GL_QUADS);
 		glVertex3f(-2,-2,0);
@@ -671,17 +725,18 @@ void ParticleEffects::Snake(bool FirstTime)
 	if(FirstTime) {
 		EffectName = "Snake";
 
-		pVelocity(0, 0, 0);
+		pVelocity(pVec(0));
 		pSize(1.0);
 		pStartingAge(0);
 
 		pKillOld(-300);
-		pColorD(1.0, PDSphere, 0.93, 0.93, 0, 0.05);
+		pColorD(PDSphere(pVec(0.93, 0.93, 0), 0.05));
 		for(float x=-10.0; x<2.0; x+=0.05)
-			pVertex(x, 0, 0);
+			pVertex(pVec(x, 0, 0));
 		pNewActionList(action_handle);
 	}
 
+	// Move a lead particle to give them all something to gravitate toward
 	static float jetx=0, jety=0, jetz=0;
 
 	static float djx = pRandf() * 0.05;
@@ -696,12 +751,11 @@ void ParticleEffects::Snake(bool FirstTime)
 	if(jety > 6 || jety < -6) djy = -djy;
 	if(jetz > 6 || jetz < -6) djz = -djz;
 
-	pCopyVertexB(false, true);
-
-	pKillOld(-1.0, true);
-	pStartingAge(-10.0);
+	pKillOld(-1.0, true); // Kill the lead particle
+	pStartingAge(-10.0); // Tag the new lead particle as having a negative age
 	pColor(1, 0, 0);
-	pVertex(jetx, jety, jetz);
+	pVelocity(pVec(0.001, 0, 0)); // This makes it able to compute a binormal.
+	pVertex(pVec(jetx, jety, jetz));
 	pStartingAge(0);
 
 	// Either of these gives an interesting effect.
@@ -728,16 +782,15 @@ void ParticleEffects::Sphere(bool FirstTime)
 
 	dirAng += 0.02;
 
-	pColorD(1.0, PDLine, 0,1,0, 0,0,1);
-	pVelocityD(PDBlob, sin(dirAng)*.1,cos(dirAng)*.1, 0.1, 0.01);
+	pColorD(PDLine(pVec(0,1,0), pVec(0,0,1)));
+	pVelocityD(PDBlob(pVec(sin(dirAng)*.1,cos(dirAng)*.1, 0.1), 0.01));
 	pStartingAge(0);
 	pSize(1);
 
-	pCopyVertexB(false, true);
 	pKillOld(600);
-	pSource(0.8, PDPoint, 1, 1, 6);
-	pGravity(0, 0, -.01);
-	pBounce(0, 0.55, 0, PDSphere, 0, 0, 4, 6);
+	pSource(0.8, PDPoint(pVec(1, 1, 6)));
+	pGravity(GravityVec);
+	pBounce(0, 0.55, 0, PDSphere(pVec(0, 0, 4), 6));
 
 	pMove();
 
@@ -748,7 +801,7 @@ void ParticleEffects::Sphere(bool FirstTime)
 // A sprayer with particles orbiting a line
 void ParticleEffects::Swirl(bool FirstTime)
 {
-	pVelocityD(PDBlob, 0.02, -0.2, 0, 0.015);
+	pVelocityD(PDBlob(pVec(0.02, -0.2, 0), 0.015));
 	pSize(1.0);
 	pStartingAge(0);
 
@@ -757,34 +810,28 @@ void ParticleEffects::Swirl(bool FirstTime)
 		pNewActionList(action_handle);
 	}
 
-	static float jetx=-4, jety=0, jetz=-2.4;
+	static pVec jet(-4, 0, -2.4);
+	static pVec djet = pRandVec() * 0.05;
 
-	static float djx = pRandf() * 0.05;
-	static float djy = pRandf() * 0.05;
-	static float djz = pRandf() * 0.05;
+	jet += djet;
 
-	jetx += djx;
-	jety += djy;
-	jetz += djz;
-
-	if(jetx > 10 || jetx < -10) djx = -djx;
-	if(jety > 10 || jety < -10) djy = -djy;
-	if(jetz > 10 || jetz < -10) djz = -djz;
-
-	pCopyVertexB(false, true);
+	if(jet.x() > 10 || jet.x() < -10) djet.x() = -djet.x();
+	if(jet.y() > 10 || jet.y() < -10) djet.y() = -djet.y();
+	if(jet.z() > 10 || jet.z() < -10) djet.z() = -djet.z();
 
 	int LifeTime = 300;
 
 	pKillOld(LifeTime);
 
-	pColorD(1.0, PDSphere, 0.4+fabs(jetx*0.1), 0.4+fabs(jety*0.1), 0.4+fabs(jetz*0.1), 0.1);
-	pSource(maxParticles / LifeTime, PDPoint, jetx, jety, jetz);
+	pVec tjet = Abs(jet) * 0.1 + pVec(0.4, 0.4, 0.4);
+	pColorD(PDSphere(tjet, 0.1));
+	pSource(maxParticles / LifeTime, PDPoint(jet));
 
-	pOrbitLine(0, 0, 1, 1, 0, 0.0, 0.5, 0.1);
+	pOrbitLine(pVec(0, 0, 1), pVec(1, 0.1, 0), 0.5, 0.1);
 
-	pDamping(1, 0.994, 0.994);
+	pDamping(pVec(1, 0.994, 0.994));
 
-	pSink(false, PDSphere, 0, 0, 0, 15);
+	pSink(false, PDSphere(pVec(0, 0, 0), 15));
 
 	pMove();
 
@@ -795,8 +842,8 @@ void ParticleEffects::Swirl(bool FirstTime)
 // A waterfall bouncing off invisible rocks
 void ParticleEffects::Waterfall1(bool FirstTime)
 {
-	pVelocityD(PDBlob, 0.03, -0.001, 0.01, 0.002);
-	pColorD(1.0, PDLine, 0.8, 0.9, 1.0, 1.0, 1.0, 1.0);
+	pVelocityD(PDBlob(pVec(0.03, -0.001, 0.01), 0.002));
+	pColorD(PDLine(pVec(0.8, 0.9, 1.0), pVec(1.0, 1.0, 1.0)));
 	pSize(1.5);
 
 	if(FirstTime) {
@@ -804,16 +851,15 @@ void ParticleEffects::Waterfall1(bool FirstTime)
 		pNewActionList(action_handle);
 	}
 
-	pCopyVertexB(false, true);
-	pSource(100, PDLine, -5, -1, 8, -5, -3, 8);
-	pGravity(0.0, 0.0, -0.01);
+	pSource(100, PDLine(pVec(-5, -1, 8), pVec(-5, -3, 8)));
+	pGravity(GravityVec);
 	pKillOld(300);
-	pBounce(0, 0.35, 0, PDRectangle, -7, -4, 7, 3, 0, 0, 0, 3, 0);
-	pBounce(0, 0.5, 0, PDSphere, -4, -2, 4, 0.2);
-	pBounce(0, 0.5, 0, PDSphere, -3.5, 0, 2, 2);
-	pBounce(0, 0.5, 0, PDSphere, 3.8, 0, 0, 2);
-	pBounce(-0.01, 0.35, 0, PDPlane, 0,0,0, 0,0,1);
-	pSink(false, PDSphere, 0,0,0,20);
+	pBounce(0, 0.35, 0, PDRectangle(pVec(-7, -4, 7), pVec(3, 0, 0), pVec(0, 3, 0)));
+	pBounce(0, 0.5, 0, PDSphere(pVec(-4, -2, 4), 0.2));
+	pBounce(0, 0.5, 0, PDSphere(pVec(-3.5, 0, 2), 2));
+	pBounce(0, 0.5, 0, PDSphere(pVec(3.8, 0, 0), 2));
+	pBounce(-0.01, 0.35, 0, PDPlane(pVec(0,0,0), pVec(0,0,1)));
+	pSink(false, PDSphere(pVec(0,0,0), 20));
 
 	pMove();
 
@@ -824,8 +870,8 @@ void ParticleEffects::Waterfall1(bool FirstTime)
 // A waterfall bouncing off invisible rocks
 void ParticleEffects::Waterfall2(bool FirstTime)
 {
-	pVelocityD(PDBlob, 0.1, 0, 0.1, 0.004);
-	pColorD(1.0, PDLine, 0.8, 0.9, 1.0, 1.0, 1.0, 1.0);
+	pVelocityD(PDBlob(pVec(0.1, 0, 0.1), 0.004));
+	pColorD(PDLine(pVec(0.8, 0.9, 1.0), pVec(1.0, 1.0, 1.0)));
 	pSize(1.5);
 	pStartingAge(0);
 
@@ -834,14 +880,13 @@ void ParticleEffects::Waterfall2(bool FirstTime)
 		pNewActionList(action_handle);
 	}
 
-	pCopyVertexB(false, true);
-	pSource(100, PDPoint, -4, 0, 6);
-	pGravity(0.0, 0.0, -0.01);
+	pSource(100, PDPoint(pVec(-4, 0, 6)));
+	pGravity(GravityVec);
 	pKillOld(250);
-	pBounce(0, 0.01, 0, PDSphere, -1, 0, 4, 1);
-	pBounce(0, 0.01, 0, PDSphere, -2.5, 0, 2, 1);
-	pBounce(0, 0.01, 0, PDSphere, 0.7, -0.5, 2, 1);
-	pBounce(-0.01, 0.35, 0, PDPlane, 0,0,0, 0,0,1);
+	pBounce(0, 0.01, 0, PDSphere(pVec(-1, 0, 4), 1));
+	pBounce(0, 0.01, 0, PDSphere(pVec(-2.5, 0, 2), 1));
+	pBounce(0, 0.01, 0, PDSphere(pVec(0.7, -0.5, 2), 1));
+	pBounce(-0.01, 0.35, 0, PDPlane(pVec(0,0,0), pVec(0,0,1)));
 	pMove();
 
 	if(FirstTime)

@@ -19,11 +19,14 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				InlineFunctionExpansion="0"
+				ImproveFloatingPointConsistency="FALSE"
 				AdditionalIncludeDirectories="../Particle"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;PARTICLE_MAKE_DLL;PARTICLEDLL_EXPORTS"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
+				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="TRUE"
@@ -69,9 +72,22 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/Oa"
+				Optimization="3"
+				GlobalOptimizations="TRUE"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="TRUE"
+				FavorSizeOrSpeed="1"
+				OmitFramePointers="TRUE"
+				EnableFiberSafeOptimizations="TRUE"
+				OptimizeForProcessor="3"
 				AdditionalIncludeDirectories="../Particle"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;PARTICLE_MAKE_DLL;PARTICLEDLL_EXPORTS"
-				RuntimeLibrary="0"
+				ExceptionHandling="TRUE"
+				RuntimeLibrary="4"
+				BufferSecurityCheck="FALSE"
+				EnableEnhancedInstructionSet="2"
+				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="TRUE"
@@ -128,10 +144,7 @@
 				RelativePath=".\other_api.cpp">
 			</File>
 			<File
-				RelativePath=".\pDomain.cpp">
-			</File>
-			<File
-				RelativePath=".\system.cpp">
+				RelativePath=".\ParticleState.cpp">
 			</File>
 		</Filter>
 		<Filter
@@ -142,16 +155,22 @@
 				RelativePath=".\actions.h">
 			</File>
 			<File
-				RelativePath=".\general.h">
-			</File>
-			<File
 				RelativePath="..\Particle\papi.h">
 			</File>
 			<File
-				RelativePath=".\pDomain.h">
+				RelativePath=".\Particle.h">
 			</File>
 			<File
-				RelativePath="..\Particle\pVector.h">
+				RelativePath=".\ParticleGroup.h">
+			</File>
+			<File
+				RelativePath=".\ParticleState.h">
+			</File>
+			<File
+				RelativePath="..\Particle\pDomain.h">
+			</File>
+			<File
+				RelativePath="..\Particle\pVec.h">
 			</File>
 		</Filter>
 		<Filter

@@ -2,20 +2,23 @@
 //
 // Copyright 1998-2005 by David K. McAllister
 //
-// This application demonstrates particle systems for interactive graphics
-// using OpenGL and GLUT.
+// This application demonstrates particle systems for interactive graphics.
+// It uses OpenGL and GLUT.
 
 // To do:
+// Make the ParticleState class contain the API calls.
 // Make a screen saver
 // Environment reflected water drops
-// Fix sphere penetration problem
+// Bouncing off multiple nearby or intersecting domains is broken.
 // Bounce inside box
 // Make demos that use a wider variety of actions
-// Demo with particles inside a sphere with gravity
-// Reorganize domains
-// Execute in phases to keep it in cache
-// Use SSE
-// Optimize compiled action lists: fountain 17.21 optimized vs.5.1 not.
+// Make the API more generic so many API calls can apply to any different attribute. Make attributes generic.
+// Use SSE. Requires a new four-element pVec class.
+// Optimize compiled action lists by combining calls: fountain 17.21 fps optimized vs. 5.1 fps not.
+// Demo where you put particles all over the surface of a statue, explode the statue, and then suck the particles back to the original position.
+// Demo with a bunch of particles that start at the top and bounce down through a bunch of polys, then get blown back up with jets.
+// Toggle creation/killing of particles for all effects so the Snake doesn't kill them, etc.
+// Make actions conditional on domains.
 
 #include "../PSpray/DrawGroups.h"
 #include "../PSpray/Effects.h"
@@ -31,6 +34,7 @@
 #include <GL/glut.h>
 
 #include <iostream>
+#include <string>
 using namespace std;
 #include <math.h>
 #include <string.h>
@@ -44,11 +48,12 @@ using namespace std;
 #endif
 
 static bool MotionBlur = false, FreezeParticles = false, AntiAlias = true, DepthTest = false;
-static bool ConstColor = false, ShowText = true, ParticleCam = false, SortParticles = true;
+static bool ConstColor = false, ShowText = true, ParticleCam = false, SortParticles = false;
 static bool Immediate = true, DrawGround = false, CameraMotion = true, FullScreen = false;
 static int DemoNum = 10, PrimType = 0x0102, DisplayListID = -1, SpotTexID = -1, RandomDemo = 500;
 static float BlurRate = 0.09;
 static char *PrimName = "Point Sprites";
+static char *FName = NULL;
 
 static Timer Clock;
 static ParticleEffects Efx(30000);
@@ -199,8 +204,8 @@ void Draw()
 		// Use a particle to model the camera motion
 		CameraSystem = pGenParticleGroups(1, 1);
 		pCurrentGroup(CameraSystem);
-		pVelocityD(PDSphere, 0, 0.1, 0, 0.1);
-		pVertex(0,-19,15);
+		pVelocityD(PDSphere(pVec(0, 0.1, 0), 0.1));
+		pVertex(pVec(0,-19,15));
 	}
 
 	glLoadIdentity();
@@ -235,7 +240,7 @@ void Draw()
 	// Use a particle to model the camera motion
 	pCurrentGroup(CameraSystem);
 	if(CameraMotion) {
-		pBounce(0, 1, 0.1, PDSphere, 0, -10, 7, 15);
+		pBounce(0, 1, 0.1, PDSphere(pVec(0, -10, 7), 15));
 		pMove();
 	}
 
@@ -243,15 +248,16 @@ void Draw()
 	if(ParticleCam)
 		pCurrentGroup(Efx.particle_handle);
 
-	pVector Cam, Vel;
+	pVec Cam, Vel;
 	pGetParticles(0, 1, (float *)&Cam, NULL, (float *)&Vel);
+
 #if 0
-	pVector At=Cam+Vel;
+	pVec At=Cam+Vel;
 #else
-	pVector At(0,0,3);
+	pVec At(0,0,3);
 #endif
 
-	gluLookAt(Cam.x, Cam.y, Cam.z, At.x, At.y, At.z, 0, 0, 1);
+	gluLookAt(Cam.x(), Cam.y(), Cam.z(), At.x(), At.y(), At.z(), 0, 0, 1);
 
 	if(DrawGround) {
 		glColor3f(0,0.8,0.2);
@@ -265,12 +271,15 @@ void Draw()
 
 	pCurrentGroup(Efx.particle_handle);
 	if(SortParticles) {
-		pVector Look = DepthTest ? (At - Cam) : (Cam - At);
-		pSort(Cam.x, Cam.y, Cam.z, Look.x, Look.y, Look.z);
+		pVec Look = DepthTest ? (At - Cam) : (Cam - At);
+		pSort(Cam, Look);
 	}
 
 	if(PrimType == 0x0103) {
 		DrawGroupAsDisplayLists(DisplayListID, ConstColor, false);
+		// The cross product of the velocity vector and the previous frame's velocity vector
+		// can give us a vector pointing to the side. Use this to orient the particles.
+		pCopyVertexB(false, true);
 	} else if(PrimType == GL_LINES) {
 		DrawGroupAsLines(ConstColor);
 	} else if(PrimType == GL_POINTS) {
@@ -282,16 +291,16 @@ void Draw()
 		glDisable(GL_POINT_SPRITE_ARB);
 		glDisable(GL_TEXTURE_2D);
 	} else if(PrimType == 0x100) {
-		pVector view = At - Cam;
+		pVec view = At - Cam;
 		view.normalize();
-		pVector up(0, 0, 1);
+		pVec up(0, 0, 1);
 		glEnable(GL_TEXTURE_2D);
 		DrawGroupAsTriSprites(view, up, 0.16, true, true, ConstColor);
 		glDisable(GL_TEXTURE_2D);
 	} else if(PrimType == 0x101) {
-		pVector view = At - Cam;
+		pVec view = At - Cam;
 		view.normalize();
-		pVector up(0, 0, 1);
+		pVec up(0, 0, 1);
 		glEnable(GL_TEXTURE_2D);
 		DrawGroupAsQuadSprites(view, up, 0.16, true, true, ConstColor);
 		glDisable(GL_TEXTURE_2D);
@@ -361,10 +370,12 @@ void menu(int item)
 
 	switch(item) {
 	case ' ':
-		DemoNum = 9;
+		DemoNum = 10;
 		Efx.CallDemo(DemoNum, true, Immediate);
 		break;
 	case GLUT_KEY_UP + 0x1000:
+		DemoNum = Efx.CallDemo(13, true, Immediate);
+		break;
 	case GLUT_KEY_DOWN + 0x1000:
 		DemoNum = Efx.CallDemo(lrand48(), true, Immediate);
 		break;
@@ -459,7 +470,7 @@ void menu(int item)
 		ParticleCam = !ParticleCam;
 		break;
 	case 'z':
-		pSinkVelocity(true, PDSphere, 0, 0, 0, 0.01);
+		pSinkVelocity(true, PDSphere(pVec(0, 0, 0), 0.01));
 		break;
 	case 'x':
 		FreezeParticles = !FreezeParticles;
@@ -522,23 +533,27 @@ static void Usage(char *program_name, char *message)
 
 static void Args(int argc, char **argv)
 {
-	char *program = argv[0];
+    char *program = argv[0];
 
-	while (--argc) {
-		++argv;
+    for(int i=1; i<argc; i++) {
+        if(string(argv[i]) == "-h" || string(argv[i]) == "-help") {
+            Usage(program, "Help:");
+        } else if(string(argv[i]) == "-photo") {
+            FName = argv[i+1];
+            Efx.SetPhoto(new uc3Image(FName));
 
-		if (!strcmp("-h", argv[0]) || !strcmp("-help", argv[0]))
-			Usage(program, NULL);
-		else
-			Usage(program, "Invalid option!");
-	}
+            RemoveArgs(argc, argv, i, 2);
+        } else {
+            Usage(program, "Invalid option!");
+        }
+    }
 }
 
 int main(int argc, char **argv)
 {
-	srand48( (unsigned)time( NULL ) );
+    srand48( (unsigned)time( NULL ) );
 
-	DemoNum = lrand48();
+    DemoNum = lrand48();
 
 	glutInit(&argc, argv);
 	Args(argc, argv);

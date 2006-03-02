@@ -10,24 +10,51 @@
 void ComputeParticles()
 {
 	// Set up the state.
-	pVelocityD(PDCylinder, 0.01, 0.0, 0.35, 0.01, 0.0, 0.37, 0.021, 0.019);
-	pColorD(1.0, PDLine, 0.8, 0.9, 1.0, 1.0, 1.0, 1.0);
+	pVelocityD(PDCylinder(pVec(0.0, -0.01, 0.25), pVec(0.0, -0.01, 0.27), 0.021, 0.019));
+	pColorD(PDLine(pVec(0.8, 0.9, 1.0), pVec(1.0, 1.0, 1.0)));
 	pSize(1.5);
+	pStartingAge(0);
 
 	// Generate particles along a very small line in the nozzle.
-	pSource(100, PDLine, 0.0, 0.0, 0.401, 0.0, 0.0, 0.405);
+	pSource(100, PDLine(pVec(0.0, 0.0, 0.0), pVec(0.0, 0.0, 0.405)));
 
 	// Gravity.
-	pGravity(0.0, 0.0, -0.01);
+	pGravity(pVec(0.0, 0.0, -0.01));
 	
 	// Bounce particles off a disc of radius 5.
-	pBounce(-0.05, 0.35, 0, PDDisc, 0, 0, 0,  0, 0, 1,  5);
+	pBounce(-0.05, 0.35, 0, PDDisc(pVec(0, 0, 0), pVec(0, 0, 1), 5));
 	
 	// Kill particles below Z=-3.
-	pSink(false, PDPlane, 0,0,-3, 0,0,1);
+	pSink(false, PDPlane(pVec(0,0,-3), pVec(0,0,1)));
 
 	// Move particles to their new positions.
 	pMove();
+}
+
+// Draw as points using vertex arrays
+// To draw as textured point sprites just call
+// glEnable(GL_POINT_SPRITE_ARB) before calling this function.
+void DrawGroupAsPoints()
+{
+	int cnt = (int)pGetGroupCount();
+	if(cnt < 1) return;
+
+	float *ptr;
+    size_t flstride, pos3Ofs, posB3Ofs, size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs;
+
+    cnt = (int)pGetParticlePointer(ptr, flstride, pos3Ofs, posB3Ofs,
+        size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs);
+    if(cnt < 1) return;
+
+    glEnableClientState(GL_COLOR_ARRAY);
+    glColorPointer(4, GL_FLOAT, int(flstride) * sizeof(float), ptr + color3Ofs);
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(3, GL_FLOAT, int(flstride) * sizeof(float), ptr + pos3Ofs);
+
+    glDrawArrays(GL_POINTS, 0, cnt);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
 }
 
 void Draw()
@@ -54,7 +81,7 @@ void Draw()
 	ComputeParticles();
 	
 	// Draw the particles.
-	pDrawGroupp(GL_LINES, true);
+	DrawGroupAsPoints();
 	
 	glutSwapBuffers();
 }
@@ -88,7 +115,7 @@ int main(int argc, char **argv)
 	glDepthFunc(GL_LESS);
 
 	// Make a particle group
-	int particle_handle = pGenParticleGroups(1, 4000);
+	int particle_handle = pGenParticleGroups(1, 10000);
 	
 	pCurrentGroup(particle_handle);
 	

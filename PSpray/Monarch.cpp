@@ -7,7 +7,7 @@
 #include <GL/gl.h>
 
 // Make a Monarch Butterfly by hand.
-// In about 1992 I drew this butterfly on graph paper and typed in the coords.
+// In about 1993 I drew this butterfly on graph paper and typed in the coords.
 // I can't believe I ever did that.
 void Monarch(int ListNum)
 {

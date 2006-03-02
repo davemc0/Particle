@@ -1,54 +1,23 @@
 Particle System API
 by David McAllister
-version 1.5
-November 26, 2005
+version 2.0
+March 2, 2006
 
 http://www.cs.unc.edu/~davemc/Particle
 
-For some of these demos you must download and use
+This distribution contains three source trees. Here is an explanation of each:
 
-  http://www.cs.unc.edu/~davemc/Stuff/Goodies.zip
+Particle2:  The Particle System API
+            The Particle2 library is released under the Gnu GPL.
 
-which has compiled JPEG, TIFF, PNG, and GLUT libraries and 
+Goodies:    DLLs and other libs I use, like GLUT, JPEG, TIFF, PNG, Half, etc.
+            The code in Goodies is probably copyright by its authors.
 
-  http://www.cs.unc.edu/~davemc/DMcTools
+DMcTools:   This has my collection of graphics tools - VRML loader, image stuff,
+            vector class, random number generator stop watch, matrix class, etc.
+	    It is only needed by the PSpray demo, not the API or the Example demo.
+            DMcTools is copyright by me, and maybe others.
 
-which is my collection of graphics tools - VRML loader, image stuff,
-vector class, random number generator stop watch, matrix class, ...
-Also, you will need to download
-http://www.cs.unc.edu/~davemc/Stuff/Goodies.tar.gz to get the TIFF,
-JPEG, and GLUT libraries and includes.
+If you have any questions, contributions or suggestions you can mail me at davemc@cs.unc.edu. [I work for Nvidia now, but don't want my Nvidia email address posted where spambots can find it.]
 
-Running the MeltingPhoto Demo
-
-Drag any image (GIF, TIFF, JPEG, ...) onto the MeltingPhoto icon or
-specify the image's filename on the command line. When the program
-starts it will show your photo. Press 'C' or 'A' or 'J' or some other
-effect button to stir up the pixels of the image, then press 'R' to
-make it come back together. Press 'S' to start over.
-
-Running the PSpray Demo
-
-To run the PSpray demo, click on pspray.exe and the demo will start by
-drawing a random demo. It uses motion blur, which may be faster or
-slower than no motion blur. To toggle it, press 'm'. Press the right
-mouse button to see a menu of options. Many different particle effects
-are included in the demo. The menu tells what they are. Press the
-space bar to cause an explosion. Press 'f' to toggle full screen mode.
-
-By default, the program runs a maximum of 10000 particles. Use '+' and
-'-' to change the number of particles.
-
-This demo shows just particles by themselves, instead of as a special
-effect in an environment, but these effects can trivially be added to
-any OpenGL program.
-
-Compiling the Library for UNIX
-
-The sample Makefile compiles both libparticle.a and pspray. If the
-supplied optimization flags don't make sense, feel free to rip them
-out. I've also included an SGI N32 compiled library and application.
-
-That's really it. If you have any questions, comments, or suggestions
-you can mail me at davemc@nvidia.com
 

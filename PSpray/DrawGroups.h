@@ -1,7 +1,7 @@
 #ifndef DRAWGROUPS_H
 #define DRAWGROUPS_H
 
-#include <particle/pVector.h>
+#include <particle/pVec.h>
 
 // Emit OpenGL calls to draw the particles as GL_LINES.
 // The color is set per primitive or is constant.
@@ -14,12 +14,12 @@ extern void DrawGroupAsLines(bool const_color);
 extern void DrawGroupAsDisplayLists(int dlist, bool const_color, bool const_rotation);
 
 // Draw each particle as a screen-aligned triangle with texture.
-extern void DrawGroupAsTriSprites(const pVector &view, const pVector &up,
+extern void DrawGroupAsTriSprites(const pVec &view, const pVec &up,
 								  float size_scale = 1.0f, bool draw_tex=false,
 								  bool const_size=false, bool const_color=false);
 
 // Draw each particle as a screen-aligned quad with texture.
-extern void DrawGroupAsQuadSprites(const pVector &view, const pVector &up,
+extern void DrawGroupAsQuadSprites(const pVec &view, const pVec &up,
 								   float size_scale = 1.0f, bool draw_tex=false,
 								   bool const_size=false, bool const_color=false);
 

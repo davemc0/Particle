@@ -1,10 +1,16 @@
 #ifndef _Effects_h
 #define _Effects_h
 
+#include <particle/pVec.h>
+
+#include <Image/tImage.h>
+
 class ParticleEffects
 {
 private:
 	char *EffectName;
+    uc3Image *Img; // For the PhotoShape effect
+    pVec GravityVec;
 
 public:
 	static const int NumEffects = 22;
@@ -14,6 +20,7 @@ public:
 	int particle_handle; // The handle of the particle group
 	int action_handle; // The handle of the action list being created or used
 
+    void SetPhoto(uc3Image *Im) {Img = Im; if(Img == NULL || Img->size() < 1) cerr << "Bad image.\n";}
 	char *GetCurEffectName() {return EffectName;}
 
 	ParticleEffects(int mp = 100);
@@ -53,16 +60,16 @@ public:
 	void JetSpray(bool FirstTime);
 
 	// A sprayer with particles that orbit two points
-	void Orbit2(bool FirstTime);
+    void Orbit2(bool FirstTime);
 
-	// It kinda looks like rain hitting a parking lot
-	void Rain(bool FirstTime);
+    // A bunch of particles in the shape of a photo
+    void PhotoShape(bool FirstTime);
+
+    // It kinda looks like rain hitting a parking lot
+    void Rain(bool FirstTime);
 
 	// Restore particles to their positionB.
 	void Restore(bool FirstTime);
-
-	// A bunch of particles in a shaft shape
-	void ShaftShape(bool FirstTime);
 
 	// A sheet of particles falling down, avoiding various-shaped obstacles
 	// SteerShape is one of PDSphere, PDTriangle, PDRectangle

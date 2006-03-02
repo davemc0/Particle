@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="7.10"
-	Name="ParTest"
-	ProjectGUID="{253610B8-1F09-463B-A305-F243ABE4626C}"
+	Name="Example"
+	ProjectGUID="{195ECABA-C793-47BD-A32B-6E5E781CBF5B}"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -19,11 +19,12 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../Goodies/include/glh;..;../../DMcTools"
+				AdditionalIncludeDirectories="../../Goodies/include/glh;.."
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="5"
+				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="TRUE"
@@ -32,12 +33,11 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="dmctools.lib"
-				OutputFile="$(OutDir)/ParTest.exe"
+				OutputFile="$(OutDir)/Example.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../../Goodies/lib;../../DMcTools/Debug"
 				GenerateDebugInformation="TRUE"
-				ProgramDatabaseFile="$(OutDir)/ParTest.pdb"
+				ProgramDatabaseFile="$(OutDir)/Example.pdb"
 				SubSystem="1"
 				TargetMachine="1"/>
 			<Tool
@@ -69,9 +69,10 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../../Goodies/include/glh;..;../../DMcTools"
+				AdditionalIncludeDirectories="../../Goodies/include/glh;.."
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="4"
+				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="TRUE"
@@ -80,8 +81,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="dmctools.lib"
-				OutputFile="$(OutDir)/ParTest.exe"
+				OutputFile="$(OutDir)/Example.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../Goodies/lib;../../DMcTools/Release"
 				GenerateDebugInformation="TRUE"
@@ -119,31 +119,13 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
-				RelativePath="..\PSpray\DrawGroups.cpp">
-			</File>
-			<File
-				RelativePath="..\PSpray\Effects.cpp">
-			</File>
-			<File
-				RelativePath="..\PSpray\Monarch.cpp">
-			</File>
-			<File
-				RelativePath=".\ParTest.cpp">
+				RelativePath=".\Example.cpp">
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
-			<File
-				RelativePath="..\PSpray\DrawGroups.h">
-			</File>
-			<File
-				RelativePath="..\PSpray\Effects.h">
-			</File>
-			<File
-				RelativePath="..\PSpray\Monarch.h">
-			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
