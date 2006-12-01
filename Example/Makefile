@@ -1,34 +1,35 @@
 ######################################################################
-# Particle Example
+# Particle Spray Demo
 #
-# Copyright 1999 by David K. McAllister.
+# Copyright 1998 by David K. McAllister.
 #
 ######################################################################
 
-C++ = CC
+C++ = g++
 
-PLIB =../..
-GLUT_HOME =/usr/local/contrib/unmoderated
+GLUT_HOME  =/home/utils/glut-3.7
+X11_HOME =/usr/X11R6/lib
 
-CFLAGS = $(COPT) $(COMPFLAGS) -I$(PLIB) -I$(GLUT_HOME)/include
+PHOME =..
 
-LIBDIR =-L$(PLIB)/particle -L$(GLUT_HOME)/lib
-LIBSG =$(LIBDIR) -lparticle -lglut -lGL -lGLU -lXmu -lX11 -lXext -lm
+COPT = -O3
+
+CFLAGS = $(COPT) $(COMPFLAGS) -I. -I$(PHOME) -I$(GLUT_HOME)/include
+
+LIBDIR =-L$(PHOME)/ParticleLib -L$(GLUT_HOME)/lib -L$(X11_HOME)
+LIBS =$(LIBDIR) -lParticle -lglut -lGL -lGLU -lXmu -lX11 -lXext -lXi -lm
+
+OBJS = Example.o
 
 ALL = example
 
 all: $(ALL)
 
-# following line needed for c++ .cc files
-.SUFFIXES	: .cpp
-
 .cpp.o:
 	$(C++) $(CFLAGS) -c $<
 
-example: Example.o
-	$(C++) $(LDFLAGS) -o $@ Example.o $(LIBSG)
+example: $(OBJS)
+	$(C++) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 clean:
-	rm -f $(ALL)
-	rm -f *.o
-	rm -rf ii_files rii_files
+	rm -f $(ALL) $(OBJS)

@@ -5,20 +5,18 @@
 #
 ######################################################################
 
-C++ = CC
+C++ = g++
 
-GLUT_HOME =/usr/local/contrib/unmoderated
-PLIB =../..
+GLUT_HOME  =/home/utils/glut-3.7
+PHOME =..
+DMCTOOLS_HOME =../../DMcTools
 
-LNO =-LNO:opt=1:fusion=2:fission=2:fusion_peeling_limit=2048:cs1=32K:cs2=8M
-COPT =-ptused -O3 $(LNO) -Ofast=IP27
-CFLAGS = $(COPT) $(COMPFLAGS) -I$(PLIB) -I$(GLUT_HOME)/include
+COPT = -O3
 
-LIBDIR =-L$(PLIB)/particle -L$(GLUT_HOME)/lib
-LIBSG =$(LIBDIR) -lparticle -lglut -lGL -lGLU -lXmu -lX11 -lXext -lm
-# -lmp XXX
+CFLAGS = $(COPT) $(COMPFLAGS) -I. -I$(PHOME) -I$(DMCTOOLS_HOME) -I$(GLUT_HOME)/include
 
-LDFLAGS =-IPA
+LIBDIR =-L$(PHOME)/ParticleLib -L$(GLUT_HOME)/lib
+LIBS =$(LIBDIR) -lParticle -lglut -lGL -lGLU -lXmu -lX11 -lXext -lXi -lm
 
 OBJS = PSpray.o DrawGroups.o Effects.o Monarch.o
 
@@ -26,15 +24,11 @@ ALL = pspray
 
 all: $(ALL)
 
-# following line needed for c++ .cc files
-.SUFFIXES	: .cpp
-
 .cpp.o:
 	$(C++) $(CFLAGS) -c $<
 
 pspray: $(OBJS)
-	$(C++) $(LDFLAGS) -o $@ $(OBJS) $(LIBSG)
+	$(C++) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 clean:
-	rm -f $(ALL)
-	rm -f *.o
+	rm -f $(ALL) $(OBJS)
