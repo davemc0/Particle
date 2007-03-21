@@ -11,7 +11,10 @@ using namespace PAPI;
 #include <GL/glut.h>
 #endif
 
+#include <vector>
 #include <iostream>
+
+using namespace std;
 
 #ifdef WIN32
 #define lrand48() ((rand() << 16) ^ rand())
@@ -72,9 +75,10 @@ int ParticleEffects::CallDemo(int DemoNum, bool FirstTime, bool Immediate)
     case 17: Swirl(FirstTime, Immediate); break;
     case 18: Shower(FirstTime, Immediate, 2); break;
     case 19: Snake(FirstTime, Immediate); break;
-    case 20: Waterfall1(FirstTime, Immediate); break;
-    case 21: Sphere(FirstTime, Immediate); break;
-    case 22: Experimental(FirstTime, Immediate); break;
+    case 20: Shower(FirstTime, Immediate, 3); break;
+    case 21: Waterfall1(FirstTime, Immediate); break;
+    case 22: Sphere(FirstTime, Immediate); break;
+    case 23: Experimental(FirstTime, Immediate); break;
     default:
         while(DemoNum < 0) DemoNum+= NumEffects;
         return CallDemo(DemoNum % NumEffects, FirstTime, Immediate);
@@ -124,30 +128,21 @@ void ParticleEffects::Balloons(bool FirstTime, bool Immediate)
 
     float x=0, y=0, z=-1;
 
-    int nPar = (int)P.GetGroupCount();
-    float qty = (maxParticles - nPar) / 6.0f;    // Because of 6 colors
-    qty /= 100.0f;
     float BBOX = 1.7;
 
     P.StartingAge(0, 5);
     P.Velocity(pVec(0));
-    P.Color(1,0,0); // These attributes don't get stored in the particle list.
-    P.Source(qty, PDBox(pVec(x-BBOX, y-BBOX, z-BBOX), pVec(x+BBOX, y+BBOX, z+BBOX)));
 
-    P.Color(1,1,0);
-    P.Source(qty, PDBox(pVec(x-BBOX, y-BBOX, z-BBOX), pVec(x+BBOX, y+BBOX, z+BBOX)));
+    PDUnion DomList;
+    DomList.insert(PDPoint(pVec(1,0,0)));
+    DomList.insert(PDPoint(pVec(0,1,0)));
+    DomList.insert(PDPoint(pVec(0,0,1)));
+    DomList.insert(PDPoint(pVec(0,1,1)));
+    DomList.insert(PDPoint(pVec(1,0,1)));
+    DomList.insert(PDPoint(pVec(1,1,0)));
 
-    P.Color(0,1,0);
-    P.Source(qty, PDBox(pVec(x-BBOX, y-BBOX, z-BBOX), pVec(x+BBOX, y+BBOX, z+BBOX)));
-
-    P.Color(0,1,1);
-    P.Source(qty, PDBox(pVec(x-BBOX, y-BBOX, z-BBOX), pVec(x+BBOX, y+BBOX, z+BBOX)));
-
-    P.Color(0,0,1);
-    P.Source(qty, PDBox(pVec(x-BBOX, y-BBOX, z-BBOX), pVec(x+BBOX, y+BBOX, z+BBOX)));
-
-    P.Color(1,0,1);
-    P.Source(qty, PDBox(pVec(x-BBOX, y-BBOX, z-BBOX), pVec(x+BBOX, y+BBOX, z+BBOX)));
+    P.Color(PDUnion(DomList)); // These attributes don't get stored in the particle list.
+    P.Source(maxParticles * 0.01f, PDBox(pVec(x-BBOX, y-BBOX, z-BBOX), pVec(x+BBOX, y+BBOX, z+BBOX)));
 
     P.Gravity(pVec(.0005, .005, .0005));
 
@@ -159,7 +154,7 @@ void ParticleEffects::Balloons(bool FirstTime, bool Immediate)
 
     P.Move(true, false);
 
-    P.KillOld(500);
+    P.KillOld(700);
 
     if(FirstTime)
         P.EndActionList();
@@ -658,36 +653,33 @@ void ParticleEffects::Restore(bool FirstTime, bool Immediate)
 // A sheet of particles falling down, avoiding various-shaped obstacles
 void ParticleEffects::Shower(bool FirstTime, bool Immediate, int SteerShape)
 {
-    static float jetx=0, jety=0, jetz=0;
-    static float djx, djy;
+    static pVec jet, dj;
 
     if(FirstTime) {
         EffectName = "Shower";
         ChangesEachFrame = true;
 
-        jetx = 1;
-        jety = 1;
-        djx = pRandf() * 0.1;
-        djy = pRandf() * 0.1;
+        jet = pVec(0,0,5);
+        dj = pRandVec() * 0.01f;
+        dj.z() = 0.0f;
     }
 
-    jetx += djx;
-    jety += djy;
-
-    if(jetx > 1 || jetx < 0) {djx = -djx; djy += pRandf() * 0.0005;}
-    if(jety > 2 || jety < -2) {djy = -djy; djx += pRandf() * 0.0005;}
+    jet += dj;
+    const float A = 2;
+    if(jet.x() > A || jet.x() < -A) {dj.x() *= -1.0f; dj.y() += pRandf() * 0.0005;}
+    if(jet.y() > A || jet.y() < -A) {dj.y() *= -1.0f; dj.x() += pRandf() * 0.0005;}
 
     if(!Immediate)
         P.NewActionList(action_handle);
 
-    P.Velocity(pVec(0));
+    P.Velocity(PDBlob(pVec(0), 0.001f));
     P.Size(1.5);
     P.StartingAge(0);
-    P.Color(jetx, jety, 1);
+    P.Color(PDBlob(pVec(.7,.7,.2), .2));
 
-    P.Source(120, PDLine(pVec(-5,jety,8), pVec(5,jety,8)));
+    P.Source(1, PDPoint(jet));
 
-    P.Gravity(GravityVec);
+    P.Gravity(GravityVec*.1);
 
     if(SteerShape == 0) {
         P.Avoid(0.2, 1.0, 20, PDSphere(pVec(0,0,0), 1.1));
@@ -710,22 +702,26 @@ void ParticleEffects::Shower(bool FirstTime, bool Immediate, int SteerShape)
 
 #ifndef NO_OGL_OBSTACLES
     glColor3f(1,1,0);
-    if(SteerShape == 0) {
+    switch(SteerShape) {
+    case 0:
         glutSolidSphere(1, 16, 8);
-    } else if(SteerShape == 1) {
+        break;
+    case 1:
         glBegin(GL_TRIANGLES);
         glVertex3f(0,-1,0);
         glVertex3f(2,0,0);
         glVertex3f(0,2,0);
         glEnd();
-    } else if(SteerShape == 2) {
+        break;
+    case 2:
         glBegin(GL_QUADS);
         glVertex3f(0,-1,0);
         glVertex3f(2,0,0);
         glVertex3f(2,2,0);
         glVertex3f(0,1,0);
         glEnd();
-    } else if(SteerShape == 3) {
+        break;
+    case 3:
         glBegin(GL_QUADS);
         glVertex3f(-2,-2,0);
         glVertex3f(2,-2,0);

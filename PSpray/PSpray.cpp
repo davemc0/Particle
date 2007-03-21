@@ -37,16 +37,18 @@ using namespace std;
 
 static bool MotionBlur = false, FreezeParticles = false, AntiAlias = true, DepthTest = false;
 static bool ConstColor = false, ShowText = true, ParticleCam = false, SortParticles = false, SphereTexture = true;
-static bool Immediate = false, DrawGround = false, CameraMotion = true, FullScreen = false;
-static int DemoNum = 10, PrimType = 0x0102, DisplayListID = -1, SpotTexID = -1;
+static bool Immediate = false, DrawGround = false, CameraMotion = true, FullScreen = false, PointSpritesAllowed = true;
+static int DemoNum = 10, PrimType = GL_POINTS, DisplayListID = -1, SpotTexID = -1;
 static int RandomDemo = 500; // A one-in-this-many chance of changing demos this frame
 static float BlurRate = 0.09;
-static char *PrimName = "Point Sprites";
+static char *PrimName = "Points";
 static char *FName = NULL;
 
 static Timer Clock;
 static ParticleContext_t P;
 static ParticleEffects Efx(P, 30000);
+
+void menu(int);
 
 static void SetupBenchmark()
 {
@@ -181,7 +183,8 @@ void InitProgs()
     // GotExt = glh_init_extensions("WGL_ARB_pixel_format") && GotExt;
     GotExt = glh_init_extensions("GL_ARB_point_parameters") && GotExt;
     GotExt = glh_init_extensions("GL_ARB_point_sprite") && GotExt;
-    ASSERT_R(GotExt);
+    PointSpritesAllowed = GotExt;
+    if(PointSpritesAllowed) menu('p');
 
     // Make the point size attenuate with distance.
     // These numbers are arbitrary and need to be fixed for accuracy.
@@ -256,7 +259,7 @@ void Draw()
         // Use a particle to model the camera motion
         CameraSystem = P.GenParticleGroups(1, 1);
         P.CurrentGroup(CameraSystem);
-        P.Velocity(PDSphere(pVec(0, 0.1, 0), 0.1));
+        P.Velocity(PDSphere(pVec(0, 0, 0), 0.06, 0.06));
         P.Vertex(pVec(0,-19,15));
     }
 
@@ -279,14 +282,6 @@ void Draw()
         glLoadIdentity();
     } else {
         glClear(GL_COLOR_BUFFER_BIT | (DepthTest ? GL_DEPTH_BUFFER_BIT:0));
-    }
-
-    // Do the particle dynamics
-    if(!FreezeParticles) {
-        P.CurrentGroup(Efx.particle_handle);
-        for(int step = 0; step < Efx.numSteps; step++) {
-            Efx.CallDemo(DemoNum, false, Immediate);
-        }
     }
 
     // Use a particle to model the camera motion
@@ -319,6 +314,14 @@ void Draw()
         glVertex3f(10,-10,0);
         glVertex3f(10,10,0);
         glEnd();
+    }
+
+    // Do the particle dynamics
+    if(!FreezeParticles) {
+        P.CurrentGroup(Efx.particle_handle);
+        for(int step = 0; step < Efx.numSteps; step++) {
+            Efx.CallDemo(DemoNum, false, Immediate);
+        }
     }
 
     P.CurrentGroup(Efx.particle_handle);
@@ -480,10 +483,10 @@ void menu(int item)
         }
         break;
     case 'p':
-        if(PrimType == GL_POINTS) {
+        if(PrimType == GL_POINTS && PointSpritesAllowed) {
             PrimType = 0x0102;
             PrimName = "Point Sprites";
-        } else if(PrimType == 0x0102) {
+        } else if(PrimType == 0x0102 || PrimType == GL_POINTS) {
             PrimType = GL_LINES;
             PrimName = "Lines";
         } else if(PrimType == GL_LINES) {
@@ -655,6 +658,11 @@ int main(int argc, char **argv)
     srand48( (unsigned)time( NULL ) );
 
     DemoNum = lrand48();
+
+    if(!HasSSE()) {
+        cerr << "Your CPU must have SSE to run this program. You should get an Intel or AMD CPU or recompile with SSE turned off.\n";
+        throw;
+    }
 
     Args(argc, argv);
     GlutSetup(argc, argv);

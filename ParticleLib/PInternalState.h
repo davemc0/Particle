@@ -1,8 +1,9 @@
-// PInternalState.h
-//
-// Copyright 1998-2006 by David K. McAllister.
-//
-// Defines these classes: PInternalState_t
+/// PInternalState.h
+///
+/// Copyright 1997-2007 by David K. McAllister
+/// http://www.ParticleSystems.org
+///
+/// Defines these classes: PInternalState_t
 
 #pragma once
 

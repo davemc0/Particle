@@ -1,8 +1,9 @@
-// Actions.h
-//
-// Copyright 1998-2006 by David K. McAllister.
-//
-// These structures store the details of actions for action lists
+/// Actions.h
+///
+/// Copyright 1997-2007 by David K. McAllister
+/// http://www.ParticleSystems.org
+///
+/// These structures store the details of actions for action lists
 
 #ifndef _Actions_h
 #define _Actions_h

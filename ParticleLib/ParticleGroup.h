@@ -1,10 +1,11 @@
-// ParticleGroup.h
-//
-// Copyright 1998-2005 by David K. McAllister.
-//
-// A group of particles - Info and an array of Particles
-//
-// Defines these classes: ParticleGroup
+/// ParticleGroup.h
+///
+/// Copyright 1997-2007 by David K. McAllister
+/// http://www.ParticleSystems.org
+///
+/// A group of particles - Info and an array of Particles
+///
+/// Defines these classes: ParticleGroup
 
 #ifndef _ParticleGroup_h
 #define _ParticleGroup_h
@@ -136,7 +137,7 @@ public:
     }
 
     inline bool Add(const pVec &pos, const pVec &posB,
-        const pVec &up, 
+        const pVec &up,
         const pVec &vel, const pVec &rvel,
         const pVec &size, const pVec &color,
         const float alpha = 1.0f,

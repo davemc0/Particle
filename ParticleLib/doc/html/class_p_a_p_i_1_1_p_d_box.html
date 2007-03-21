@@ -8,6 +8,7 @@
 <div class="tabs">
   <ul>
     <li><a href="index.html"><span>Main&nbsp;Page</span></a></li>
+    <li><a href="namespaces.html"><span>Namespaces</span></a></li>
     <li id="current"><a href="annotated.html"><span>Classes</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
   </ul></div>
@@ -18,7 +19,7 @@
     <li><a href="functions.html"><span>Class&nbsp;Members</span></a></li>
   </ul></div>
 <div class="nav">
-<b>PAPI</b>::<a class="el" href="class_p_a_p_i_1_1_p_d_box.html">PDBox</a></div>
+<a class="el" href="namespace_p_a_p_i.html">PAPI</a>::<a class="el" href="class_p_a_p_i_1_1_p_d_box.html">PDBox</a></div>
 <h1>PDBox Class Reference</h1><!-- doxytag: class="PAPI::PDBox" --><!-- doxytag: inherits="PAPI::pDomain" -->Axis-aligned box.  
 <a href="#_details">More...</a>
 <p>
@@ -43,6 +44,10 @@ bool&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <a class="el" href="class_p_a_p_i_1_1p_vec.html">pVec</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_d_box.html#fc189c692310a2a1f17cbc8694cb92ce">Generate</a> () const</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Returns a random point in this box. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="78060a0eb0806aea95d7ef85a3bed205"></a><!-- doxytag: member="PAPI::PDBox::Size" ref="78060a0eb0806aea95d7ef85a3bed205" args="() const" -->
+float&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_d_box.html#78060a0eb0806aea95d7ef85a3bed205">Size</a> () const</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Returns the size of the domain (length, area, or volume). <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="c690e04cee7a8360e96a94095ab10743"></a><!-- doxytag: member="PAPI::PDBox::copy" ref="c690e04cee7a8360e96a94095ab10743" args="() const" -->
 <a class="el" href="class_p_a_p_i_1_1p_domain.html">pDomain</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>copy</b> () const</td></tr>
 
@@ -56,6 +61,9 @@ bool&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="2890802267e476ca1f557814b7664068"></a><!-- doxytag: member="PAPI::PDBox::dif" ref="2890802267e476ca1f557814b7664068" args="" -->
 <a class="el" href="class_p_a_p_i_1_1p_vec.html">pVec</a>&nbsp;</td><td class="memItemRight" valign="bottom"><b>dif</b></td></tr>
 
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="88e7c10303524def0241927378e9b58c"></a><!-- doxytag: member="PAPI::PDBox::vol" ref="88e7c10303524def0241927378e9b58c" args="" -->
+float&nbsp;</td><td class="memItemRight" valign="bottom"><b>vol</b></td></tr>
+
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 Axis-aligned box. 
@@ -64,7 +72,7 @@ e0 and e1 are opposite corners of an axis-aligned box. It doesn't matter which o
 Generate returns a random point in this box. Within returns true if the point is in the box.<p>
 It is only possible to bounce particles off the outside of the box, not the inside. Likewise, particles can only Avoid the box from the outside. To use the Avoid action inside a box, define the box as six planes. 
 <p>
-<hr size="1"><address style="align: right;"><small>Generated on Fri Dec 1 13:53:59 2006 for ParticleAPI by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Wed Mar 21 14:07:01 2007 for ParticleAPI by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.1-p1 </small></address>
 </body>

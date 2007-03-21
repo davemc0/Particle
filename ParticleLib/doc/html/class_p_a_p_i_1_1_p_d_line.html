@@ -8,6 +8,7 @@
 <div class="tabs">
   <ul>
     <li><a href="index.html"><span>Main&nbsp;Page</span></a></li>
+    <li><a href="namespaces.html"><span>Namespaces</span></a></li>
     <li id="current"><a href="annotated.html"><span>Classes</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
   </ul></div>
@@ -18,7 +19,7 @@
     <li><a href="functions.html"><span>Class&nbsp;Members</span></a></li>
   </ul></div>
 <div class="nav">
-<b>PAPI</b>::<a class="el" href="class_p_a_p_i_1_1_p_d_line.html">PDLine</a></div>
+<a class="el" href="namespace_p_a_p_i.html">PAPI</a>::<a class="el" href="class_p_a_p_i_1_1_p_d_line.html">PDLine</a></div>
 <h1>PDLine Class Reference</h1><!-- doxytag: class="PAPI::PDLine" --><!-- doxytag: inherits="PAPI::pDomain" -->A line segment.  
 <a href="#_details">More...</a>
 <p>
@@ -38,11 +39,15 @@
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="da38547a2bcf5d59a9dc5f5522a1fb43"></a><!-- doxytag: member="PAPI::PDLine::Within" ref="da38547a2bcf5d59a9dc5f5522a1fb43" args="(const pVec &amp;pos) const " -->
 bool&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_d_line.html#da38547a2bcf5d59a9dc5f5522a1fb43">Within</a> (const <a class="el" href="class_p_a_p_i_1_1p_vec.html">pVec</a> &amp;pos) const </td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Always returns false. <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Returns true for points within epsilon of the line segment. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="fc189c692310a2a1f17cbc8694cb92ce"></a><!-- doxytag: member="PAPI::PDLine::Generate" ref="fc189c692310a2a1f17cbc8694cb92ce" args="() const" -->
 <a class="el" href="class_p_a_p_i_1_1p_vec.html">pVec</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_d_line.html#fc189c692310a2a1f17cbc8694cb92ce">Generate</a> () const</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Returns a random point on this segment. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="78060a0eb0806aea95d7ef85a3bed205"></a><!-- doxytag: member="PAPI::PDLine::Size" ref="78060a0eb0806aea95d7ef85a3bed205" args="() const" -->
+float&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_d_line.html#78060a0eb0806aea95d7ef85a3bed205">Size</a> () const</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Returns the size of the domain (length, area, or volume). <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="c690e04cee7a8360e96a94095ab10743"></a><!-- doxytag: member="PAPI::PDLine::copy" ref="c690e04cee7a8360e96a94095ab10743" args="() const" -->
 <a class="el" href="class_p_a_p_i_1_1p_domain.html">pDomain</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>copy</b> () const</td></tr>
 
@@ -50,17 +55,23 @@ bool&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="427cd901a899ec816ca335cd144e10cf"></a><!-- doxytag: member="PAPI::PDLine::p0" ref="427cd901a899ec816ca335cd144e10cf" args="" -->
 <a class="el" href="class_p_a_p_i_1_1p_vec.html">pVec</a>&nbsp;</td><td class="memItemRight" valign="bottom"><b>p0</b></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="d006cf2a1718333fe6646cb0ec014b91"></a><!-- doxytag: member="PAPI::PDLine::p1" ref="d006cf2a1718333fe6646cb0ec014b91" args="" -->
-<a class="el" href="class_p_a_p_i_1_1p_vec.html">pVec</a>&nbsp;</td><td class="memItemRight" valign="bottom"><b>p1</b></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="722382e92546bb92e9ba46c46baf84b8"></a><!-- doxytag: member="PAPI::PDLine::vec" ref="722382e92546bb92e9ba46c46baf84b8" args="" -->
+<a class="el" href="class_p_a_p_i_1_1p_vec.html">pVec</a>&nbsp;</td><td class="memItemRight" valign="bottom"><b>vec</b></td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="390900b4dddffe1e0760b19480f222c8"></a><!-- doxytag: member="PAPI::PDLine::vecNrm" ref="390900b4dddffe1e0760b19480f222c8" args="" -->
+<a class="el" href="class_p_a_p_i_1_1p_vec.html">pVec</a>&nbsp;</td><td class="memItemRight" valign="bottom"><b>vecNrm</b></td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="f67b7bab427a3a151b2b23026e913ef7"></a><!-- doxytag: member="PAPI::PDLine::len" ref="f67b7bab427a3a151b2b23026e913ef7" args="" -->
+float&nbsp;</td><td class="memItemRight" valign="bottom"><b>len</b></td></tr>
 
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 A line segment. 
 <p>
 e0 and e1 are the endpoints of the segment.<p>
-Generate returns a random point on this segment. Within always returns false. 
+Generate returns a random point on this segment. Within returns true for points within epsilon of the line segment. 
 <p>
-<hr size="1"><address style="align: right;"><small>Generated on Fri Dec 1 13:53:59 2006 for ParticleAPI by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Wed Mar 21 14:07:01 2007 for ParticleAPI by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.1-p1 </small></address>
 </body>

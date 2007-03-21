@@ -1,7 +1,7 @@
 /// pAPI.h
 ///
-/// Copyright 1997-2006 by David K. McAllister.
-/// http://www.cs.unc.edu/~davemc/Particle
+/// Copyright 1997-2007 by David K. McAllister
+/// http://www.ParticleSystems.org
 ///
 /// Include this file in all applications that use the Particle System API.
 /// The Particle System API is distributed under the GNU LGPL.
@@ -10,13 +10,10 @@
 #define _particle_api_h
 
 #include "pDomain.h"
-#include <string>
-
-using namespace std;
 
 namespace PAPI {
     /// This is the major and minor version number of this release of the API.
-    const int P_VERSION = 210;
+    const int P_VERSION = 220;
 
     /// A very large float value used as a default arg passed into functions
     const float P_MAXFLOAT = 1.0e16f; // Actually this must be < sqrt(MAXFLOAT) since we store this value squared.
@@ -29,24 +26,6 @@ namespace PAPI {
 
     /// This is the type of the particle death callback function that you can register.
     typedef void (*P_PARTICLE_CALLBACK)(struct Particle_t &particle, void *data);
-
-    /// Base type of all exceptions thrown by the Particle System API.
-    struct PError_t
-    {
-        string ErrMsg;
-        PError_t(const string Er) : ErrMsg(Er) {}
-    };
-
-    struct PErrInNewActionList : PError_t ///< An operation was illegally attempted while in the midst of compiling an action list
-    { PErrInNewActionList(const string Er) : PError_t(Er) {} };
-    struct PErrNotImplemented : PError_t ///< API encountered an unimplemented code path like Bounce for a new 
-    { PErrNotImplemented(const string Er) : PError_t(Er) {} };
-    struct PErrInternalError : PError_t ///< Internal API error (a PASSERT failed)
-    { PErrInternalError(const string Er) : PError_t(Er) {} };
-    struct PErrParticleGroup : PError_t ///< A particle group call had an error
-    { PErrParticleGroup(const string Er) : PError_t(Er) {} };
-    struct PErrActionList : PError_t ///< An action list call had an error
-    { PErrActionList(const string Er) : PError_t(Er) {} };
 
     class PInternalState_t; // The API-internal struct containing the context's state. Don't try to use it.
     class PInternalSourceState_t; // The API-internal struct containing the context's source state. Don't try to use it.
@@ -294,7 +273,7 @@ namespace PAPI {
         /// The group's BirthCallback(), if any, is called for each particle added to the list.
         void CopyGroup(const int p_src_group_num, ///< group number of the source particle group
             const size_t index = 0, ///< index of the first particle in the source list to copy
-            const size_t copy_count = P_MAXINT ///< copy at most this many particles 
+            const size_t copy_count = P_MAXINT ///< copy at most this many particles
             );
 
         /// Change which group is current.
@@ -356,7 +335,7 @@ namespace PAPI {
         ///
         /// Writing to the returned memory is obviously unsafe. There may be auxiliary data that depend on the current values of the particle data. You can try it if you want to, but your code may break against future API versions.
         size_t GetParticlePointer(float *&ptr, ///< the returned pointer to the particle data
-            size_t &stride, ///< the returned stride for the value for one particle to the value for the next particle
+            size_t &stride, ///< the number of floats from one particle's value to the next particle's value
             size_t &pos3Ofs, ///< the number of floats from returned ptr to the first particle's position parameter
             size_t &posB3Ofs, ///< the number of floats from returned ptr to the first particle's positionB parameter
             size_t &size3Ofs, ///< the number of floats from returned ptr to the first particle's size parameter
@@ -364,8 +343,13 @@ namespace PAPI {
             size_t &velB3Ofs, ///< the number of floats from returned ptr to the first particle's velocityB parameter
             size_t &color3Ofs, ///< the number of floats from returned ptr to the first particle's color parameter
             size_t &alpha1Ofs, ///< the number of floats from returned ptr to the first particle's alpha parameter
-            size_t &age1Ofs ///< the number of floats from returned ptr to the first particle's age parameter
-            );
+            size_t &age1Ofs, ///< the number of floats from returned ptr to the first particle's age parameter
+            size_t &up3Ofs, ///< the number of floats from returned ptr to the first particle's up parameter
+            size_t &rvel3Ofs, ///< the number of floats from returned ptr to the first particle's rvel parameter
+            size_t &upB3Ofs, ///< the number of floats from returned ptr to the first particle's upB parameter
+            size_t &mass1Ofs, ///< the number of floats from returned ptr to the first particle's mass parameter
+            size_t &data1Ofs ///< the number of floats from returned ptr to the first particle's data parameter, which is a 32-bit integer, not a float
+        );
 
         /// Change the maximum number of particles in the current group.
         ///
@@ -475,7 +459,7 @@ namespace PAPI {
         ///
         /// Causes an explosion by accelerating all particles away from the center. Particles are accelerated away from the center by an amount proportional to magnitude.
         /// The shock wave of the explosion has a gaussian magnitude. The peak of the wave front travels spherically outward from the center at the specified velocity. So at a given time step, particles at a distance (velocity * age) from center will receive the most acceleration, and particles not at the peak of the shock wave will receive a lesser outward acceleration.
-        /// 
+        ///
         /// radius is the current radius of the explosion wave's peak. It is up to the application to increment the radius for each call to Explosion(). For Explosion() calls in action lists, this means you will need to recreate the action list each time step.
         /// You can set up a standing wave by not incrementing the radius.
         void Explosion(const pVec &center, ///< center point of shock wave
@@ -539,7 +523,7 @@ namespace PAPI {
         /// Modify each particle’s rotational velocity to be similar to that of its neighbors.
         ///
         /// Each particle is accelerated toward the weighted mean of the rotational velocities of the other particles in the group.
-        /// 
+        ///
         /// Using an epsilon similar in size to magnitude can increase the range of influence of nearby particles on this particle.
         void MatchRotVelocity(const float magnitude = 1.0f, ///< scales each particle's acceleration
             const float epsilon = P_EPS, ///< The amount of acceleration falls off inversely with the squared distance to the edge of the domain. But when that distance is small, the acceleration would be infinite, so epsilon is always added to the distance.
@@ -704,7 +688,7 @@ namespace PAPI {
             );
 
         /// Accelerate particles in a vortex-like way.
-        /// 
+        ///
         /// The vortex is a complicated action to use, but when done correctly it makes particles fly around like in a tornado.
         void Vortex(
             const pVec &center, ///< tip of the vortex

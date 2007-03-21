@@ -1,12 +1,14 @@
-// pVec.h - yet another 3D vector class.
-//
-// Copyright 1997-2006 by David K. McAllister
-// Based on code Copyright 1997 by Jonathan P. Leech
-//
-// A simple 3D float vector class for internal use by the particle systems.
-//
-// The new implementation of this class uses four floats. This allows the class to be implemented using
-// SSE intrinsics for faster execution on P4 and AMD processors.
+/// pVec.h - yet another 3D vector class.
+///
+/// Copyright 1997-2007 by David K. McAllister
+/// Based on code Copyright 1997 by Jonathan P. Leech
+/// http://www.ParticleSystems.org
+///
+/// A simple 3D float vector class for internal use by the particle systems.
+///
+/// I have experimented with an implementation of this class that uses four floats.
+/// This allows the class to be implemented using
+/// SSE intrinsics for faster execution on P4 and AMD processors.
 
 #ifndef _pvec_h
 #define _pvec_h
@@ -42,30 +44,24 @@ namespace PAPI
 #endif
 
     inline bool pSameSign(const float &a, const float &b) { return a * b >= 0.0f; }
-    inline bool pSameSignd(const float &a, const float &b)
-    {
-        int *fi = (int *)&a;
-        int *gi = (int *)&b;
-        return !(((*fi) ^ (*gi)) & 0x80000000);
-    }
 
     /// Return a random number with a normal distribution.
     inline float pNRandf(float sigma = 1.0f)
     {
-        const float P_ONE_OVER_SIGMA_EXP = (1.0f / 0.7975f);
-
-        if(sigma == 0) return 0;
-
-        float y;
+        float x, y, r2;
         do {
-            y = -logf(pRandf());
+            x = pRandf()*2.0f-1.0f;
+            y = pRandf()*2.0f-1.0f;
+            r2 = x*x+y*y;
         }
-        while(pRandf() > expf(-fsqr(y - 1.0f)*0.5f));
+        while(r2 > 1.0f || r2 == 0.0f);
 
-        if(rand() & 0x1)
-            return y * sigma * P_ONE_OVER_SIGMA_EXP;
-        else
-            return -y * sigma * P_ONE_OVER_SIGMA_EXP;
+        float m = sqrtf(-2.0f * logf(r2)/r2);
+
+        float px = x*m*sigma;
+        // float py = y*m*sigma;
+
+        return px;
     }
 
     /// A single-precision floating point three-vector.
@@ -228,9 +224,21 @@ namespace PAPI
         return pVec(pRandf(), pRandf(), pRandf());
     }
 
-    inline pVec pNRandVec(float stdev)
+    inline pVec pNRandVec(float sigma)
     {
-        return pVec(pNRandf(stdev), pNRandf(stdev), pNRandf(stdev));
+        float x, y, r2;
+        do {
+            x = pRandf()*2.0f-1.0f;
+            y = pRandf()*2.0f-1.0f;
+            r2 = x*x+y*y;
+        }
+        while(r2 > 1.0f || r2 == 0.0f);
+
+        float m = sqrtf(-2.0f * logf(r2)/r2);
+
+        float px = x*m*sigma;
+        float py = y*m*sigma;
+        return pVec(px, py, pNRandf(sigma));
     }
 
 };

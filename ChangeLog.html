@@ -6,6 +6,34 @@
 </head>
 <body>
     <h1>
+        Version 2.20 Changes (March 2007)</h1>
+    <ul>
+        <li>Added the PDUnion domain, which is the union of multiple other domains. This gets
+            us closer to being able to define a polygonal model domain. It also is a good way
+            to specify colors for the Balloons effect, where colors come from disjoint sets,
+            not from a continuum.</li>
+        <li>Fixed the Within() function for many domains. Some domains just had their sense
+            reversed. Non-3D domains used to always return false but now I try to determine
+            whether the point rests in the plane or whatever.</li>
+        <li>Wrote some domain self-testing code that does Generate() then calls Within() on
+            the generated point to make sure they match.</li>
+        <li>Added the new pError.h file and added an error when negative radiuses are supplied
+            to a domain.</li>
+        <li>Fixed Rotational damping. It was previously just doing positional damping. Oops!</li>
+        <li>Avoid() was incorrectly being scaled by dt when computing the look_ahead position.</li>
+        <li>Avoid() of a rectangle was steering toward the middle of the rectangle sometimes.</li>
+        <li>Avoid() of a plane was pulling away from the plane too sharply, basically bouncing.</li>
+        <li>Made PSpray check whether you have SSE and whether you have the necessary OpenGL
+            extensions for point sprites.</li>
+        <li>Added #include "typeinfo" to appease STLPort implementation of STL.</li>
+        <li>Extended GetParticlePointer() to return <i>all</i> particle data.</li>
+        <li>Tripled the performance of the pNRandf() function, which creates a normally-distributed
+            random number.</li>
+        <li>In PSpray, I check for the existance of SSE and I allow it to work without Nvidia's
+            point sprites.</li>
+        <li>Thanks to Greg Croft, Lloyd Tullues, and John Berendsen for bug reports and fixes.</li>
+    </ul>
+    <h1>
         Version 2.10 Changes (November 2006)</h1>
     <ul>
         <li>Documented the API using Doxygen. I'm new to Doxygen, so feel free to change things

@@ -8,6 +8,7 @@
 <div class="tabs">
   <ul>
     <li><a href="index.html"><span>Main&nbsp;Page</span></a></li>
+    <li><a href="namespaces.html"><span>Namespaces</span></a></li>
     <li id="current"><a href="annotated.html"><span>Classes</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
   </ul></div>
@@ -18,7 +19,7 @@
     <li><a href="functions.html"><span>Class&nbsp;Members</span></a></li>
   </ul></div>
 <div class="nav">
-<b>PAPI</b>::<a class="el" href="class_p_a_p_i_1_1_p_d_rectangle.html">PDRectangle</a></div>
+<a class="el" href="namespace_p_a_p_i.html">PAPI</a>::<a class="el" href="class_p_a_p_i_1_1_p_d_rectangle.html">PDRectangle</a></div>
 <h1>PDRectangle Class Reference</h1><!-- doxytag: class="PAPI::PDRectangle" --><!-- doxytag: inherits="PAPI::pDomain" -->Rhombus-shaped planar region.  
 <a href="#_details">More...</a>
 <p>
@@ -38,11 +39,15 @@
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="da38547a2bcf5d59a9dc5f5522a1fb43"></a><!-- doxytag: member="PAPI::PDRectangle::Within" ref="da38547a2bcf5d59a9dc5f5522a1fb43" args="(const pVec &amp;pos) const " -->
 bool&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_d_rectangle.html#da38547a2bcf5d59a9dc5f5522a1fb43">Within</a> (const <a class="el" href="class_p_a_p_i_1_1p_vec.html">pVec</a> &amp;pos) const </td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Always returns false. <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Returns true for points within epsilon of the patch. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="fc189c692310a2a1f17cbc8694cb92ce"></a><!-- doxytag: member="PAPI::PDRectangle::Generate" ref="fc189c692310a2a1f17cbc8694cb92ce" args="() const" -->
 <a class="el" href="class_p_a_p_i_1_1p_vec.html">pVec</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_d_rectangle.html#fc189c692310a2a1f17cbc8694cb92ce">Generate</a> () const</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Returns a random point in the diamond-shaped patch whose corners are o, o+u, o+u+v, and o+v. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="78060a0eb0806aea95d7ef85a3bed205"></a><!-- doxytag: member="PAPI::PDRectangle::Size" ref="78060a0eb0806aea95d7ef85a3bed205" args="() const" -->
+float&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_d_rectangle.html#78060a0eb0806aea95d7ef85a3bed205">Size</a> () const</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Returns the size of the domain (length, area, or volume). <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="c690e04cee7a8360e96a94095ab10743"></a><!-- doxytag: member="PAPI::PDRectangle::copy" ref="c690e04cee7a8360e96a94095ab10743" args="() const" -->
 <a class="el" href="class_p_a_p_i_1_1p_domain.html">pDomain</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>copy</b> () const</td></tr>
 
@@ -65,6 +70,12 @@ bool&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="b2ee74240232c6ab3316f52bb82bf1cc"></a><!-- doxytag: member="PAPI::PDRectangle::nrm" ref="b2ee74240232c6ab3316f52bb82bf1cc" args="" -->
 <a class="el" href="class_p_a_p_i_1_1p_vec.html">pVec</a>&nbsp;</td><td class="memItemRight" valign="bottom"><b>nrm</b></td></tr>
 
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="cfbfdea057fae042422eb907eaee17ad"></a><!-- doxytag: member="PAPI::PDRectangle::s1" ref="cfbfdea057fae042422eb907eaee17ad" args="" -->
+<a class="el" href="class_p_a_p_i_1_1p_vec.html">pVec</a>&nbsp;</td><td class="memItemRight" valign="bottom"><b>s1</b></td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="dcb74072629e4737f53ff54b2a8add97"></a><!-- doxytag: member="PAPI::PDRectangle::s2" ref="dcb74072629e4737f53ff54b2a8add97" args="" -->
+<a class="el" href="class_p_a_p_i_1_1p_vec.html">pVec</a>&nbsp;</td><td class="memItemRight" valign="bottom"><b>s2</b></td></tr>
+
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="102423de0ad8ee62290d2576c6880df7"></a><!-- doxytag: member="PAPI::PDRectangle::uLen" ref="102423de0ad8ee62290d2576c6880df7" args="" -->
 float&nbsp;</td><td class="memItemRight" valign="bottom"><b>uLen</b></td></tr>
 
@@ -74,14 +85,17 @@ float&nbsp;</td><td class="memItemRight" valign="bottom"><b>vLen</b></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a6702f5ca985a5b97e1534be9d374bba"></a><!-- doxytag: member="PAPI::PDRectangle::D" ref="a6702f5ca985a5b97e1534be9d374bba" args="" -->
 float&nbsp;</td><td class="memItemRight" valign="bottom"><b>D</b></td></tr>
 
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="97ab43f6fd28920a42d987c8fec4afec"></a><!-- doxytag: member="PAPI::PDRectangle::area" ref="97ab43f6fd28920a42d987c8fec4afec" args="" -->
+float&nbsp;</td><td class="memItemRight" valign="bottom"><b>area</b></td></tr>
+
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 Rhombus-shaped planar region. 
 <p>
 p0 is a point on the plane. u0 and v0 are (non-parallel) basis vectors in the plane. They don't need to be normal or orthogonal.<p>
-Generate returns a random point in the diamond-shaped patch whose corners are o, o+u, o+u+v, and o+v. Within returns false. 
+Generate returns a random point in the diamond-shaped patch whose corners are o, o+u, o+u+v, and o+v. Within returns true for points within epsilon of the patch. 
 <p>
-<hr size="1"><address style="align: right;"><small>Generated on Fri Dec 1 13:53:59 2006 for ParticleAPI by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Wed Mar 21 14:07:01 2007 for ParticleAPI by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.1-p1 </small></address>
 </body>

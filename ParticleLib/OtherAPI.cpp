@@ -1,8 +1,9 @@
-// OtherAPI.cpp
-//
-// Copyright 1998-2006 by David K. McAllister.
-//
-// This file implements the API calls that are not particle actions.
+/// OtherAPI.cpp
+///
+/// Copyright 1997-2007 by David K. McAllister
+/// http://www.ParticleSystems.org
+///
+/// This file implements the API calls that are not particle actions.
 
 #include "pAPI.h"
 #include "PInternalState.h"
@@ -334,8 +335,8 @@ namespace PAPI {
     // WARNING: This function gives the application access to memory allocated and controlled
     // by the Particle API. Don't do anything stupid with this power or you will regret it.
     size_t PContextParticleGroup_t::GetParticlePointer(float *&ptr, size_t &stride, size_t &pos3Ofs, size_t &posB3Ofs,
-        size_t &size3Ofs, size_t &vel3Ofs, size_t &velB3Ofs,
-        size_t &color3Ofs, size_t &alpha1Ofs, size_t &age1Ofs)
+        size_t &size3Ofs, size_t &vel3Ofs, size_t &velB3Ofs, size_t &color3Ofs, size_t &alpha1Ofs, size_t &age1Ofs,
+        size_t &up3Ofs, size_t &rvel3Ofs, size_t &upB3Ofs, size_t &mass1Ofs, size_t &data1Ofs)
     {
         ParticleGroup &pg = PS->PGroups[PS->pgroup_id];
 
@@ -362,6 +363,11 @@ namespace PAPI {
         color3Ofs = (float *)&(p0->color.x()) - fp0;
         alpha1Ofs = (float *)&(p0->alpha) - fp0;
         age1Ofs = (float *)&(p0->age) - fp0;
+        up3Ofs = (float *)&(p0->up) - fp0;
+        rvel3Ofs = (float *)&(p0->rvel) - fp0;
+        upB3Ofs = (float *)&(p0->upB) - fp0;
+        mass1Ofs = (float *)&(p0->mass) - fp0;
+        data1Ofs = (float *)&(p0->data) - fp0;
 
         return pg.size();
     }

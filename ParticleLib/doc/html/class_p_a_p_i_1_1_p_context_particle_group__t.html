@@ -8,6 +8,7 @@
 <div class="tabs">
   <ul>
     <li><a href="index.html"><span>Main&nbsp;Page</span></a></li>
+    <li><a href="namespaces.html"><span>Namespaces</span></a></li>
     <li id="current"><a href="annotated.html"><span>Classes</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
   </ul></div>
@@ -18,7 +19,7 @@
     <li><a href="functions.html"><span>Class&nbsp;Members</span></a></li>
   </ul></div>
 <div class="nav">
-<b>PAPI</b>::<a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html">PContextParticleGroup_t</a></div>
+<a class="el" href="namespace_p_a_p_i.html">PAPI</a>::<a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html">PContextParticleGroup_t</a></div>
 <h1>PContextParticleGroup_t Class Reference</h1><!-- doxytag: class="PAPI::PContextParticleGroup_t" -->This class contains the API calls that operate on particle groups.  
 <a href="#_details">More...</a>
 <p>
@@ -32,7 +33,7 @@
 <a href="class_p_a_p_i_1_1_p_context_particle_group__t-members.html">List of all members.</a><table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Public Member Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html#897c8588c3760a7c5d0c7a32c26b9e5f">CopyGroup</a> (const int p_src_group_num, const size_t index=0, const size_t copy_count=P_MAXINT)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html#897c8588c3760a7c5d0c7a32c26b9e5f">CopyGroup</a> (const int p_src_group_num, const size_t index=0, const size_t copy_count=<a class="el" href="namespace_p_a_p_i.html#4e6d6573f60c51b8ebddff9cd72a54d3">P_MAXINT</a>)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Copy particles from the specified group into the current group.  <a href="#897c8588c3760a7c5d0c7a32c26b9e5f"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html#f1ddcf82756a87ded68e545cad3e8d90">CurrentGroup</a> (const int p_group_num)</td></tr>
@@ -53,16 +54,16 @@
 <tr><td class="memItemLeft" nowrap align="right" valign="top">size_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html#572fa2570b679e30dcce3b83454482ef">GetParticles</a> (const size_t index, const size_t count, float *position=NULL, float *color=NULL, float *vel=NULL, float *size=NULL, float *age=NULL)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Copy particles from the current group to application memory.  <a href="#572fa2570b679e30dcce3b83454482ef"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">size_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html#b7ca7cb5ae1f37bd6cc5bb0fea18e94d">GetParticlePointer</a> (float *&amp;ptr, size_t &amp;stride, size_t &amp;pos3Ofs, size_t &amp;posB3Ofs, size_t &amp;size3Ofs, size_t &amp;vel3Ofs, size_t &amp;velB3Ofs, size_t &amp;color3Ofs, size_t &amp;alpha1Ofs, size_t &amp;age1Ofs)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">size_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html#5bce0365096e7fc132e3dce169670436">GetParticlePointer</a> (float *&amp;ptr, size_t &amp;stride, size_t &amp;pos3Ofs, size_t &amp;posB3Ofs, size_t &amp;size3Ofs, size_t &amp;vel3Ofs, size_t &amp;velB3Ofs, size_t &amp;color3Ofs, size_t &amp;alpha1Ofs, size_t &amp;age1Ofs, size_t &amp;up3Ofs, size_t &amp;rvel3Ofs, size_t &amp;upB3Ofs, size_t &amp;mass1Ofs, size_t &amp;data1Ofs)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Return a pointer to particle data stored in API memory.  <a href="#b7ca7cb5ae1f37bd6cc5bb0fea18e94d"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Return a pointer to particle data stored in API memory.  <a href="#5bce0365096e7fc132e3dce169670436"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html#c89a60f3740531bba39533bf75d3e990">SetMaxParticles</a> (const size_t max_count)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Change the maximum number of particles in the current group.  <a href="#c89a60f3740531bba39533bf75d3e990"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html#9749bf1b9c38df0d8926c9a963508718">BirthCallback</a> (P_PARTICLE_CALLBACK callback, void *data=NULL)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html#9749bf1b9c38df0d8926c9a963508718">BirthCallback</a> (<a class="el" href="namespace_p_a_p_i.html#e196f7abdc914b3b26bde0b287058a0e">P_PARTICLE_CALLBACK</a> callback, void *data=NULL)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Specify a particle creation callback.  <a href="#9749bf1b9c38df0d8926c9a963508718"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html#86bd49a92ff44d2daca656a6cd4f272f">DeathCallback</a> (P_PARTICLE_CALLBACK callback, void *data=NULL)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html#86bd49a92ff44d2daca656a6cd4f272f">DeathCallback</a> (<a class="el" href="namespace_p_a_p_i.html#e196f7abdc914b3b26bde0b287058a0e">P_PARTICLE_CALLBACK</a> callback, void *data=NULL)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Specify a particle death callback.  <a href="#86bd49a92ff44d2daca656a6cd4f272f"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html#1112f0655c7c1b62f870511b8afef9d7">SetWorkingSetSize</a> (const int set_size_bytes)</td></tr>
@@ -81,7 +82,7 @@ PInternalState_t *&nbsp;</td><td class="memItemRight" valign="bottom"><b>PS</b><
 This class contains the API calls that operate on particle groups. 
 <p>
 A particle group is first created using <a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html#d6b48bdc6e998672ff0df1c4f581230b">GenParticleGroups()</a>, which will create a sequentially-numbered set of particle groups and return the identifying number of the first generated particle group. You specify which group is current using <a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html#f1ddcf82756a87ded68e545cad3e8d90">CurrentGroup()</a>. Unless otherwise stated, all other commands operate on the current particle group. The maximum number of particles in the group is specified using <a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html#c89a60f3740531bba39533bf75d3e990">SetMaxParticles()</a>. The particle group is then acted upon using the Actions.<p>
-After the actions have been applied, the particles are rendered. This is done at the same stage of the application's execution as drawing other geometry. To draw a particle group in OpenGL, the application calls <a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html#572fa2570b679e30dcce3b83454482ef">GetParticles()</a> or <a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html#b7ca7cb5ae1f37bd6cc5bb0fea18e94d">GetParticlePointer()</a> functions to get the vertex data, then sends it to OpenGL. When a particle group is no longer needed, it is deleted using <a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html#49aab2a3887103f5bbeccebef529a31b">DeleteParticleGroups()</a>. 
+After the actions have been applied, the particles are rendered. This is done at the same stage of the application's execution as drawing other geometry. To draw a particle group in OpenGL, the application calls <a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html#572fa2570b679e30dcce3b83454482ef">GetParticles()</a> or <a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html#5bce0365096e7fc132e3dce169670436">GetParticlePointer()</a> functions to get the vertex data, then sends it to OpenGL. When a particle group is no longer needed, it is deleted using <a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html#49aab2a3887103f5bbeccebef529a31b">DeleteParticleGroups()</a>. 
 <p>
 <hr><h2>Member Function Documentation</h2>
 <a class="anchor" name="897c8588c3760a7c5d0c7a32c26b9e5f"></a><!-- doxytag: member="PAPI::PContextParticleGroup_t::CopyGroup" ref="897c8588c3760a7c5d0c7a32c26b9e5f" args="(const int p_src_group_num, const size_t index=0, const size_t copy_count=P_MAXINT)" -->
@@ -104,7 +105,7 @@ After the actions have been applied, the particles are rendered. This is done at
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const size_t&nbsp;</td>
-          <td class="paramname"> <em>copy_count</em> = <code>P_MAXINT</code></td><td>&nbsp;</td>
+          <td class="paramname"> <em>copy_count</em> = <code><a class="el" href="namespace_p_a_p_i.html#4e6d6573f60c51b8ebddff9cd72a54d3">P_MAXINT</a></code></td><td>&nbsp;</td>
         </tr>
         <tr>
           <td></td>
@@ -351,7 +352,7 @@ location to store 1 float per particle for age </td></tr>
 </dl>
 </div>
 </div><p>
-<a class="anchor" name="b7ca7cb5ae1f37bd6cc5bb0fea18e94d"></a><!-- doxytag: member="PAPI::PContextParticleGroup_t::GetParticlePointer" ref="b7ca7cb5ae1f37bd6cc5bb0fea18e94d" args="(float *&amp;ptr, size_t &amp;stride, size_t &amp;pos3Ofs, size_t &amp;posB3Ofs, size_t &amp;size3Ofs, size_t &amp;vel3Ofs, size_t &amp;velB3Ofs, size_t &amp;color3Ofs, size_t &amp;alpha1Ofs, size_t &amp;age1Ofs)" -->
+<a class="anchor" name="5bce0365096e7fc132e3dce169670436"></a><!-- doxytag: member="PAPI::PContextParticleGroup_t::GetParticlePointer" ref="5bce0365096e7fc132e3dce169670436" args="(float *&amp;ptr, size_t &amp;stride, size_t &amp;pos3Ofs, size_t &amp;posB3Ofs, size_t &amp;size3Ofs, size_t &amp;vel3Ofs, size_t &amp;velB3Ofs, size_t &amp;color3Ofs, size_t &amp;alpha1Ofs, size_t &amp;age1Ofs, size_t &amp;up3Ofs, size_t &amp;rvel3Ofs, size_t &amp;upB3Ofs, size_t &amp;mass1Ofs, size_t &amp;data1Ofs)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -413,7 +414,37 @@ location to store 1 float per particle for age </td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">size_t &amp;&nbsp;</td>
-          <td class="paramname"> <em>age1Ofs</em></td><td>&nbsp;</td>
+          <td class="paramname"> <em>age1Ofs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t &amp;&nbsp;</td>
+          <td class="paramname"> <em>up3Ofs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t &amp;&nbsp;</td>
+          <td class="paramname"> <em>rvel3Ofs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t &amp;&nbsp;</td>
+          <td class="paramname"> <em>upB3Ofs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t &amp;&nbsp;</td>
+          <td class="paramname"> <em>mass1Ofs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t &amp;&nbsp;</td>
+          <td class="paramname"> <em>data1Ofs</em></td><td>&nbsp;</td>
         </tr>
         <tr>
           <td></td>
@@ -433,7 +464,7 @@ Writing to the returned memory is obviously unsafe. There may be auxiliary data 
 <tr><td valign="top"><em>ptr</em>&nbsp;</td><td>
 the returned pointer to the particle data </td></tr>
 <tr><td valign="top"><em>stride</em>&nbsp;</td><td>
-the returned stride for the value for one particle to the value for the next particle </td></tr>
+the number of floats from one particle's value to the next particle's value </td></tr>
 <tr><td valign="top"><em>pos3Ofs</em>&nbsp;</td><td>
 the number of floats from returned ptr to the first particle's position parameter </td></tr>
 <tr><td valign="top"><em>posB3Ofs</em>&nbsp;</td><td>
@@ -450,6 +481,16 @@ the number of floats from returned ptr to the first particle's color parameter <
 the number of floats from returned ptr to the first particle's alpha parameter </td></tr>
 <tr><td valign="top"><em>age1Ofs</em>&nbsp;</td><td>
 the number of floats from returned ptr to the first particle's age parameter </td></tr>
+<tr><td valign="top"><em>up3Ofs</em>&nbsp;</td><td>
+the number of floats from returned ptr to the first particle's up parameter </td></tr>
+<tr><td valign="top"><em>rvel3Ofs</em>&nbsp;</td><td>
+the number of floats from returned ptr to the first particle's rvel parameter </td></tr>
+<tr><td valign="top"><em>upB3Ofs</em>&nbsp;</td><td>
+the number of floats from returned ptr to the first particle's upB parameter </td></tr>
+<tr><td valign="top"><em>mass1Ofs</em>&nbsp;</td><td>
+the number of floats from returned ptr to the first particle's mass parameter </td></tr>
+<tr><td valign="top"><em>data1Ofs</em>&nbsp;</td><td>
+the number of floats from returned ptr to the first particle's data parameter, which is a 32-bit integer, not a float </td></tr>
 </table>
 </dl>
 </div>
@@ -483,7 +524,7 @@ If necessary, this will delete particles from the end of the particle group, but
         <tr>
           <td class="memname">void BirthCallback           </td>
           <td>(</td>
-          <td class="paramtype">P_PARTICLE_CALLBACK&nbsp;</td>
+          <td class="paramtype"><a class="el" href="namespace_p_a_p_i.html#e196f7abdc914b3b26bde0b287058a0e">P_PARTICLE_CALLBACK</a>&nbsp;</td>
           <td class="paramname"> <em>callback</em>, </td>
         </tr>
         <tr>
@@ -521,7 +562,7 @@ Pointer to arbitrary data of yours to pass into your function </td></tr>
         <tr>
           <td class="memname">void DeathCallback           </td>
           <td>(</td>
-          <td class="paramtype">P_PARTICLE_CALLBACK&nbsp;</td>
+          <td class="paramtype"><a class="el" href="namespace_p_a_p_i.html#e196f7abdc914b3b26bde0b287058a0e">P_PARTICLE_CALLBACK</a>&nbsp;</td>
           <td class="paramname"> <em>callback</em>, </td>
         </tr>
         <tr>
@@ -575,7 +616,7 @@ You probably don't need to call this function. It is the number of bytes in the 
 You specify the working set size in bytes. The default is 768KB. 
 </div>
 </div><p>
-<hr size="1"><address style="align: right;"><small>Generated on Fri Dec 1 13:53:59 2006 for ParticleAPI by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Wed Mar 21 14:07:01 2007 for ParticleAPI by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.1-p1 </small></address>
 </body>

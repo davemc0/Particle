@@ -6,11 +6,11 @@
 </head>
 <body>
     <h1>
-        The Particle System API, version 2.10</h1>
+        The Particle System API, version 2.20</h1>
     <p>
         by David K. McAllister, <a href="mailto:davemc@cs.unc.edu">davemc@cs.unc.edu</a></p>
     <p>
-        November 30, 2006</p>
+        March 20, 2007</p>
     <p>
         The home page of the Particle System API is <a href="http://www.cs.unc.edu/~davemc/Particle ">
             http://www.cs.unc.edu/~davemc/Particle</a> or <a href="http://www.particlesystems.org">
@@ -160,10 +160,11 @@
         Action Lists</h2>
     <p>
         Action lists are blocks of actions that are applied together to a particle group.
-        They are conceptually similar to scripts or procedures. They are implemented and
-        expressed similarly to display lists in OpenGL. An action list encapsulates the
-        specifics of a particular effect and allows complex effects to be treated as primitives
-        like actions. An action list can be called from within another action list.</p>
+        An action list is conceptually similar to a script or procedure. Action lists are
+        implemented and expressed similarly to display lists in OpenGL. An action list encapsulates
+        the specifics of a particular effect and allows complex effects to be treated as
+        primitives like actions. An action list can be called from within another action
+        list.</p>
     <p>
         Action lists also allow effects to be simulated much more efficiently because the
         entire set of actions is known at the start, and this knowledge can be used by the
@@ -186,10 +187,11 @@
     <p>
         A Domain is a representation of a region of 3D space. For example, the Source action
         uses a domain to describe the volume in which a particle's random initial position
-        will be. The Sink and Bounce actions use domains to describe a volume in space for
-        particles to die when they enter, or to bounce off, respectively. Domains are used
-        as parameters to many functions within the API. See the Domains section of this
-        document for more.</p>
+        will be. The Avoid(), Sink() and Bounce() actions use domains to describe a volume
+        in space for particles to steer to avoid, die when they enter, or to bounce off,
+        respectively. Domains are used as parameters to many functions within the API. See
+        <a href="ParticleLib/doc/html/class_p_a_p_i_1_1p_domain.html">the Domains section of
+            this documentation</a> for more.</p>
     <h2>
         Default Parameters</h2>
     <p>

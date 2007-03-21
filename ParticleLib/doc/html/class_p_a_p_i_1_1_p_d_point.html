@@ -8,6 +8,7 @@
 <div class="tabs">
   <ul>
     <li><a href="index.html"><span>Main&nbsp;Page</span></a></li>
+    <li><a href="namespaces.html"><span>Namespaces</span></a></li>
     <li id="current"><a href="annotated.html"><span>Classes</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
   </ul></div>
@@ -18,7 +19,7 @@
     <li><a href="functions.html"><span>Class&nbsp;Members</span></a></li>
   </ul></div>
 <div class="nav">
-<b>PAPI</b>::<a class="el" href="class_p_a_p_i_1_1_p_d_point.html">PDPoint</a></div>
+<a class="el" href="namespace_p_a_p_i.html">PAPI</a>::<a class="el" href="class_p_a_p_i_1_1_p_d_point.html">PDPoint</a></div>
 <h1>PDPoint Class Reference</h1><!-- doxytag: class="PAPI::PDPoint" --><!-- doxytag: inherits="PAPI::pDomain" -->A single point.  
 <a href="#_details">More...</a>
 <p>
@@ -42,7 +43,11 @@ bool&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="fc189c692310a2a1f17cbc8694cb92ce"></a><!-- doxytag: member="PAPI::PDPoint::Generate" ref="fc189c692310a2a1f17cbc8694cb92ce" args="() const" -->
 <a class="el" href="class_p_a_p_i_1_1p_vec.html">pVec</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_d_point.html#fc189c692310a2a1f17cbc8694cb92ce">Generate</a> () const</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Always returns this point. <br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Returns true if the point is exactly equal. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="78060a0eb0806aea95d7ef85a3bed205"></a><!-- doxytag: member="PAPI::PDPoint::Size" ref="78060a0eb0806aea95d7ef85a3bed205" args="() const" -->
+float&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_d_point.html#78060a0eb0806aea95d7ef85a3bed205">Size</a> () const</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Returns the size of the domain (length, area, or volume). <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="c690e04cee7a8360e96a94095ab10743"></a><!-- doxytag: member="PAPI::PDPoint::copy" ref="c690e04cee7a8360e96a94095ab10743" args="() const" -->
 <a class="el" href="class_p_a_p_i_1_1p_domain.html">pDomain</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>copy</b> () const</td></tr>
 
@@ -54,9 +59,9 @@ bool&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 A single point. 
 <p>
-Generate always returns this point. Within always returns false. 
+Generate always returns this point. Within returns true if the point is exactly equal. 
 <p>
-<hr size="1"><address style="align: right;"><small>Generated on Fri Dec 1 13:53:59 2006 for ParticleAPI by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Wed Mar 21 14:07:01 2007 for ParticleAPI by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.1-p1 </small></address>
 </body>

@@ -19,7 +19,7 @@ private:
     void MakeFakeImage();
 
 public:
-    static const int NumEffects = 23;
+    static const int NumEffects = 24;
 
     int maxParticles; // The number of particles the app wants in this demo
     int numSteps; // The number of simulation time steps per rendered frame

@@ -1,33 +1,21 @@
-// Actions.cpp
-//
-// Copyright 1997-2006 by David K. McAllister
-//
-// I used code Copyright 1997 by Jonathan P. Leech
-// as an example in implenting this.
-//
-// This file implements the dynamics of particle actions.
+/// Actions.cpp
+///
+/// Copyright 1997-2007 by David K. McAllister
+/// http://www.ParticleSystems.org
+///
+/// I used code Copyright 1997 by Jonathan P. Leech as an example in implenting this.
+///
+/// This file implements the dynamics of particle actions.
 
 #include "Actions.h"
 #include "PInternalState.h"
 
 #include <algorithm>
+#include <typeinfo>
 // For dumping errors
 #include <sstream>
 
 namespace PAPI {
-
-    // Compute the inverse matrix of the plane basis.
-    static inline void NewBasis(const pVec &u, const pVec &v, pVec &s1, pVec &s2)
-    {
-        pVec w = Cross(u, v);
-
-        float det = 1.0f / (w.z()*u.x()*v.y() - w.z()*u.y()*v.x() - u.z()*w.x()*v.y() - u.x()*v.z()*w.y() + v.z()*w.x()*u.y() + u.z()*v.x()*w.y());
-
-        s1 = pVec((v.y()*w.z() - v.z()*w.y()), (v.z()*w.x() - v.x()*w.z()), (v.x()*w.y() - v.y()*w.x()));
-        s1 *= det;
-        s2 = pVec((u.y()*w.z() - u.z()*w.y()), (u.z()*w.x() - u.x()*w.z()), (u.x()*w.y() - u.y()*w.x()));
-        s2 *= -det;
-    }
 
     void PAAvoid::Exec(const PDTriangle &dom, ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend)
     {
@@ -36,25 +24,17 @@ namespace PAPI {
         const pVec &u = dom.u;
         const pVec &v = dom.v;
 
-        // The normalized bases are needed inside the loop.
-        const pVec &un = dom.uNrm;
-        const pVec &vn = dom.vNrm;
-
         // f is the third (non-basis) triangle edge.
         pVec f = v - u;
         pVec fn = f;
         fn.normalize();
-
-        // Compute the inverse matrix of the plane basis.
-        pVec s1, s2;
-        NewBasis(u, v, s1, s2);
 
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
             Particle_t &m = (*it);
 
             // See if particle's current and look_ahead positions cross plane.
             // If not, couldn't hit, so keep going.
-            pVec pnext = m.pos + m.vel * dt * look_ahead;
+            pVec pnext = m.pos + m.vel * look_ahead;
 
             // nrm stores the plane normal (the a,b,c of the plane eqn).
             // Old and new distances: dist(p,plane) = n * p + d
@@ -72,8 +52,8 @@ namespace PAPI {
 
             // Dot product with basis vectors of old frame
             // in terms of new frame gives position in uv frame.
-            float upos = dot(offset, s1);
-            float vpos = dot(offset, s2);
+            float upos = dot(offset, dom.s1);
+            float vpos = dot(offset, dom.s2);
 
             // Did it cross plane outside triangle?
             if(upos < 0 || vpos < 0 || (upos + vpos) > 1)
@@ -81,9 +61,9 @@ namespace PAPI {
 
             // A hit! A most palpable hit!
             // Compute distance to the three edges.
-            pVec uofs = (un * dot(un, offset)) - offset;
+            pVec uofs = (dom.uNrm * dot(dom.uNrm, offset)) - offset;
             float udistSqr = uofs.length2();
-            pVec vofs = (vn * dot(vn, offset)) - offset;
+            pVec vofs = (dom.vNrm * dot(dom.vNrm, offset)) - offset;
             float vdistSqr = vofs.length2();
 
             pVec foffset = offset - u;
@@ -99,11 +79,11 @@ namespace PAPI {
             // Blend S with m.vel.
             S.normalize();
 
-            float vm = m.vel.length();
-            pVec Vn = m.vel / vm;
+            float vlen = m.vel.length();
+            pVec Vn = m.vel / vlen;
 
             pVec dir = (S * (magdt / (fsqr(t)+epsilon))) + Vn;
-            m.vel = dir * (vm / dir.length()); // Speed of m.vel, but in direction dir.
+            m.vel = dir * (vlen / dir.length()); // Speed of m.vel, but in direction dir.
         }
     }
 
@@ -111,23 +91,12 @@ namespace PAPI {
     {
         float magdt = magnitude * dt;
 
-        const pVec &u = dom.u;
-        const pVec &v = dom.v;
-
-        // The normalized bases are needed inside the loop.
-        const pVec &un = dom.uNrm;
-        const pVec &vn = dom.vNrm;
-
-        // Compute the inverse matrix of the plane basis.
-        pVec s1, s2;
-        NewBasis(u, v, s1, s2);
-
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
             Particle_t &m = (*it);
 
             // See if particle's current and look_ahead positions cross plane.
             // If not, couldn't hit, so keep going.
-            pVec pnext = m.pos + m.vel * dt * look_ahead;
+            pVec pnext = m.pos + m.vel * look_ahead;
 
             // nrm stores the plane normal (the a,b,c of the plane eqn).
             // Old and new distances: dist(p,plane) = n * p + d
@@ -145,27 +114,27 @@ namespace PAPI {
 
             // Dot product with basis vectors of old frame
             // in terms of new frame gives position in uv frame.
-            float upos = dot(offset, s1);
-            float vpos = dot(offset, s2);
+            float upos = dot(offset, dom.s1);
+            float vpos = dot(offset, dom.s2);
 
             // Did it cross plane outside rectangle?
             if(upos < 0 || vpos < 0 || upos > 1 || vpos > 1)
                 continue;
 
             // A hit! A most palpable hit!
-            // Compute distance to the three edges.
-            pVec uofs = (un * dot(un, offset)) - offset;
+            // Compute distance to the four edges.
+            pVec uofs = (dom.uNrm * dot(dom.uNrm, offset)) - offset;
             float udistSqr = uofs.length2();
-            pVec vofs = (vn * dot(vn, offset)) - offset;
+            pVec vofs = (dom.vNrm * dot(dom.vNrm, offset)) - offset;
             float vdistSqr = vofs.length2();
 
-            pVec foffset = (u + v) - offset;
-            pVec fofs = (un * dot(un, foffset)) - foffset;
+            pVec foffset = (dom.u + dom.v) - offset;
+            pVec fofs = foffset - (dom.uNrm * dot(dom.uNrm, foffset));
             float fdistSqr = fofs.length2();
-            pVec gofs = (un * dot(un, foffset)) - foffset;
+            pVec gofs = foffset - (dom.vNrm * dot(dom.vNrm, foffset));
             float gdistSqr = gofs.length2();
 
-            pVec S;
+            pVec S; // Vector from point of impact to safety
             if(udistSqr <= vdistSqr && udistSqr <= fdistSqr
                 && udistSqr <= gdistSqr) S = uofs;
             else if(vdistSqr <= fdistSqr && vdistSqr <= gdistSqr) S = vofs;
@@ -175,11 +144,11 @@ namespace PAPI {
             // Blend S with m.vel.
             S.normalize();
 
-            float vm = m.vel.length();
-            pVec Vn = m.vel / vm;
+            float vlen = m.vel.length();
+            pVec Vn = m.vel / vlen;
 
             pVec dir = (S * (magdt / (fsqr(t)+epsilon))) + Vn;
-            m.vel = dir * (vm / dir.length()); // Speed of m.vel, but in direction dir.
+            m.vel = dir * (vlen / dir.length()); // Speed of m.vel, but in direction dir.
         }
     }
 
@@ -192,7 +161,7 @@ namespace PAPI {
 
             // See if particle's current and look_ahead positions cross plane.
             // If not, couldn't hit, so keep going.
-            pVec pnext = m.pos + m.vel * dt * look_ahead;
+            pVec pnext = m.pos + m.vel * look_ahead;
 
             // nrm stores the plane normal (the a,b,c of the plane eqn).
             // Old and new distances: dist(p,plane) = n * p + d
@@ -202,17 +171,21 @@ namespace PAPI {
             if(pSameSign(distold, distnew))
                 continue;
 
-            float nv = dot(dom.nrm, m.vel);
-            float t = -distold / nv;
+            float t = -distold / dot(dom.nrm, m.vel); // Time to collision
+            pVec S = m.vel * t + dom.nrm * distold; // Vector from projection point to point of impact
+
+            float slen = S.length2();
+            if(slen == 0.0f)
+                S = dom.nrm;
+            else
+                S.normalize();
 
             // Blend S with m.vel.
-            const pVec &S = dom.nrm;
-
-            float vm = m.vel.length();
-            pVec Vn = m.vel / vm;
+            float vlen = m.vel.length();
+            pVec Vn = m.vel / vlen;
 
             pVec dir = (S * (magdt / (fsqr(t)+epsilon))) + Vn;
-            m.vel = dir * (vm / dir.length()); // Speed of m.vel, but in direction dir.
+            m.vel = dir * (vlen / dir.length()); // Speed of m.vel, but in direction dir.
         }
     }
 
@@ -226,8 +199,8 @@ namespace PAPI {
 
             // First do a ray-sphere intersection test and see if it's soon enough.
             // Can I do this faster without t?
-            float vm = m.vel.length();
-            pVec Vn = m.vel / vm;
+            float vlen = m.vel.length();
+            pVec Vn = m.vel / vlen;
 
             pVec L = dom.ctr - m.pos;
             float v = dot(L, Vn);
@@ -238,7 +211,7 @@ namespace PAPI {
 
             // Compute length for second rejection test.
             float t = v - sqrtf(disc);
-            if(t < 0 || t > (vm * look_ahead))
+            if(t < 0 || t > (vlen * look_ahead))
                 continue;
 
             // Get a vector to safety.
@@ -247,7 +220,7 @@ namespace PAPI {
             pVec S = Cross(Vn, C);
 
             pVec dir = (S * (magdt / (fsqr(t)+epsilon))) + Vn;
-            m.vel = dir * (vm / dir.length()); // Speed of m.vel, but in direction dir.
+            m.vel = dir * (vlen / dir.length()); // Speed of m.vel, but in direction dir.
         }
     }
 
@@ -260,7 +233,7 @@ namespace PAPI {
 
             // See if particle's current and look_ahead positions cross plane.
             // If not, couldn't hit, so keep going.
-            pVec pnext = m.pos + m.vel * dt * look_ahead;
+            pVec pnext = m.pos + m.vel * look_ahead;
 
             // nrm stores the plane normal (the a,b,c of the plane eqn).
             // Old and new distances: dist(p,plane) = n * p + d
@@ -279,17 +252,19 @@ namespace PAPI {
             float radSqr = offset.length2();
 
             // Are we going to hit the disc ring? If so, always turn to the OUTSIDE of the ring.
+            // Could do inside of ring, too, if we took sqrts, found the closer direction, and flipped offset if needed.
             if(radSqr < dom.radInSqr || radSqr > dom.radOutSqr)
                 continue;
 
             // Blend S with m.vel.
             pVec S = offset;
+            S /= sqrtf(radSqr);
 
-            float vm = m.vel.length();
-            pVec Vn = m.vel / vm;
+            float vlen = m.vel.length();
+            pVec Vn = m.vel / vlen;
 
             pVec dir = (S * (magdt / (fsqr(t)+epsilon))) + Vn;
-            m.vel = dir * (vm / dir.length()); // Speed of m.vel, but in direction dir.
+            m.vel = dir * (vlen / dir.length()); // Speed of m.vel, but in direction dir.
         }
     }
 
@@ -312,9 +287,6 @@ namespace PAPI {
 
     void PABounce::Exec(const PDTriangle &dom, ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend)
     {
-        pVec s1, s2;
-        NewBasis(dom.u, dom.v, s1, s2);
-
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
             Particle_t &m = (*it);
 
@@ -338,8 +310,8 @@ namespace PAPI {
 
             // Dot product with basis vectors of old frame
             // in terms of new frame gives position in uv frame.
-            float upos = dot(offset, s1);
-            float vpos = dot(offset, s2);
+            float upos = dot(offset, dom.s1);
+            float vpos = dot(offset, dom.s2);
 
             // Did it cross plane outside triangle?
             if(upos < 0 || vpos < 0 || (upos + vpos) > 1)
@@ -361,9 +333,6 @@ namespace PAPI {
 
     void PABounce::Exec(const PDRectangle &dom, ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend)
     {
-        pVec s1, s2;
-        NewBasis(dom.u, dom.v, s1, s2);
-
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
             Particle_t &m = (*it);
 
@@ -387,8 +356,8 @@ namespace PAPI {
 
             // Dot product with basis vectors of old frame
             // in terms of new frame gives position in uv frame.
-            float upos = dot(offset, s1);
-            float vpos = dot(offset, s2);
+            float upos = dot(offset, dom.s1);
+            float vpos = dot(offset, dom.s2);
 
             // Did it cross plane outside rectangle?
             if(upos < 0 || upos > 1 || vpos < 0 || vpos > 1)

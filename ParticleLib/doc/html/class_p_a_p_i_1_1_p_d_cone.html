@@ -8,6 +8,7 @@
 <div class="tabs">
   <ul>
     <li><a href="index.html"><span>Main&nbsp;Page</span></a></li>
+    <li><a href="namespaces.html"><span>Namespaces</span></a></li>
     <li id="current"><a href="annotated.html"><span>Classes</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
   </ul></div>
@@ -18,7 +19,7 @@
     <li><a href="functions.html"><span>Class&nbsp;Members</span></a></li>
   </ul></div>
 <div class="nav">
-<b>PAPI</b>::<a class="el" href="class_p_a_p_i_1_1_p_d_cone.html">PDCone</a></div>
+<a class="el" href="namespace_p_a_p_i.html">PAPI</a>::<a class="el" href="class_p_a_p_i_1_1_p_d_cone.html">PDCone</a></div>
 <h1>PDCone Class Reference</h1><!-- doxytag: class="PAPI::PDCone" --><!-- doxytag: inherits="PAPI::pDomain" -->Cone.  
 <a href="#_details">More...</a>
 <p>
@@ -43,6 +44,10 @@ bool&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <a class="el" href="class_p_a_p_i_1_1p_vec.html">pVec</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_d_cone.html#fc189c692310a2a1f17cbc8694cb92ce">Generate</a> () const</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Returns a random point in the conical shell. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="78060a0eb0806aea95d7ef85a3bed205"></a><!-- doxytag: member="PAPI::PDCone::Size" ref="78060a0eb0806aea95d7ef85a3bed205" args="() const" -->
+float&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_d_cone.html#78060a0eb0806aea95d7ef85a3bed205">Size</a> () const</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Returns the thick conical shell volume or the thin conical shell area if OuterRadius==InnerRadius. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="c690e04cee7a8360e96a94095ab10743"></a><!-- doxytag: member="PAPI::PDCone::copy" ref="c690e04cee7a8360e96a94095ab10743" args="() const" -->
 <a class="el" href="class_p_a_p_i_1_1p_domain.html">pDomain</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>copy</b> () const</td></tr>
 
@@ -58,9 +63,6 @@ bool&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="8286229efa01c295e66d9f31a14df0b8"></a><!-- doxytag: member="PAPI::PDCone::v" ref="8286229efa01c295e66d9f31a14df0b8" args="" -->
 <a class="el" href="class_p_a_p_i_1_1p_vec.html">pVec</a>&nbsp;</td><td class="memItemRight" valign="bottom"><b>v</b></td></tr>
-
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="f67b7bab427a3a151b2b23026e913ef7"></a><!-- doxytag: member="PAPI::PDCone::len" ref="f67b7bab427a3a151b2b23026e913ef7" args="" -->
-float&nbsp;</td><td class="memItemRight" valign="bottom"><b>len</b></td></tr>
 
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="3e8db2a4c4ff0acbe293f7fe163394c5"></a><!-- doxytag: member="PAPI::PDCone::radOut" ref="3e8db2a4c4ff0acbe293f7fe163394c5" args="" -->
 float&nbsp;</td><td class="memItemRight" valign="bottom"><b>radOut</b></td></tr>
@@ -80,6 +82,9 @@ float&nbsp;</td><td class="memItemRight" valign="bottom"><b>radDif</b></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="5633ed068ba8d95a03a848ac81118567"></a><!-- doxytag: member="PAPI::PDCone::axisLenInvSqr" ref="5633ed068ba8d95a03a848ac81118567" args="" -->
 float&nbsp;</td><td class="memItemRight" valign="bottom"><b>axisLenInvSqr</b></td></tr>
 
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="88e7c10303524def0241927378e9b58c"></a><!-- doxytag: member="PAPI::PDCone::vol" ref="88e7c10303524def0241927378e9b58c" args="" -->
+float&nbsp;</td><td class="memItemRight" valign="bottom"><b>vol</b></td></tr>
+
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="33ab2132bf82a6e3cd7d4d3e16087419"></a><!-- doxytag: member="PAPI::PDCone::ThinShell" ref="33ab2132bf82a6e3cd7d4d3e16087419" args="" -->
 bool&nbsp;</td><td class="memItemRight" valign="bottom"><b>ThinShell</b></td></tr>
 
@@ -87,10 +92,10 @@ bool&nbsp;</td><td class="memItemRight" valign="bottom"><b>ThinShell</b></td></t
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 Cone. 
 <p>
-e0 is the apex of the cone and e1 is the other endpoint of the axis of the cone. OuterRadius is the radius of the base of the cone. InnerRadius is the radius of the base of a cone to subtract from the first cone to create a conical shell. This is similar to the cylindrical shell, which can be thought of as a large cylinder with a smaller cylinder subtracted from the middle. Both cones share the same apex and axis, which implies that the thickness of the conical shell tapers to 0 at the apex. InnerRadius = 0 for a solid cone with no empty space in the middle.<p>
+e0 is the apex of the cone and e1 is the endpoint of the axis at the cone's base. OuterRadius is the radius of the base of the cone. InnerRadius is the radius of the base of a cone to subtract from the first cone to create a conical shell. This is similar to the cylindrical shell, which can be thought of as a large cylinder with a smaller cylinder subtracted from the middle. Both cones share the same apex and axis, which implies that the thickness of the conical shell tapers to 0 at the apex. InnerRadius = 0 for a solid cone with no empty space in the middle.<p>
 Generate returns a random point in the conical shell. Within returns true if the point is within the conical shell. 
 <p>
-<hr size="1"><address style="align: right;"><small>Generated on Fri Dec 1 13:53:59 2006 for ParticleAPI by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Wed Mar 21 14:07:01 2007 for ParticleAPI by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.1-p1 </small></address>
 </body>

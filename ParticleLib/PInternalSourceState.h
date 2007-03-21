@@ -1,8 +1,9 @@
-// PInternalSourceState.h
-//
-// Copyright 1998-2006 by David K. McAllister.
-//
-// Defines these classes: PInternalSourceState_t
+/// PInternalSourceState.h
+///
+/// Copyright 1997-2007 by David K. McAllister
+/// http://www.ParticleSystems.org
+///
+/// Defines these classes: PInternalSourceState_t
 
 #ifndef PInternalSourceState_h
 #define PInternalSourceState_h

@@ -8,6 +8,7 @@
 <div class="tabs">
   <ul>
     <li><a href="index.html"><span>Main&nbsp;Page</span></a></li>
+    <li><a href="namespaces.html"><span>Namespaces</span></a></li>
     <li id="current"><a href="annotated.html"><span>Classes</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
   </ul></div>
@@ -18,7 +19,7 @@
     <li><a href="functions.html"><span>Class&nbsp;Members</span></a></li>
   </ul></div>
 <div class="nav">
-<b>PAPI</b>::<a class="el" href="class_p_a_p_i_1_1_p_context_actions__t.html">PContextActions_t</a></div>
+<a class="el" href="namespace_p_a_p_i.html">PAPI</a>::<a class="el" href="class_p_a_p_i_1_1_p_context_actions__t.html">PContextActions_t</a></div>
 <h1>PContextActions_t Class Reference</h1><!-- doxytag: class="PAPI::PContextActions_t" -->This class contains the actual Action API calls.  
 <a href="#_details">More...</a>
 <p>
@@ -47,7 +48,7 @@
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_context_actions__t.html#bc3ba86037ad03977193c72cb3002b5b">RotDamping</a> (const <a class="el" href="class_p_a_p_i_1_1p_vec.html">pVec</a> &amp;damping, const float vlow=0.0f, const float vhigh=P_MAXFLOAT)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Simulate air by dampening rotational velocities.  <a href="#bc3ba86037ad03977193c72cb3002b5b"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_context_actions__t.html#a38e3c026791173cb8542eed1b2dea7d">Explosion</a> (const <a class="el" href="class_p_a_p_i_1_1p_vec.html">pVec</a> &amp;center, const float radius, const float magnitude, const float sigma, const float epsilon=P_EPS)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_context_actions__t.html#a38e3c026791173cb8542eed1b2dea7d">Explosion</a> (const <a class="el" href="class_p_a_p_i_1_1p_vec.html">pVec</a> &amp;center, const float radius, const float magnitude, const float sigma, const float epsilon=<a class="el" href="namespace_p_a_p_i.html#cdfcf7e535bc26fd322ed304b82d7242">P_EPS</a>)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Exert force on each particle away from explosion center.  <a href="#a38e3c026791173cb8542eed1b2dea7d"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_context_actions__t.html#e1cb64b2a8d902681ffbe36c4fc98d27">Follow</a> (float magnitude=1.0f, const float epsilon=P_EPS, const float max_radius=P_MAXFLOAT)</td></tr>
@@ -111,7 +112,7 @@ void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_context_actions__t.html#d06e3e59d48e0aba7a0637ee1ad9c30e">Source</a> (const float particle_rate, const <a class="el" href="class_p_a_p_i_1_1p_domain.html">pDomain</a> &amp;dom)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Add particles with positions in the specified domain.  <a href="#d06e3e59d48e0aba7a0637ee1ad9c30e"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_context_actions__t.html#c62277d6a6f81f68620690fbc280fa9c">SpeedLimit</a> (const float min_speed, const float max_speed=P_MAXFLOAT)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_context_actions__t.html#c62277d6a6f81f68620690fbc280fa9c">SpeedLimit</a> (const float min_speed, const float max_speed=<a class="el" href="namespace_p_a_p_i.html#37212c76051870544901840b9a94a0c8">P_MAXFLOAT</a>)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Clamp particle velocities to the given range.  <a href="#c62277d6a6f81f68620690fbc280fa9c"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_context_actions__t.html#1e413fdc19c928d6ff41fb5a3a71b3bd">TargetColor</a> (const <a class="el" href="class_p_a_p_i_1_1p_vec.html">pVec</a> &amp;color, const float alpha, const float scale)</td></tr>
@@ -319,7 +320,7 @@ If true, sets the velocityB of each particle to the current velocity of that par
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const float&nbsp;</td>
-          <td class="paramname"> <em>vhigh</em> = <code>P_MAXFLOAT</code></td><td>&nbsp;</td>
+          <td class="paramname"> <em>vhigh</em> = <code><a class="el" href="namespace_p_a_p_i.html#37212c76051870544901840b9a94a0c8">P_MAXFLOAT</a></code></td><td>&nbsp;</td>
         </tr>
         <tr>
           <td></td>
@@ -361,7 +362,7 @@ Component-wise multiply this vector by the velocity vector </td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const float&nbsp;</td>
-          <td class="paramname"> <em>vhigh</em> = <code>P_MAXFLOAT</code></td><td>&nbsp;</td>
+          <td class="paramname"> <em>vhigh</em> = <code><a class="el" href="namespace_p_a_p_i.html#37212c76051870544901840b9a94a0c8">P_MAXFLOAT</a></code></td><td>&nbsp;</td>
         </tr>
         <tr>
           <td></td>
@@ -415,7 +416,7 @@ Component-wise multiply this vector by the rotational velocity vector </td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const float&nbsp;</td>
-          <td class="paramname"> <em>epsilon</em> = <code>P_EPS</code></td><td>&nbsp;</td>
+          <td class="paramname"> <em>epsilon</em> = <code><a class="el" href="namespace_p_a_p_i.html#cdfcf7e535bc26fd322ed304b82d7242">P_EPS</a></code></td><td>&nbsp;</td>
         </tr>
         <tr>
           <td></td>
@@ -460,13 +461,13 @@ The amount of acceleration falls off inversely with the squared distance to the 
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const float&nbsp;</td>
-          <td class="paramname"> <em>epsilon</em> = <code>P_EPS</code>, </td>
+          <td class="paramname"> <em>epsilon</em> = <code><a class="el" href="namespace_p_a_p_i.html#cdfcf7e535bc26fd322ed304b82d7242">P_EPS</a></code>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const float&nbsp;</td>
-          <td class="paramname"> <em>max_radius</em> = <code>P_MAXFLOAT</code></td><td>&nbsp;</td>
+          <td class="paramname"> <em>max_radius</em> = <code><a class="el" href="namespace_p_a_p_i.html#37212c76051870544901840b9a94a0c8">P_MAXFLOAT</a></code></td><td>&nbsp;</td>
         </tr>
         <tr>
           <td></td>
@@ -506,13 +507,13 @@ defines the sphere of influence of this action. No particle further than max_rad
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const float&nbsp;</td>
-          <td class="paramname"> <em>epsilon</em> = <code>P_EPS</code>, </td>
+          <td class="paramname"> <em>epsilon</em> = <code><a class="el" href="namespace_p_a_p_i.html#cdfcf7e535bc26fd322ed304b82d7242">P_EPS</a></code>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const float&nbsp;</td>
-          <td class="paramname"> <em>max_radius</em> = <code>P_MAXFLOAT</code></td><td>&nbsp;</td>
+          <td class="paramname"> <em>max_radius</em> = <code><a class="el" href="namespace_p_a_p_i.html#37212c76051870544901840b9a94a0c8">P_MAXFLOAT</a></code></td><td>&nbsp;</td>
         </tr>
         <tr>
           <td></td>
@@ -647,13 +648,13 @@ true to kill particles younger than age_limit </td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const float&nbsp;</td>
-          <td class="paramname"> <em>epsilon</em> = <code>P_EPS</code>, </td>
+          <td class="paramname"> <em>epsilon</em> = <code><a class="el" href="namespace_p_a_p_i.html#cdfcf7e535bc26fd322ed304b82d7242">P_EPS</a></code>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const float&nbsp;</td>
-          <td class="paramname"> <em>max_radius</em> = <code>P_MAXFLOAT</code></td><td>&nbsp;</td>
+          <td class="paramname"> <em>max_radius</em> = <code><a class="el" href="namespace_p_a_p_i.html#37212c76051870544901840b9a94a0c8">P_MAXFLOAT</a></code></td><td>&nbsp;</td>
         </tr>
         <tr>
           <td></td>
@@ -694,13 +695,13 @@ defines the sphere of influence of this action. No particle further than max_rad
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const float&nbsp;</td>
-          <td class="paramname"> <em>epsilon</em> = <code>P_EPS</code>, </td>
+          <td class="paramname"> <em>epsilon</em> = <code><a class="el" href="namespace_p_a_p_i.html#cdfcf7e535bc26fd322ed304b82d7242">P_EPS</a></code>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const float&nbsp;</td>
-          <td class="paramname"> <em>max_radius</em> = <code>P_MAXFLOAT</code></td><td>&nbsp;</td>
+          <td class="paramname"> <em>max_radius</em> = <code><a class="el" href="namespace_p_a_p_i.html#37212c76051870544901840b9a94a0c8">P_MAXFLOAT</a></code></td><td>&nbsp;</td>
         </tr>
         <tr>
           <td></td>
@@ -792,13 +793,13 @@ apply rotational velocity to Up vector. This is an optimization. </td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const float&nbsp;</td>
-          <td class="paramname"> <em>epsilon</em> = <code>P_EPS</code>, </td>
+          <td class="paramname"> <em>epsilon</em> = <code><a class="el" href="namespace_p_a_p_i.html#cdfcf7e535bc26fd322ed304b82d7242">P_EPS</a></code>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const float&nbsp;</td>
-          <td class="paramname"> <em>max_radius</em> = <code>P_MAXFLOAT</code></td><td>&nbsp;</td>
+          <td class="paramname"> <em>max_radius</em> = <code><a class="el" href="namespace_p_a_p_i.html#37212c76051870544901840b9a94a0c8">P_MAXFLOAT</a></code></td><td>&nbsp;</td>
         </tr>
         <tr>
           <td></td>
@@ -848,13 +849,13 @@ defines the cylinder of influence of this action. No particle further than max_r
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const float&nbsp;</td>
-          <td class="paramname"> <em>epsilon</em> = <code>P_EPS</code>, </td>
+          <td class="paramname"> <em>epsilon</em> = <code><a class="el" href="namespace_p_a_p_i.html#cdfcf7e535bc26fd322ed304b82d7242">P_EPS</a></code>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const float&nbsp;</td>
-          <td class="paramname"> <em>max_radius</em> = <code>P_MAXFLOAT</code></td><td>&nbsp;</td>
+          <td class="paramname"> <em>max_radius</em> = <code><a class="el" href="namespace_p_a_p_i.html#37212c76051870544901840b9a94a0c8">P_MAXFLOAT</a></code></td><td>&nbsp;</td>
         </tr>
         <tr>
           <td></td>
@@ -1190,7 +1191,7 @@ particle positions are chosen from this domain </td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const float&nbsp;</td>
-          <td class="paramname"> <em>max_speed</em> = <code>P_MAXFLOAT</code></td><td>&nbsp;</td>
+          <td class="paramname"> <em>max_speed</em> = <code><a class="el" href="namespace_p_a_p_i.html#37212c76051870544901840b9a94a0c8">P_MAXFLOAT</a></code></td><td>&nbsp;</td>
         </tr>
         <tr>
           <td></td>
@@ -1489,7 +1490,7 @@ acceleration around vortex of particles INSIDE the vortex. </td></tr>
 </dl>
 </div>
 </div><p>
-<hr size="1"><address style="align: right;"><small>Generated on Fri Dec 1 13:53:59 2006 for ParticleAPI by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Wed Mar 21 14:07:01 2007 for ParticleAPI by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.1-p1 </small></address>
 </body>

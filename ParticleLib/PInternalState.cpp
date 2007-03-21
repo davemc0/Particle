@@ -1,20 +1,20 @@
-// PInternalState.cpp
-//
-// Copyright 1998-2006 by David K. McAllister.
-//
-// This file implements the PInternalState_t class and other under-the-hood stuff that is not part of an API call.
-
-// To optimize action lists, at execute time check whether the first action can be combined with
-// the next action. If so, combine them. Then try again. When the current one can't be combined
-// with the next one anymore, execute it.
-
-// Doing this at CallList time instead of list compile time should make it easier to store the state of
-// compound actions.
+/// PInternalState.cpp
+///
+/// Copyright 1997-2007 by David K. McAllister
+/// http://www.ParticleSystems.org
+///
+/// This file implements the PInternalState_t class and other under-the-hood stuff that is not part of an API call.
+///
+/// To optimize action lists, at execute time check whether the first action can be combined with
+/// the next action. If so, combine them. Then try again. When the current one can't be combined
+/// with the next one anymore, execute it.
+///
+/// Doing this at CallList time instead of list compile time should make it easier to store the state of compound actions.
 
 #include "PInternalState.h"
 #include "pAPI.h"
 
-#include <iostream>
+#include <typeinfo>
 
 namespace PAPI {
 
@@ -140,7 +140,7 @@ namespace PAPI {
                     else
                         ait++;
                 }
-                if(!one_pass) { // If we're not one_pass then we know we didn't do any actions that mangle our iterators.  
+                if(!one_pass) { // If we're not one_pass then we know we didn't do any actions that mangle our iterators.
                     pbeg = pend;
                     pend = ((pg.end() - pbeg) <= PWorkingSetSize) ? pg.end() : (pbeg + PWorkingSetSize);
                 }

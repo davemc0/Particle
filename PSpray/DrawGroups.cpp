@@ -24,10 +24,12 @@ void DrawGroupAsLines(ParticleContext_t &P, bool const_color)
     if(cnt < 1) return;
 
     float *ptr;
-    size_t flstride, pos3Ofs, posB3Ofs, size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs;
+    size_t flstride, pos3Ofs, posB3Ofs, size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs, up3Ofs, rvel3Ofs, upB3Ofs, mass1Ofs, data1Ofs;
+;
 
     cnt = (int)P.GetParticlePointer(ptr, flstride, pos3Ofs, posB3Ofs,
-        size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs);
+        size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs,
+        up3Ofs, rvel3Ofs, upB3Ofs, mass1Ofs, data1Ofs);
     if(cnt < 1) return;
 
     glBegin(GL_LINES);
@@ -63,10 +65,11 @@ void DrawGroupAsDisplayLists(ParticleContext_t &P, int dlist, bool const_color, 
     if(cnt < 1) return;
 
     float *ptr;
-    size_t flstride, pos3Ofs, posB3Ofs, size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs;
+    size_t flstride, pos3Ofs, posB3Ofs, size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs, up3Ofs, rvel3Ofs, upB3Ofs, mass1Ofs, data1Ofs;
 
     cnt = (int)P.GetParticlePointer(ptr, flstride, pos3Ofs, posB3Ofs,
-        size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs);
+        size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs,
+        up3Ofs, rvel3Ofs, upB3Ofs, mass1Ofs, data1Ofs);
 
     for(int i = 0; i < cnt; i++) {
         glPushMatrix();
@@ -303,10 +306,11 @@ void DrawGroupAsPoints(ParticleContext_t &P, const bool const_color)
     if(cnt < 1) return;
 
     float *ptr;
-    size_t flstride, pos3Ofs, posB3Ofs, size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs;
+    size_t flstride, pos3Ofs, posB3Ofs, size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs, up3Ofs, rvel3Ofs, upB3Ofs, mass1Ofs, data1Ofs;
 
     cnt = (int)P.GetParticlePointer(ptr, flstride, pos3Ofs, posB3Ofs,
-        size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs);
+        size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs,
+        up3Ofs, rvel3Ofs, upB3Ofs, mass1Ofs, data1Ofs);
     if(cnt < 1) return;
 
     if(!const_color) {

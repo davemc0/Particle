@@ -8,6 +8,7 @@
 <div class="tabs">
   <ul>
     <li><a href="index.html"><span>Main&nbsp;Page</span></a></li>
+    <li><a href="namespaces.html"><span>Namespaces</span></a></li>
     <li id="current"><a href="annotated.html"><span>Classes</span></a></li>
     <li><a href="files.html"><span>Files</span></a></li>
   </ul></div>
@@ -18,7 +19,7 @@
     <li><a href="functions.html"><span>Class&nbsp;Members</span></a></li>
   </ul></div>
 <div class="nav">
-<b>PAPI</b>::<a class="el" href="class_p_a_p_i_1_1_p_d_sphere.html">PDSphere</a></div>
+<a class="el" href="namespace_p_a_p_i.html">PAPI</a>::<a class="el" href="class_p_a_p_i_1_1_p_d_sphere.html">PDSphere</a></div>
 <h1>PDSphere Class Reference</h1><!-- doxytag: class="PAPI::PDSphere" --><!-- doxytag: inherits="PAPI::pDomain" -->Sphere.  
 <a href="#_details">More...</a>
 <p>
@@ -43,6 +44,10 @@ bool&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <a class="el" href="class_p_a_p_i_1_1p_vec.html">pVec</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_d_sphere.html#fc189c692310a2a1f17cbc8694cb92ce">Generate</a> () const</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Returns a random point in the thick spherical shell. <br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="78060a0eb0806aea95d7ef85a3bed205"></a><!-- doxytag: member="PAPI::PDSphere::Size" ref="78060a0eb0806aea95d7ef85a3bed205" args="() const" -->
+float&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_p_a_p_i_1_1_p_d_sphere.html#78060a0eb0806aea95d7ef85a3bed205">Size</a> () const</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Returns the thick spherical shell volume or the thin spherical shell area if OuterRadius==InnerRadius. <br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="c690e04cee7a8360e96a94095ab10743"></a><!-- doxytag: member="PAPI::PDSphere::copy" ref="c690e04cee7a8360e96a94095ab10743" args="() const" -->
 <a class="el" href="class_p_a_p_i_1_1p_domain.html">pDomain</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>copy</b> () const</td></tr>
 
@@ -65,6 +70,9 @@ float&nbsp;</td><td class="memItemRight" valign="bottom"><b>radInSqr</b></td></t
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="f0ace9b89ea807e46117e42ec8b83d9b"></a><!-- doxytag: member="PAPI::PDSphere::radDif" ref="f0ace9b89ea807e46117e42ec8b83d9b" args="" -->
 float&nbsp;</td><td class="memItemRight" valign="bottom"><b>radDif</b></td></tr>
 
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="88e7c10303524def0241927378e9b58c"></a><!-- doxytag: member="PAPI::PDSphere::vol" ref="88e7c10303524def0241927378e9b58c" args="" -->
+float&nbsp;</td><td class="memItemRight" valign="bottom"><b>vol</b></td></tr>
+
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="33ab2132bf82a6e3cd7d4d3e16087419"></a><!-- doxytag: member="PAPI::PDSphere::ThinShell" ref="33ab2132bf82a6e3cd7d4d3e16087419" args="" -->
 bool&nbsp;</td><td class="memItemRight" valign="bottom"><b>ThinShell</b></td></tr>
 
@@ -75,7 +83,7 @@ Sphere.
 The point Center is the center of the sphere. OuterRadius is the outer radius of the spherical shell and InnerRadius is the inner radius.<p>
 Generate returns a random point in the thick shell at a distance between OuterRadius and InnerRadius from point Center. If InnerRadius is 0, then it is the whole sphere. Within returns true if the point lies within the thick shell at a distance between InnerRadius to OuterRadius from point Center. 
 <p>
-<hr size="1"><address style="align: right;"><small>Generated on Fri Dec 1 13:53:59 2006 for ParticleAPI by&nbsp;
+<hr size="1"><address style="align: right;"><small>Generated on Wed Mar 21 14:07:01 2007 for ParticleAPI by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.1-p1 </small></address>
 </body>

@@ -1,9 +1,10 @@
-// Particle.h
-//
-// Copyright 1998-2006 by David K. McAllister.
-//
-// This file contains the definition of a particle.
-// It is only included by API implementation files, not by applications.
+/// Particle.h
+///
+/// Copyright 1997-2007 by David K. McAllister
+/// http://www.ParticleSystems.org
+///
+/// This file contains the definition of a particle.
+/// It is only included by API implementation files, not by applications.
 
 #ifndef _Particle_h
 #define _Particle_h
@@ -34,15 +35,15 @@ struct Particle_t
 
     inline Particle_t(const pVec &pos, const pVec &posB,
         const pVec &up, const pVec &upB,
-        const pVec &vel, const pVec &velB, 
-        const pVec &rvel, const pVec &rvelB, 
+        const pVec &vel, const pVec &velB,
+        const pVec &rvel, const pVec &rvelB,
         const pVec &size, const pVec &color,
         float alpha, float age, float mass, long data, float tmp0) :
     pos(pos), posB(posB),
         up(up), upB(upB),
-        vel(vel), velB(velB), 
+        vel(vel), velB(velB),
         rvel(rvel),
-        size(size), color(color), 
+        size(size), color(color),
         alpha(alpha), age(age), mass(mass), data(data), tmp0(0)
     {
     }
@@ -50,7 +51,7 @@ struct Particle_t
     inline Particle_t(const Particle_t &rhs) :
     pos(rhs.pos), posB(rhs.posB),
         up(rhs.up), upB(rhs.upB),
-        vel(rhs.vel), velB(rhs.velB), 
+        vel(rhs.vel), velB(rhs.velB),
         rvel(rhs.rvel),
         size(rhs.size), color(rhs.color),
         alpha(rhs.alpha), age(rhs.age), mass(rhs.mass), data(rhs.data), tmp0(rhs.tmp0)

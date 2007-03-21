@@ -1,10 +1,10 @@
-// ActionsAPI.cpp
-//
-// Copyright 1997-2006 by David K. McAllister
-//
-// This file implements the action API calls by creating
-// action class instances, which are either executed or
-// added to an action list.
+/// ActionsAPI.cpp
+///
+/// Copyright 1997-2007 by David K. McAllister
+/// http://www.ParticleSystems.org
+///
+/// This file implements the action API calls by creating action class instances,
+/// which are either executed or added to an action list.
 
 #include "pAPI.h"
 #include "PInternalState.h"
@@ -13,7 +13,7 @@ namespace PAPI {
 
 void PContextActions_t::Avoid(const float magnitude, const float epsilon, const float look_ahead, const pDomain &dom)
 {
-    PAAvoid *A = new PAAvoid();
+    PAAvoid *A = new PAAvoid;
 
     A->position = dom.copy();
     A->magnitude = magnitude;
@@ -28,7 +28,7 @@ void PContextActions_t::Avoid(const float magnitude, const float epsilon, const 
 
 void PContextActions_t::Bounce(const float friction, const float resilience, const float cutoff, const pDomain &dom)
 {
-    PABounce *A = new PABounce();
+    PABounce *A = new PABounce;
 
     A->position = dom.copy();
     A->oneMinusFriction = 1.0f - friction;
@@ -72,7 +72,7 @@ void PContextActions_t::Damping(const pVec &damping,
 void PContextActions_t::RotDamping(const pVec &damping,
                                    const float vlow, const float vhigh)
 {
-    PADamping *A = new PADamping;
+    PARotDamping *A = new PARotDamping;
 
     A->damping = damping;
     A->vlowSqr = fsqr(vlow);
@@ -156,7 +156,7 @@ void PContextActions_t::Gravity(const pVec &dir)
 
 void PContextActions_t::Jet(const pDomain &dom, const pDomain &accel)
 {
-    PAJet *A = new PAJet();
+    PAJet *A = new PAJet;
 
     A->dom = dom.copy();
     A->acc = accel.copy();
@@ -256,7 +256,7 @@ void PContextActions_t::OrbitPoint(const pVec &center, const float magnitude, co
 
 void PContextActions_t::RandomAccel(const pDomain &dom)
 {
-    PARandomAccel *A = new PARandomAccel();
+    PARandomAccel *A = new PARandomAccel;
 
     A->gen_acc = dom.copy();
     A->SetKillsParticles(false);
@@ -267,7 +267,7 @@ void PContextActions_t::RandomAccel(const pDomain &dom)
 
 void PContextActions_t::RandomDisplace(const pDomain &dom)
 {
-    PARandomDisplace *A = new PARandomDisplace();
+    PARandomDisplace *A = new PARandomDisplace;
 
     A->gen_disp = dom.copy();
     A->SetKillsParticles(false);
@@ -278,7 +278,7 @@ void PContextActions_t::RandomDisplace(const pDomain &dom)
 
 void PContextActions_t::RandomVelocity(const pDomain &dom)
 {
-    PARandomVelocity *A = new PARandomVelocity();
+    PARandomVelocity *A = new PARandomVelocity;
 
     A->gen_vel = dom.copy();
     A->SetKillsParticles(false);
@@ -289,7 +289,7 @@ void PContextActions_t::RandomVelocity(const pDomain &dom)
 
 void PContextActions_t::RandomRotVelocity(const pDomain &dom)
 {
-    PARandomRotVelocity *A = new PARandomRotVelocity();
+    PARandomRotVelocity *A = new PARandomRotVelocity;
 
     A->gen_vel = dom.copy();
     A->SetKillsParticles(false);
@@ -314,7 +314,7 @@ void PContextActions_t::Restore(const float time_left, const bool vel, const boo
 
 void PContextActions_t::Sink(const bool kill_inside, const pDomain &dom)
 {
-    PASink *A = new PASink();
+    PASink *A = new PASink;
 
     A->position = dom.copy();
     A->kill_inside = kill_inside;
@@ -327,7 +327,7 @@ void PContextActions_t::Sink(const bool kill_inside, const pDomain &dom)
 
 void PContextActions_t::SinkVelocity(const bool kill_inside, const pDomain &dom)
 {
-    PASinkVelocity *A = new PASinkVelocity();
+    PASinkVelocity *A = new PASinkVelocity;
 
     A->velocity = dom.copy();
     A->kill_inside = kill_inside;
@@ -355,7 +355,7 @@ void PContextActions_t::Sort(const pVec &eye, const pVec &look, const bool front
 
 void PContextActions_t::Source(const float particle_rate, const pDomain &dom)
 {
-    PASource *A = new PASource();
+    PASource *A = new PASource;
 
     A->position = dom.copy();
     A->particle_rate = particle_rate;
