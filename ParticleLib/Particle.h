@@ -6,8 +6,8 @@
 /// This file contains the definition of a particle.
 /// It is only included by API implementation files, not by applications.
 
-#ifndef _Particle_h
-#define _Particle_h
+#ifndef Particle_h
+#define Particle_h
 
 #include "pVec.h"
 
@@ -31,14 +31,14 @@ struct Particle_t
     pVec velB;	    // Used to compute binormal, normal, etc.
     pVec upB;
     float mass;
-    long data;		// arbitrary data for user
+    puint64 data;		// arbitrary data for user
 
     inline Particle_t(const pVec &pos, const pVec &posB,
         const pVec &up, const pVec &upB,
         const pVec &vel, const pVec &velB,
         const pVec &rvel, const pVec &rvelB,
         const pVec &size, const pVec &color,
-        float alpha, float age, float mass, long data, float tmp0) :
+        float alpha, float age, float mass, puint64 data, float tmp0) :
     pos(pos), posB(posB),
         up(up), upB(upB),
         vel(vel), velB(velB),

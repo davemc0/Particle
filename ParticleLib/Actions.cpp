@@ -566,6 +566,16 @@ namespace PAPI {
         PS->ExecuteActionList(PS->ALists[action_list_num]);
     }
 
+    void PACallback::Execute(ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend)
+    {
+        PASSERT(callback != NULL, "callback pointer was NULL");
+
+        for (ParticleList::iterator it = ibegin; it != iend; it++) {
+            Particle_t &m = (*it);
+            (*callback)(m, Data);
+        }
+    }
+
     // Set the secondary position and velocity from current.
     void PACopyVertexB::Execute(ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend)
     {
@@ -1240,19 +1250,21 @@ namespace PAPI {
             rate = group.GetMaxParticles() - group.size();
 
         for(size_t i = 0; i < rate; i++) {
-            pVec pos, posB, up, vel, rvel, siz, col, al;
+            Particle_t P;
 
-            pos = position->Generate();
-            posB = SrcSt.vertexB_tracks ? pos : SrcSt.VertexB->Generate();
-            up = SrcSt.Up->Generate();
-            vel = SrcSt.Vel->Generate();
-            rvel = SrcSt.RotVel->Generate();
-            siz = SrcSt.Size->Generate();
-            col = SrcSt.Color->Generate();
-            al = SrcSt.Alpha->Generate();
-            float ag = SrcSt.Age + pNRandf(SrcSt.AgeSigma);
+            P.pos = position->Generate();
+            P.posB = SrcSt.vertexB_tracks ? P.pos : SrcSt.VertexB->Generate();
+            P.up = SrcSt.Up->Generate();
+            P.vel = SrcSt.Vel->Generate();
+            P.rvel = SrcSt.RotVel->Generate();
+            P.size = SrcSt.Size->Generate();
+            P.color = SrcSt.Color->Generate();
+            P.alpha = SrcSt.Alpha->Generate().x();
+            P.age = SrcSt.Age + pNRandf(SrcSt.AgeSigma);
+            P.mass = SrcSt.Mass;
+            P.data = SrcSt.Data;
 
-            group.Add(pos, posB, up, vel, rvel, siz, col, al.x(), ag);
+            group.Add(P);
         }
     }
 
@@ -1377,13 +1389,5 @@ namespace PAPI {
             pVec AccelAround = RotDir * (aroundSpeed * dtOverMass);
             m.vel = AccelUp + AccelAround; // NOT += because we want to stop its inward travel.
         }
-    }
-
-    // This is an experimental Action.
-    // It's mostly for the purpose of seeing how big the speedup can be
-    // if we apply all actions to a particle at once,
-    // rather than doing an action to all particles at once.
-    void PAFountain::Execute(ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend)
-    {
     }
 };

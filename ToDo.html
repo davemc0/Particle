@@ -13,19 +13,14 @@
         API</h2>
     <ul>
         <li>Use Nvidia's CUDA library to do the particle computation on the GPU</li>
+        <li>Use SSE better and use multiple CPU cores. I believe I will do this using CUDA for multicore.</li>
+        <li>Optimize compiled action lists by combining calls. I believe the CUDA implementation will handle this.</li>
         <li>Bouncing off multiple nearby or intersecting domains is broken (see Waterfall).</li>
+        <li>Bouncing and avoiding of PDUnion domains. This may be the answer for obstacle avoidance.</li>
         <li>Bounce off inside PDBox domain</li>
-        <li>Make the API more generic so many API calls can apply to any different attribute.
-            Make attributes generic.</li>
-        <li>Use SSE better. Requires a new four-element pVec class. I implemented this and rewrote
-            the Move() action in SSE. The inner loop came out to 8 instructions. However, the
-            code is ugly and I had trouble getting the alignment of particles in STL vectors
-            to obey the alignment constraint of SSE.</li>
-        <li>Optimize compiled action lists by combining calls: fountain 17.21 fps optimized
-            vs. 5.1 fps not.</li>
+        <li>Bounce off cylinders</li>
         <li>Make actions conditional on domains.</li>
-        <li>Compound domains (so you can define a whole model as a single domain instead of
-            a zillion triangle domains). This may be the answer for obstacle avoidance.</li>
+        <li>Make the API more generic so many API calls can apply to any different attribute. Make attributes generic.</li>
         <li>Have a secondary color for each particle.</li>
         <li>DensityColor - color is f(density)</li>
         <li>PositionColor - color is f(position)</li>

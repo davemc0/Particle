@@ -10,25 +10,25 @@
 /// This allows the class to be implemented using
 /// SSE intrinsics for faster execution on P4 and AMD processors.
 
-#ifndef _pvec_h
-#define _pvec_h
+#ifndef pvec_h
+#define pvec_h
 
 #include <iostream>
-
-#include <math.h>
+#include <cmath>
 
 #ifndef M_PI
 #define M_PI 3.1415926535897932384626433f
 #endif
 
 #ifdef WIN32
-#include <stdlib.h>
 // This is because their stupid compiler thinks it's smart.
 #define inline __forceinline
 #endif
 
 namespace PAPI
 {
+    typedef unsigned long long puint64;
+
     const float P_SQRT2PI = 2.506628274631000502415765284811045253006f;
     const float P_ONEOVERSQRT2PI = (1.f / P_SQRT2PI);
 

@@ -5,7 +5,8 @@
 ///
 /// Defines these classes: PInternalState_t
 
-#pragma once
+#ifndef PInternalState_h
+#define PInternalState_h
 
 #include "pAPI.h"
 #include "Actions.h"
@@ -54,3 +55,5 @@ namespace PAPI {
     };
 
 };
+
+#endif

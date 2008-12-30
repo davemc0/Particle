@@ -6,12 +6,12 @@
 
 #ifdef WIN32
 // This is for something in gl.h.
-#include <windows.h>
+#include "windows.h"
 #endif
 
-#include <GL/gl.h>
+#include "GL/gl.h"
 
-#include <Particle/pAPI.h>
+#include "Particle/pAPI.h"
 
 using namespace PAPI;
 

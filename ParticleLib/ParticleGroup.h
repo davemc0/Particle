@@ -7,8 +7,8 @@
 ///
 /// Defines these classes: ParticleGroup
 
-#ifndef _ParticleGroup_h
-#define _ParticleGroup_h
+#ifndef ParticleGroup_h
+#define ParticleGroup_h
 
 // Particle.h includes pVec.h.
 #include "Particle.h"
@@ -17,7 +17,7 @@
 
 namespace PAPI {
 
-typedef void (*P_PARTICLE_CALLBACK)(struct Particle_t &particle, void *data); // Also defined in pAPI.h.
+typedef void (*P_PARTICLE_CALLBACK)(struct Particle_t &particle, puint64 data); // Also defined in pAPI.h.
 
 typedef std::vector<Particle_t> ParticleList;
 
@@ -26,10 +26,10 @@ class ParticleGroup
     ParticleList list;
 
     size_t max_particles;	// Max particles allowed in group
-    P_PARTICLE_CALLBACK cb_birth;
-    P_PARTICLE_CALLBACK cb_death;
-    void *cb_birth_data;
-    void *cb_death_data;
+    P_PARTICLE_CALLBACK cb_birth; // Call this function for each created particle
+    P_PARTICLE_CALLBACK cb_death; // Call this function for each destroyed particle
+    puint64 group_birth_data; // Pass this to the birth callback
+    puint64 group_death_data; // Pass this to the death callback
 
 public:
     ParticleGroup()
@@ -37,8 +37,8 @@ public:
         max_particles = 0;
         cb_birth = NULL;
         cb_death = NULL;
-        cb_birth_data = NULL;
-        cb_death_data = NULL;
+        group_birth_data = NULL;
+        group_death_data = NULL;
     }
 
     ParticleGroup(size_t maxp) : max_particles(maxp)
@@ -46,8 +46,8 @@ public:
         list.reserve(max_particles);
         cb_birth = NULL;
         cb_death = NULL;
-        cb_birth_data = NULL;
-        cb_death_data = NULL;
+        group_birth_data = NULL;
+        group_death_data = NULL;
     }
 
     ParticleGroup(const ParticleGroup &rhs) : list(rhs.list)
@@ -55,8 +55,8 @@ public:
         max_particles = rhs.max_particles;
         cb_birth = rhs.cb_birth;
         cb_death = rhs.cb_death;
-        cb_birth_data = rhs.cb_birth_data;
-        cb_death_data = rhs.cb_death_data;
+        group_birth_data = rhs.group_birth_data;
+        group_death_data = rhs.group_death_data;
     }
 
     ~ParticleGroup()
@@ -64,7 +64,7 @@ public:
         if (cb_death) {
             ParticleList::iterator it;
             for (it = list.begin(); it != list.end(); ++it)
-                (*cb_death)((*it), cb_death_data);
+                (*cb_death)((*it), group_death_data);
         }
     }
 
@@ -74,13 +74,13 @@ public:
             if (cb_death) {
                 ParticleList::iterator it;
                 for (it = list.begin(); it != list.end(); ++it)
-                    (*cb_death)((*it), cb_death_data);
+                    (*cb_death)((*it), group_death_data);
             }
             list = rhs.list;
             cb_birth = rhs.cb_birth;
             cb_death = rhs.cb_death;
-            cb_birth_data = rhs.cb_birth_data;
-            cb_death_data = rhs.cb_death_data;
+            group_birth_data = rhs.group_birth_data;
+            group_death_data = rhs.group_death_data;
             max_particles = rhs.max_particles;
         }
         return *this;
@@ -89,16 +89,16 @@ public:
     inline size_t GetMaxParticles() { return max_particles; }
     inline ParticleList &GetList() { return list; }
 
-    inline void SetBirthCallback(P_PARTICLE_CALLBACK cbb, void *cbb_data)
+    inline void SetBirthCallback(P_PARTICLE_CALLBACK callback, puint64 group_data)
     {
-        cb_birth = cbb;
-        cb_birth_data = cbb_data;
+        cb_birth = callback;
+        group_birth_data = group_data;
     }
 
-    inline void SetDeathCallback(P_PARTICLE_CALLBACK cbd, void *cbd_data)
+    inline void SetDeathCallback(P_PARTICLE_CALLBACK callback, puint64 group_data)
     {
-        cb_death = cbd;
-        cb_death_data = cbd_data;
+        cb_death = callback;
+        group_death_data = group_data;
     }
 
     inline void SetMaxParticles(size_t maxp)
@@ -107,7 +107,7 @@ public:
         if(list.size() > max_particles) {
             if (cb_death) {
                 for (ParticleList::iterator it = list.begin() + max_particles; it != list.end(); ++it)
-                    (*cb_death)((*it), cb_death_data);
+                    (*cb_death)((*it), group_death_data);
             }
             list.resize(max_particles);
         }
@@ -122,7 +122,7 @@ public:
     inline ParticleList::iterator Remove(ParticleList::iterator it)
     {
         if (cb_death)
-            (*cb_death)((*it), cb_death_data);
+            (*cb_death)((*it), group_death_data);
 
         // Copy the one from the end to here.
         if(it != list.end() - 1) {
@@ -136,26 +136,6 @@ public:
         return it;
     }
 
-    inline bool Add(const pVec &pos, const pVec &posB,
-        const pVec &up,
-        const pVec &vel, const pVec &rvel,
-        const pVec &size, const pVec &color,
-        const float alpha = 1.0f,
-        const float age = 0.0f,
-        const float mass = 1.0f,
-        const long data = 0)
-    {
-        if (list.size() >= max_particles)
-            return false;
-        else {
-            list.push_back(Particle_t(pos, posB, up, up, vel, vel, rvel, rvel, size, color, alpha, age, mass, data, 0.0f));
-            Particle_t &p = list.back();
-            if (cb_birth)
-                (*cb_birth)(p, cb_birth_data);
-            return true;
-        }
-    }
-
     inline bool Add(const Particle_t &P)
     {
         if (list.size() >= max_particles)
@@ -164,7 +144,7 @@ public:
             list.push_back(P);
             Particle_t &p = list.back();
             if (cb_birth)
-                (*cb_birth)(p, cb_birth_data);
+                (*cb_birth)(p, group_birth_data);
             return true;
         }
     }

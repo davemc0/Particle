@@ -2,10 +2,10 @@
 //
 // Copyright 1999-2006 by David K. McAllister
 
-#include <Particle/pAPI.h>
+#include "Particle/pAPI.h"
 using namespace PAPI;
 
-#include <GL/glut.h>
+#include "GL/glut.h"
 
 ParticleContext_t P;
 

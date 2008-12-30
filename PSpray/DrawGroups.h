@@ -1,7 +1,7 @@
 #ifndef DRAWGROUPS_H
 #define DRAWGROUPS_H
 
-#include <Particle/pAPI.h>
+#include "Particle/pAPI.h"
 
 // Emit OpenGL calls to draw the particles as GL_LINES.
 // The color is set per primitive or is constant.

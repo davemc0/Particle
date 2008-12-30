@@ -5,28 +5,40 @@
 // This application demonstrates particle systems for interactive graphics.
 // It uses OpenGL and GLUT.
 
+// Texture and light the butterflies
+// Texture the rain drops
+// Fix motion blur
+// Key to adjust point diameter
+// Multisampling
+// Multiple textures
+// Fountain playground
+// When in random mode reset all rendering params to best for that demo
+//   motion blur, kill before start, primitive, texture, depth test, speed, particle size
+// Do I just make an init function, or do I make a struct?
+
 #include "../PSpray/DrawGroups.h"
 #include "../PSpray/Effects.h"
 #include "../PSpray/Monarch.h"
 
-#include <Particle/pAPI.h>
+#include "Particle/pAPI.h"
 
 // The following header files are part of DMcTools.
 // DMcTools is part of the same source distribution as the Particle API.
-#include <Util/Timer.h>
-#include <Util/Utils.h>
-#include <Util/Assert.h>
+#include "Util/Timer.h"
+#include "Util/Utils.h"
+#include "Util/Assert.h"
+
 #define GLH_EXT_SINGLE_FILE
 #include "glh_extensions.h"
-#include <GL/glut.h>
+#include "GL/glut.h"
 
 #include <iostream>
 #include <string>
-using namespace std;
+#include <cmath>
+#include <cstring>
+#include <ctime>
 
-#include <math.h>
-#include <string.h>
-#include <time.h>
+using namespace std;
 
 #ifdef WIN32
 #pragma warning (disable:4305) /* disable bogus conversion warnings */
@@ -39,14 +51,15 @@ static bool MotionBlur = false, FreezeParticles = false, AntiAlias = true, Depth
 static bool ConstColor = false, ShowText = true, ParticleCam = false, SortParticles = false, SphereTexture = true;
 static bool Immediate = false, DrawGround = false, CameraMotion = true, FullScreen = false, PointSpritesAllowed = true;
 static int DemoNum = 10, PrimType = GL_POINTS, DisplayListID = -1, SpotTexID = -1;
+static const float DEMO_MIN_SEC = 6.0f;
 static int RandomDemo = 500; // A one-in-this-many chance of changing demos this frame
 static float BlurRate = 0.09;
 static char *PrimName = "Points";
 static char *FName = NULL;
 
-static Timer Clock;
+static Timer Clock, RandomDemoClock;
 static ParticleContext_t P;
-static ParticleEffects Efx(P, 30000);
+static ParticleEffects Efx(P, 40000);
 
 void menu(int);
 
@@ -192,7 +205,7 @@ void InitProgs()
     // ModelView + Viewport matrix. This gives a measure of the change in size from model space
     // to eye space. The cube root of this estimates the 1D change in scale. Divide this by W
     // per point.
-    float params[3] = {0.0f, 0.0f, 0.00001f};
+    float params[3] = {0.0f, 0.0f, 0.00003f};
     glPointParameterfvARB(GL_POINT_DISTANCE_ATTENUATION_ARB, params);
     glPointParameterfARB(GL_POINT_SIZE_MIN_ARB, 0);
     glPointParameterfARB(GL_POINT_SIZE_MAX_ARB, 5000);
@@ -405,8 +418,10 @@ void Draw()
         glutSwapBuffers();
 
     // Change to a different random demo
-    if(RandomDemo > 0 && ((lrand48() % RandomDemo) == 0))
+    if(RandomDemo > 0 && ((lrand48() % RandomDemo) == 0) && RandomDemoClock.Read() > DEMO_MIN_SEC) {
+        RandomDemoClock.Reset();
         DemoNum = Efx.CallDemo(lrand48(), true, Immediate);
+    }
 }
 
 void Reshape(int w, int h)
@@ -616,8 +631,8 @@ void GlutSetup(int argc, char **argv)
 {
     glutInit(&argc, argv);
 
-    glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE /* | GLUT_MULTISAMPLE */);
-    glutInitWindowSize(512, 512);
+    glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_MULTISAMPLE);
+    glutInitWindowSize(900, 900);
     glutInitWindowPosition(200, 200);
     glutCreateWindow("Particle Spray");
 
@@ -658,6 +673,7 @@ int main(int argc, char **argv)
     srand48( (unsigned)time( NULL ) );
 
     DemoNum = lrand48();
+    RandomDemoClock.Start();
 
     if(!HasSSE()) {
         cerr << "Your CPU must have SSE to run this program. You should get an Intel or AMD CPU or recompile with SSE turned off.\n";

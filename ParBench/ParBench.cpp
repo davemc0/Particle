@@ -28,16 +28,15 @@ static int DemoNum = 6;
 
 static Timer Clock;
 static ParticleContext_t P;
-static ParticleEffects Efx(P, 30000);
+static ParticleEffects Efx(P, 60000);
 
 void Report()
 {
-#define NUM_FRAMES_TO_AVG_FOR_CLOCK 30
+#define NUM_FRAMES_TO_AVG_FOR_CLOCK 100
     static double ClockTime = 1.0;
     static int FrameCountForClock = 0;
     FrameCountForClock++;
-    if(FrameCountForClock >= NUM_FRAMES_TO_AVG_FOR_CLOCK)
-    {
+    if(FrameCountForClock >= NUM_FRAMES_TO_AVG_FOR_CLOCK) {
         ClockTime = Clock.Reset();
         float fps = float(NUM_FRAMES_TO_AVG_FOR_CLOCK) / ClockTime;
         int cnt = (int)P.GetGroupCount();
@@ -52,6 +51,7 @@ void Report()
 }
 
 // Optimize the working set size
+// 3 MB works for Q6300.
 void RunBenchmarkCache()
 {
     Efx.particle_handle = P.GenParticleGroups(1, Efx.maxParticles); // Make a particle group
@@ -61,10 +61,10 @@ void RunBenchmarkCache()
     Efx.CallDemo(DemoNum, true, Immediate);
 
     Clock.Start();
-    for(int CacheSize = 1024 * 8; CacheSize < 2 * 1024 * 1024; CacheSize += (8 * 1024)) {
+    for(int CacheSize = 1024 * 16; CacheSize < 8 * 1024 * 1024; CacheSize += (16 * 1024)) {
         P.SetWorkingSetSize(CacheSize);
         Clock.Reset();
-        for(int i=0; i<200; i++) {
+        for(int i=0; i<100; i++) {
             Efx.CallDemo(DemoNum, false, Immediate);
             if(SortParticles)
                 P.Sort(pVec(0,-19,15), pVec(0,0,3));
@@ -85,7 +85,7 @@ void RunBenchmark()
     Efx.CallDemo(DemoNum, true, Immediate);
 
 #if 1
-    for(int i=0; i<300; i++) {
+    for(int i=0; i<1000; i++) {
         Efx.CallDemo(DemoNum, false, Immediate);
         if(SortParticles)
             P.Sort(pVec(0,-19,15), pVec(0,0,3));
@@ -108,6 +108,7 @@ void RunBenchmark()
 
 void TestOneDomain(pDomain &Dom)
 {
+    cerr << "TestOneDomain()\n";
     const int Loops = 1000000;
     const float EP = 0.0000001;
     int Bad = 0;
@@ -141,9 +142,11 @@ float RN()
 
 void TestDomains()
 {
+    cerr << "Testing domains\n";
+
     const int OuterLoops = 1000;
 
-    cerr << "PDPoint\n";      for(int i=0; i<OuterLoops; i++) TestOneDomain(PDPoint(pVec(RN(),RN(),RN())));
+    cerr << "PDPoint\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDPoint(pVec(RN(),RN(),RN())));
     cerr << "PDLine\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDLine(pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN())));
     cerr << "PDTriangle\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDTriangle(pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN())));
     cerr << "PDRectangle\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDRectangle(pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN())));
@@ -194,8 +197,9 @@ int main(int argc, char **argv)
     Args(argc, argv);
 
     try {
-        RunBenchmark();
-        TestDomains();
+        // RunBenchmark();
+        RunBenchmarkCache();
+        // TestDomains();
     }
     catch (PError_t &Er) {
         cerr << "Particle API exception: " << Er.ErrMsg << endl;

@@ -41,6 +41,18 @@ void PContextActions_t::Bounce(const float friction, const float resilience, con
     PS->SendAction(A);
 }
 
+void PContextActions_t::Callback(P_PARTICLE_CALLBACK callback, puint64 data)
+{
+    PACallback *A = new PACallback;
+    A->callback = callback;
+    A->Data = data;
+
+    A->SetKillsParticles(false);
+    A->SetDoNotSegment(false);
+
+    PS->SendAction(A);
+}
+
 void PContextActions_t::CopyVertexB(const bool copy_pos, const bool copy_vel)
 {
     PACopyVertexB *A = new PACopyVertexB;
@@ -113,16 +125,6 @@ void PContextActions_t::Follow(const float magnitude, const float epsilon, const
     A->max_radius = max_radius;
 
     A->SetKillsParticles(false);
-    A->SetDoNotSegment(true);
-
-    PS->SendAction(A);
-}
-
-void PContextActions_t::Fountain()
-{
-    PAFollow *A = new PAFollow;
-
-    A->SetKillsParticles(true);
     A->SetDoNotSegment(true);
 
     PS->SendAction(A);
@@ -434,8 +436,8 @@ void PContextActions_t::TargetRotVelocity(const pVec &vel, const float scale)
 }
 
 // If in immediate mode, quickly add a vertex.
-// If building an action list, call pSource.
-void PContextActions_t::Vertex(const pVec &pos, const long data)
+// If building an action list, call Source().
+void PContextActions_t::Vertex(const pVec &pos, const puint64 data)
 {
     if(PS->in_new_list) {
         Source(1, PDPoint(pos));
@@ -443,18 +445,23 @@ void PContextActions_t::Vertex(const pVec &pos, const long data)
     }
 
     // Immediate mode. Quickly add the vertex.
-    pVec posB, siz, up, vel, rvel, col, alpha;
+    Particle_t P;
 
-    posB = PS->SrcSt.vertexB_tracks ? pos : PS->SrcSt.VertexB->Generate();
-    siz = PS->SrcSt.Size->Generate();
-    up = PS->SrcSt.Up->Generate();
-    vel = PS->SrcSt.Vel->Generate();
-    rvel = PS->SrcSt.RotVel->Generate();
-    col = PS->SrcSt.Color->Generate();
-    alpha = PS->SrcSt.Alpha->Generate();
-    float ag = PS->SrcSt.Age + pNRandf(PS->SrcSt.AgeSigma);
+    P.pos = pos;
+    P.posB = PS->SrcSt.vertexB_tracks ? pos : PS->SrcSt.VertexB->Generate();
+    P.size = PS->SrcSt.Size->Generate();
+    P.up = PS->SrcSt.Up->Generate();
+    P.vel = PS->SrcSt.Vel->Generate();
+    P.rvel = PS->SrcSt.RotVel->Generate();
+    P.color = PS->SrcSt.Color->Generate();
+    P.alpha = PS->SrcSt.Alpha->Generate().x();
+    P.age = PS->SrcSt.Age + pNRandf(PS->SrcSt.AgeSigma);
+    P.mass = PS->SrcSt.Mass;
+    P.data = data;
+    // Note that we pass in the particle user data of the Vertex call, even if it's the default value.
+    // We don't pass the PS->SrcSt data. Note that this creates an inconsistency if building an action list.
 
-    PS->PGroups[PS->pgroup_id].Add(pos, posB, up, vel, rvel, siz, col, alpha.x(), ag, PS->SrcSt.Mass, data);
+    PS->PGroups[PS->pgroup_id].Add(P);
 }
 
 void PContextActions_t::Vortex(

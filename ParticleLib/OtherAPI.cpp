@@ -38,6 +38,11 @@ namespace PAPI {
         PSS->Alpha = adom.copy();
     }
 
+    void PContextSourceState_t::Data(const puint64 data)
+    {
+        PSS->Data = data;
+    }
+
     void PContextSourceState_t::UpVec(const pVec &up)
     {
         delete PSS->Up;
@@ -388,14 +393,14 @@ namespace PAPI {
         return PS->PGroups[PS->pgroup_id].GetMaxParticles();
     }
 
-    void PContextParticleGroup_t::BirthCallback(P_PARTICLE_CALLBACK callback, void *data)
+    void PContextParticleGroup_t::BirthCallback(P_PARTICLE_CALLBACK callback, puint64 data)
     {
         if(PS->in_new_list) throw PErrInNewActionList("Can't call BirthCallback while in NewActionList.");
 
         PS->PGroups[PS->pgroup_id].SetBirthCallback(callback, data);
     }
 
-    void PContextParticleGroup_t::DeathCallback(P_PARTICLE_CALLBACK callback, void *data)
+    void PContextParticleGroup_t::DeathCallback(P_PARTICLE_CALLBACK callback, puint64 data)
     {
         if(PS->in_new_list) throw PErrInNewActionList("Can't call DeathCallback while in NewActionList.");
 

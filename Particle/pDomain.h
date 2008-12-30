@@ -5,8 +5,8 @@
 ///
 /// This file defines the pDomain class and all of the classes that derive from it.
 
-#ifndef _pdomain_h
-#define _pdomain_h
+#ifndef pdomain_h
+#define pdomain_h
 
 #include "pError.h"
 #include "pVec.h"
@@ -19,17 +19,22 @@ namespace PAPI
 
     /// A representation of a region of space.
     ///
-    /// A Domain is a representation of a region of space. For example, the Source action uses a domain to describe the volume in which a particle will be created. A random point within the domain is chosen as the initial position of the particle. The Avoid, Sink and Bounce actions, for example, use domains to describe a volume in space for particles to steer around, die when they enter, or bounce off, respectively.
+    /// A Domain is a representation of a region of space. For example, the Source action uses a domain to describe the volume in which a particle
+    /// will be created. A random point within the domain is chosen as the initial position of the particle. The Avoid, Sink and Bounce actions,
+    /// for example, use domains to describe a volume in space for particles to steer around, die when they enter, or bounce off, respectively.
     ///
-    /// Domains can be used to describe velocities. Picture the velocity vector as having its tail at the origin and its tip being in the domain. Domains can be used to describe colors in any three-valued color space. They can be used to describe three-valued sizes, such as Length, Width, Height.
+    /// Domains can be used to describe velocities. Picture the velocity vector as having its tail at the origin and its tip being in the domain.
+    /// Domains can be used to describe colors in any three-valued color space. They can be used to describe three-valued sizes, such as Length, Width, Height.
     ///
-    /// Several types of domains can be specified, such as points, lines, planes, discs, spheres, gaussian blobs, etc. Each subclass of the pDomain class represents a different kind of domain.
+    /// Several types of domains can be specified, such as points, lines, planes, discs, spheres, gaussian blobs, etc. Each subclass of the pDomain
+    /// class represents a different kind of domain.
     ///
     /// All domains support two basic operations. The first is Generate, which returns a random point in the domain.
     ///
     /// The second basic operation is Within, which tells whether a given point is within the domain.
     ///
-    /// The application programmer never calls the Generate or Within functions. The application will use the pDomain class and its derivatives solely as a way to communicate the domain to the API. The API's action commands will then perform operations on the domain, such as generating particles within it.
+    /// The application programmer never calls the Generate or Within functions. The application will use the pDomain class and its derivatives solely
+    /// as a way to communicate the domain to the API. The API's action commands will then perform operations on the domain, such as generating particles within it.
     class pDomain
     {
     public:
@@ -48,8 +53,11 @@ namespace PAPI
     /// Generate returns a point from either domain.
     /// Within returns true if pos is within A or within B.
     ///
-    /// All domains have a Size() that is used to apportion probability between the domains in the union. Sizes of domains of the same dimensionality are commensurate but sizes of differing dimensionality are not.
-    /// Thus, to properly distribute probability of Generate() choosing each domain, it is wise to only combine domains that have the same dimensionality. Note that thin shelled cylinders, cones, and spheres, where InnerRadius==OuterRadius, are considered 2D, not 3D. Thin shelled discs (circles) are considered 1D.
+    /// All domains have a Size() that is used to apportion probability between the domains in the union. Sizes of domains of the same dimensionality
+    /// are commensurate but sizes of differing dimensionality are not.
+    /// Thus, to properly distribute probability of Generate() choosing each domain, it is wise to only combine domains that have the same
+    /// dimensionality. Note that thin shelled cylinders, cones, and spheres, where InnerRadius==OuterRadius, are considered 2D, not 3D. Thin
+    /// shelled discs (circles) are considered 1D.
     class PDUnion : public pDomain
     {
     public:
@@ -249,9 +257,11 @@ namespace PAPI
 
     /// A Triangle.
     ///
-    /// p0, p1, and p2 are the vertices of the triangle. The triangle can be used to define an arbitrary geometrical model for particles to bounce off, or generate particles on its surface (and explode them), etc.
+    /// p0, p1, and p2 are the vertices of the triangle. The triangle can be used to define an arbitrary geometrical model for particles to
+    // bounce off, or generate particles on its surface (and explode them), etc.
     ///
-    /// Generate returns a random point in the triangle. Within returns true for points within epsilon of the triangle. Currently it is not possible to sink particles that enter/exit a polygonal model. Suggestions?]
+    /// Generate returns a random point in the triangle. Within returns true for points within epsilon of the triangle. Currently it is not
+    /// possible to sink particles that enter/exit a polygonal model. Suggestions?]
     class PDTriangle : public pDomain
     {
     public:
@@ -405,7 +415,8 @@ namespace PAPI
 
     /// Arbitrarily-oriented disc
     ///
-    /// The point Center is the center of a disc in the plane with normal Normal. The disc has an OuterRadius. If InnerRadius is greater than 0, the domain is a flat washer, rather than a disc. The normal will get normalized, so it need not already be unit length.
+    /// The point Center is the center of a disc in the plane with normal Normal. The disc has an OuterRadius. If InnerRadius is greater than 0,
+    /// the domain is a flat washer, rather than a disc. The normal will get normalized, so it need not already be unit length.
     ///
     /// Generate returns a point inside the disc shell. Within returns true for points within epsilon of the disc.
     class PDDisc : public pDomain
@@ -495,7 +506,8 @@ namespace PAPI
 
     /// Arbitrarily-oriented plane.
     ///
-    /// The point p0 is a point on the plane. Normal is the normal vector of the plane. If you have a plane in a,b,c,d form remember that n = [a,b,c] and you can compute a suitable point p0 as p0 = -n*d. The normal will get normalized, so it need not already be unit length.
+    /// The point p0 is a point on the plane. Normal is the normal vector of the plane. If you have a plane in a,b,c,d form remember that
+    /// n = [a,b,c] and you can compute a suitable point p0 as p0 = -n*d. The normal will get normalized, so it need not already be unit length.
     ///
     /// Generate returns the point p0. Within returns true if the point is in the positive half-space of the plane (in the plane or on the side that Normal points to).
     class PDPlane : public pDomain
@@ -548,7 +560,8 @@ namespace PAPI
     ///
     /// Generate returns a random point in this box. Within returns true if the point is in the box.
     ///
-    /// It is only possible to bounce particles off the outside of the box, not the inside. Likewise, particles can only Avoid the box from the outside. To use the Avoid action inside a box, define the box as six planes.
+    /// It is only possible to bounce particles off the outside of the box, not the inside. Likewise, particles can only Avoid
+    /// the box from the outside. To use the Avoid action inside a box, define the box as six planes.
     class PDBox : public pDomain
     {
     public:
@@ -561,9 +574,9 @@ namespace PAPI
         {
             p0 = e0;
             p1 = e1;
-            if(e1.x() < e0.x()) { p0.x() = e1.x(); p1.x() = e1.x(); }
-            if(e1.y() < e0.y()) { p0.y() = e1.y(); p1.y() = e1.y(); }
-            if(e1.z() < e0.z()) { p0.z() = e1.z(); p1.z() = e1.z(); }
+            if(e1.x() < e0.x()) { p0.x() = e1.x(); p1.x() = e0.x(); }
+            if(e1.y() < e0.y()) { p0.y() = e1.y(); p1.y() = e0.y(); }
+            if(e1.z() < e0.z()) { p0.z() = e1.z(); p1.z() = e0.z(); }
 
             dif = p1 - p0;
             vol = dot(dif, pVec(1,1,1));
@@ -600,7 +613,8 @@ namespace PAPI
 
     /// Cylinder
     ///
-    /// e0 and e1 are the endpoints of the axis of the right cylinder. OuterRadius is the outer radius, and InnerRadius is the inner radius for a cylindrical shell. InnerRadius = 0 for a solid cylinder with no empty space in the middle.
+    /// e0 and e1 are the endpoints of the axis of the right cylinder. OuterRadius is the outer radius, and InnerRadius is the inner
+    /// radius for a cylindrical shell. InnerRadius = 0 for a solid cylinder with no empty space in the middle.
     ///
     /// Generate returns a random point in the cylindrical shell. Within returns true if the point is within the cylindrical shell.
     class PDCylinder : public pDomain
@@ -715,7 +729,11 @@ namespace PAPI
 
     ///  Cone
     ///
-    /// e0 is the apex of the cone and e1 is the endpoint of the axis at the cone's base. OuterRadius is the radius of the base of the cone. InnerRadius is the radius of the base of a cone to subtract from the first cone to create a conical shell. This is similar to the cylindrical shell, which can be thought of as a large cylinder with a smaller cylinder subtracted from the middle. Both cones share the same apex and axis, which implies that the thickness of the conical shell tapers to 0 at the apex. InnerRadius = 0 for a solid cone with no empty space in the middle.
+    /// e0 is the apex of the cone and e1 is the endpoint of the axis at the cone's base. OuterRadius is the radius of the base of the cone.
+    /// InnerRadius is the radius of the base of a cone to subtract from the first cone to create a conical shell. This is similar to the 
+    /// cylindrical shell, which can be thought of as a large cylinder with a smaller cylinder subtracted from the middle. Both cones share the
+    /// same apex and axis, which implies that the thickness of the conical shell tapers to 0 at the apex. InnerRadius = 0 for a solid cone with
+    /// no empty space in the middle.
     ///
     /// Generate returns a random point in the conical shell. Within returns true if the point is within the conical shell.
     class PDCone : public pDomain
@@ -840,7 +858,8 @@ namespace PAPI
     ///
     /// The point Center is the center of the sphere. OuterRadius is the outer radius of the spherical shell and InnerRadius is the inner radius.
     ///
-    /// Generate returns a random point in the thick shell at a distance between OuterRadius and InnerRadius from point Center. If InnerRadius is 0, then it is the whole sphere. Within returns true if the point lies within the thick shell at a distance between InnerRadius to OuterRadius from point Center.
+    /// Generate returns a random point in the thick shell at a distance between OuterRadius and InnerRadius from point Center. If InnerRadius
+    /// is 0, then it is the whole sphere. Within returns true if the point lies within the thick shell at a distance between InnerRadius to OuterRadius from point Center.
     class PDSphere : public pDomain
     {
     public:
@@ -920,7 +939,8 @@ namespace PAPI
 
     /// Gaussian blob
     ///
-    /// The point Center is the center of a normal probability density of standard deviation StandardDev. The density is radially symmetrical. The blob domain allows for some very natural-looking effects because there is no sharp, artificial-looking boundary at the edge of the domain.
+    /// The point Center is the center of a normal probability density of standard deviation StandardDev. The density is radially symmetrical.
+    /// The blob domain allows for some very natural-looking effects because there is no sharp, artificial-looking boundary at the edge of the domain.
     ///
     /// Generate returns a point with normal probability density. Within has a probability of returning true equal to the probability density at the specified point.
     class PDBlob : public pDomain

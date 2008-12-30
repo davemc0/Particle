@@ -88,6 +88,14 @@ struct PABounce : public PActionBase
     void Exec(const PDDisc &dom, ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend);
 };
 
+struct PACallback : public PActionBase
+{
+    P_PARTICLE_CALLBACK callback;
+    puint64 Data; // The action list number to call
+
+    EXEC_METHOD;
+};
+
 struct PACallActionList : public PActionBase
 {
     int action_list_num; // The action list number to call
@@ -137,13 +145,6 @@ struct PAFollow : public PActionBase
     float magnitude;	// The grav of each particle
     float epsilon;		// Softening parameter
     float max_radius;	// Only influence particles within max_radius
-
-    EXEC_METHOD;
-};
-
-struct PAFountain : public PActionBase
-{
-    PActionBase *AL;    // A pointer to the data for all the actions.
 
     EXEC_METHOD;
 };

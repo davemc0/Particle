@@ -1,14 +1,14 @@
 #include "Effects.h"
 
-#include <Particle/pAPI.h>
+#include "Particle/pAPI.h"
 
 using namespace PAPI;
 
-#include <Image/ImageAlgorithms.h>
+#include "Image/ImageAlgorithms.h"
 
 #ifndef NO_OGL_OBSTACLES
 // This is for drawing the obstacles for Shower().
-#include <GL/glut.h>
+#include "GL/glut.h"
 #endif
 
 #include <vector>
@@ -20,7 +20,7 @@ using namespace std;
 #define lrand48() ((rand() << 16) ^ rand())
 #endif
 
-ParticleEffects::ParticleEffects(ParticleContext_t &_P, int mp) : P(_P)
+ParticleEffects::ParticleEffects(ParticleContext_t &P_, int mp) : P(P_)
 {
     maxParticles = mp;
     numSteps = 1;
@@ -330,7 +330,7 @@ void ParticleEffects::Fireworks(bool FirstTime, bool Immediate)
     P.Color(PDBox(pVec(0,0.5,0), pVec(1,1,1)));
     P.StartingAge(0);
 
-    P.Source(0.05, PDDisc(pVec(0,0,0), pVec(0,0,1), 6));
+    P.Source(MAX_ROCKETS * 0.002, PDDisc(pVec(0,0,0), pVec(0,0,1), 6));
     P.Sink(false, PDPlane(pVec(0,0,-1), pVec(0,0,1)));
     P.Gravity(GravityVec);
     P.Move(true, false);
@@ -347,8 +347,9 @@ void ParticleEffects::Fireworks(bool FirstTime, bool Immediate)
     P.Size(1.0);
     P.StartingAge(0, 6);
 
-    for(int i=0; i<rcount; i++)
-    {
+    const float sparkLifetime = 25.0f;
+
+    for(int i=0; i<rcount; i++) {
         pVec rv(rocketv[i]);
         rv.normalize();
         rv *= -0.026;
@@ -357,14 +358,14 @@ void ParticleEffects::Fireworks(bool FirstTime, bool Immediate)
 
         P.Color(PDLine(rocketc[i], pVec(1,.5,.5)));
         P.Velocity(PDBlob(rv, 0.006));
-        P.Source(70, PDPoint(rocketp[i]));
+        P.Source((maxParticles * 2.0) / (sparkLifetime * MAX_ROCKETS), PDPoint(rocketp[i]));
     }
 
     P.Gravity(GravityVec);
     //P.Damping(pVec(0.999));
-    P.TargetColor(pVec(0,0,0), 0, 0.02);
+    P.TargetColor(pVec(0,0,0), 0, 0.04);
     P.Move(true, false);
-    P.KillOld(90);
+    P.KillOld(sparkLifetime);
 
     if(!Immediate) {
         P.EndActionList();

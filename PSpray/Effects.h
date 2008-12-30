@@ -1,9 +1,9 @@
 #ifndef _Effects_h
 #define _Effects_h
 
-#include <Image/tImage.h>
+#include "Particle/pAPI.h"
 
-#include <Particle/pAPI.h>
+#include "Image/tImage.h"
 
 using namespace PAPI;
 

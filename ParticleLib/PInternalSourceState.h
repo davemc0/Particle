@@ -26,6 +26,7 @@ namespace PAPI {
         pDomain *Size;
         pDomain *Color;
         pDomain *Alpha;
+        puint64 Data;
         float Age;
         float AgeSigma;
         float Mass;
@@ -34,6 +35,7 @@ namespace PAPI {
         PInternalSourceState_t() : Up(new PDPoint(P010)), Vel(new PDPoint(P000)), RotVel(new PDPoint(P000)),
             VertexB(new PDPoint(P000)), Size(new PDPoint(P111)), Color(new PDPoint(P111)), Alpha(new PDPoint(P111))
         {
+            Data = 0;
             Age = 0.0f;
             AgeSigma = 0.0f;
             Mass = 1.0f;
@@ -64,6 +66,7 @@ namespace PAPI {
             Size = In.Size->copy();
             Color = In.Color->copy();
             Alpha = In.Alpha->copy();
+            Data = In.Data;
             Age = In.Age;
             AgeSigma = In.AgeSigma;
             Mass = In.Mass;

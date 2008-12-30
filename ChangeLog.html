@@ -6,6 +6,22 @@
 </head>
 <body>
     <h1>
+        Version 2.21 Changes (December 2008)</h1>
+    <ul>
+        <li>Made user data an attribute of particle source state, settable via the Data() call.
+            Also made it a 64-bit unisgned integer. Before, it was sometimes a long and sometimes
+            a void *.</li>
+        <li>Added a Callback() action that simply calls user code for each particle in the middle
+            of particle simulation. This allows for implementing effects that can't be expressed solely with the existing API.</li>
+        <li>Ported to Visual Studio 2008 (MSVC 9.0). This yields about a 15% perf improvement.</li>
+        <li>Fixed a memory leak with deleting ParticleContext_t.</li>
+        <li>Fixed the bug with the distributed demos not running on certain XP machines because
+            of a bug in the compiler's manifest generator.</li>
+            <li>Fixed bug with bounding boxes.</li>
+        <li>PSpray now waits at least 6 seconds before cycling to a different random demo.</li>
+        <li>Thanks to Andrew Chew, Stefan Maton, Lloyd Tullues, and Bryan Witkowski for bug reports and fixes.</li>
+    </ul>
+    <h1>
         Version 2.20 Changes (March 2007)</h1>
     <ul>
         <li>Added the PDUnion domain, which is the union of multiple other domains. This gets

@@ -28,6 +28,12 @@ namespace PAPI {
         PContextParticleGroup_t::InternalSetup(PSt);
     }
 
+    ParticleContext_t::~ParticleContext_t()
+    {
+        PInternalState_t* pss = PContextActionList_t::getInternalState();
+        delete pss;
+    }
+
     void PContextSourceState_t::InternalSetup(PInternalSourceState_t *St)
     {
         PSS = St;
@@ -46,6 +52,11 @@ namespace PAPI {
     void PContextParticleGroup_t::InternalSetup(PInternalState_t *St)
     {
         PS = St;
+    }
+
+    PInternalState_t* PContextActionList_t::getInternalState() const
+    {
+        return PS;
     }
 
     // Constructor for the internal state
@@ -134,11 +145,7 @@ namespace PAPI {
                     (*ait)->dt = dt; // Provide the action with access to the current dt.
                     (*ait)->Execute(pg, pbeg, pend);
 
-                    // This is a hack to handle our compound object experiment.
-                    if(typeid(ait) == typeid(PAFountain))
-                        ait += 6;
-                    else
-                        ait++;
+                    ait++;
                 }
                 if(!one_pass) { // If we're not one_pass then we know we didn't do any actions that mangle our iterators.
                     pbeg = pend;
