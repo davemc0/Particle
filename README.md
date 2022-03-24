@@ -1,3 +1,5 @@
+# Particle
+The Particle System API, since 1999, using C++, OpenGL, GLUT, and CMake
 Particle System API
 by David McAllister
 version 2.21

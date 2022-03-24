@@ -244,18 +244,18 @@ void DrawGroupAsQuadSprites(ParticleContext_t &P, const pVec &view, const pVec &
     pVec V2 = right + nup;
     pVec V3 = nup - right;
 
-    //cerr << "x " << view.x() << " " << view.y() << " " << view.z() << endl;
-    //cerr << "x " << nup.x() << " " << nup.y() << " " << nup.z() << endl;
-    //cerr << "x " << right.x() << " " << right.y() << " " << right.z() << endl;
-    //cerr << "x " << V0.x() << " " << V0.y() << " " << V0.z() << endl;
+    //cerr << "x " << view.x() << " " << view.y() << " " << view.z() << std::endl;
+    //cerr << "x " << nup.x() << " " << nup.y() << " " << nup.z() << std::endl;
+    //cerr << "x " << right.x() << " " << right.y() << " " << right.z() << std::endl;
+    //cerr << "x " << V0.x() << " " << V0.y() << " " << V0.z() << std::endl;
 
     glBegin(GL_QUADS);
 
     for(int i = 0; i < cnt; i++)
     {
         pVec &p = ppos[i];
-        //cerr << p.x() << " " << p.y() << " " << p.z() << endl;
-        // cerr << color[i*4+3] << endl;
+        //cerr << p.x() << " " << p.y() << " " << p.z() << std::endl;
+        // std::cerr << color[i*4+3] << std::endl;
 
         if(!const_color)
             glColor4fv((GLfloat *)&color[i*4]);

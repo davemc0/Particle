@@ -14,8 +14,6 @@ using namespace PAPI;
 #include <vector>
 #include <iostream>
 
-using namespace std;
-
 #ifdef WIN32
 #define lrand48() ((rand() << 16) ^ rand())
 #endif
@@ -458,8 +456,9 @@ void ParticleEffects::PhotoShape(bool FirstTime, bool Immediate)
         for(int y=0; y<d; y++, fy+=sy) {
             float fx = 0.0f;
             for(int x=0; x<d; x++, fx+=sx) {
-                f3Pixel p;
-                sample2(p, *Img, fx, fy);
+                uc3Pixel puc;
+                sample2(puc, *Img, fx, fy);
+                f3Pixel p(puc);
                 P.Color(p.r(), p.g(), p.b());
                 pVec v(fx, 0, fy);
                 v /= float(Img->w());
