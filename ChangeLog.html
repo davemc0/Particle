@@ -1,0 +1,211 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1">
+    <title>ParticleAPI: Change Log</title>
+</head>
+<body>
+    <h1>
+        Version 2.21 Changes (December 2008)</h1>
+    <ul>
+        <li>Made user data an attribute of particle source state, settable via the Data() call.
+            Also made it a 64-bit unisgned integer. Before, it was sometimes a long and sometimes
+            a void *.</li>
+        <li>Added a Callback() action that simply calls user code for each particle in the middle
+            of particle simulation. This allows for implementing effects that can't be expressed solely with the existing API.</li>
+        <li>Ported to Visual Studio 2008 (MSVC 9.0). This yields about a 15% perf improvement.</li>
+        <li>Fixed a memory leak with deleting ParticleContext_t.</li>
+        <li>Fixed the bug with the distributed demos not running on certain XP machines because
+            of a bug in the compiler's manifest generator.</li>
+            <li>Fixed bug with bounding boxes.</li>
+        <li>PSpray now waits at least 6 seconds before cycling to a different random demo.</li>
+        <li>Thanks to Andrew Chew, Stefan Maton, Lloyd Tullues, and Bryan Witkowski for bug reports and fixes.</li>
+    </ul>
+    <h1>
+        Version 2.20 Changes (March 2007)</h1>
+    <ul>
+        <li>Added the PDUnion domain, which is the union of multiple other domains. This gets
+            us closer to being able to define a polygonal model domain. It also is a good way
+            to specify colors for the Balloons effect, where colors come from disjoint sets,
+            not from a continuum.</li>
+        <li>Fixed the Within() function for many domains. Some domains just had their sense
+            reversed. Non-3D domains used to always return false but now I try to determine
+            whether the point rests in the plane or whatever.</li>
+        <li>Wrote some domain self-testing code that does Generate() then calls Within() on
+            the generated point to make sure they match.</li>
+        <li>Added the new pError.h file and added an error when negative radiuses are supplied
+            to a domain.</li>
+        <li>Fixed Rotational damping. It was previously just doing positional damping. Oops!</li>
+        <li>Avoid() was incorrectly being scaled by dt when computing the look_ahead position.</li>
+        <li>Avoid() of a rectangle was steering toward the middle of the rectangle sometimes.</li>
+        <li>Avoid() of a plane was pulling away from the plane too sharply, basically bouncing.</li>
+        <li>Made PSpray check whether you have SSE and whether you have the necessary OpenGL
+            extensions for point sprites.</li>
+        <li>Added #include "typeinfo" to appease STLPort implementation of STL.</li>
+        <li>Extended GetParticlePointer() to return <i>all</i> particle data.</li>
+        <li>Tripled the performance of the pNRandf() function, which creates a normally-distributed
+            random number.</li>
+        <li>In PSpray, I check for the existance of SSE and I allow it to work without Nvidia's
+            point sprites.</li>
+        <li>Thanks to Greg Croft, Lloyd Tullues, and John Berendsen for bug reports and fixes.</li>
+    </ul>
+    <h1>
+        Version 2.10 Changes (November 2006)</h1>
+    <ul>
+        <li>Documented the API using Doxygen. I'm new to Doxygen, so feel free to change things
+            or give me advice. But finally the API documentation is current.</li>
+        <li>Updated my Makefiles and compiled the code on Linux under GCC 4.1.</li>
+        <li>Changed the Visual Studio project files to be Visual Studio 2005 (VC8). With VC8's
+            stricter containers, I fixed a few pseudo-bugs.</li>
+        <li>Implemented C++ exception handling for error detection and reporting.</li>
+        <li>Created a PAPI namespace and put the whole API in it. My demos use "using namespace
+            PAPI;", but you can put "PAPI::" in front of every identifier if you feel the need.</li>
+        <li>Created a user-visible ParticleContext_t struct. It contains four base classes,
+            each of which contains one of the four kinds of API calls. Most people will probably
+            create a single, global ParticleContext_t in their app. For example,
+            <pre>
+ParticleContext_t P;
+
+void DoParticles()
+{
+    P.Color(pVec(1,1,1));
+    P.Source(10, PDLine(pVec(0.0, 0.0, 0.401), pVec(0.0, 0.0, 0.405)));
+    P.Move();
+}
+</pre>
+            For single-threaded apps, the main change is that you say <code>P.Action()</code>
+            rather than <code>pAction()</code>. This new structure is more thread-safe, more
+            C++-esque and better performing when multithreaded.</li>
+        <li>Renamed ColorD() to Color() and *D() because the function prototype distinguishes
+            the version.</li>
+        <li>Added a ResetSourceState() call that sets the particle creation state back to its
+            default values.</li>
+        <li>Changed SetMaxParticles() to not return a value because it was just the value that
+            you passed in.</li>
+        <li>Removed the Reset() function that deletes all the particles in the current group
+            because SetMaxParticles(0) will do that.</li>
+        <li>Changed the default value of StartingAge's sigma from 1.0 to 0.0. I figure that
+            if people don't specify an amount of variation in the starting age, it's probably
+            because they don't want any.</li>
+        <li>Finally got a good Vortex action defined. It's beautiful!</li>
+        <li>Optimized the code further. Performance is up by a factor of 2 or 3 in many cases.</li>
+        <li>I tuned the working set size for action lists down to 256KB. This apparently gives
+            us all the goodness, and works on every machine. Added a SetWorkingSetSize() command.</li>
+        <li>Using action lists is now <i>very</i> beneficial. I changed PSpray to make this
+            the default.</li>
+        <li>Added flags to the Move() action to specify whether you're moving the velocity,
+            rotational velocity, or both.</li>
+        <li>Changed the semantics of the Restore() and Explosion() actions so that you now have
+            to decrement time_left, or increment radius manually, even in action list mode.
+            This is to preserve the rule that action lists don't change once created.</li>
+        <li>Cleaned up the code internally, mostly in regards to STL containers that have changed
+            with the compiler upgrades.</li>
+        <li>Renamed some of the .cpp files to have more clear names.</li>
+        <li>Fixed a bug where mass was not properly getting changed in some cases.</li>
+        <li>Fixed a bug where particle age was not receiving a normal distribution for particles
+            made with Vertex().</li>
+    </ul>
+    <h1>
+        Version 2.0 Beta Changes (March 2006)</h1>
+    <p>
+        This is the first major update to the particle system API in about five years. It
+        includes enhancements in several areas. Here are the major improvements:</p>
+    <ul>
+        <li>More actions. I added pSort, which sorts particles back-to-front, given an eye point
+            and look vector. I added control over the random number seeds (useful for repeatability
+            and multithreaded apps). Someone (I wish I could remember who) added support for
+            callback functions that get called whenever a particle is created or destroyed.
+            He also added particle rotation actions. This is really nice for complex particles
+            like boulders.</li>
+        <li>Improved actions. The pJet action can now apply acceleration to particles within
+            any domain, not just within a sphere. Particles can now bounce off the inside of
+            a sphere domain. The vortex action is more sane now.</li>
+        <li>Stronger typing. Each API call used to just take a long list of floats as args.
+            This was confusing, especially for specifying domains. Now the vector type, pVec,
+            and the domains are exposed as classes, so this line:
+            <pre>
+pSource(10, PDLine, 0.0, 0.0, 0.401, 0.0, 0.0, 0.405);
+</pre>
+            becomes this:
+            <pre>
+pSource(10, PDLine(pVec(0.0, 0.0, 0.401), pVec(0.0, 0.0, 0.405)));
+</pre>
+            This is much easier to read, safer, and now the Visual C++ editor can provide useful
+            function prototype hints.</li>
+        <li>Faster code. It is now very advantageous to use action lists. This is because I
+            divide a particle group into working sets that are about the size of a CPU's L2
+            cache. I perform as many actions as possible on this working set before moving on
+            to the next. That way, the particles only get loaded into cache on the first action
+            of their working set, rather than for every action. This provides about a 2X speedup
+            for large particle systems. I have also experimented with compound actions, which
+            are hard-coded combinations of actions, such as "pSink(); pMove();". When these
+            two appear in an action list, an internal action, pSinkMove, could be called instead
+            to further reduce overhead. A compound Fountain action got about a 3X speedup over
+            the traditional fountain. I have also experimented with using SSE, and have made
+            some infrastructure changes to prepare, but haven't done the actual implementation
+            yet. I have turned on /arch:SSE2 in the MSVC compiler and got about 15% speedup
+            from it. I also improved the efficiency of several individual actions such as pRestore.</li>
+        <li>Better code. I have used STL containers to re-implement action lists and particle
+            groups, thereby fixing some bugs and making the code more readable. I made each
+            kind of domain a separate class and use virtual functions instead of switch statements.
+            It's just as fast and is much more solid and more extensible. I also reorganized
+            classes and pulled all global variables into classes.</li>
+        <li>Better demos. I have restructured the demos for better code sharing, and made it
+            easier to add new effects. I spruced up some effects, and added new ones: a snow
+            globe, a bunch of rectangles that the particles bounce off, and a flame thrower.
+            It now cycles randomly through the demos like a screen saver.</li>
+        <li>I added a point sprite rendering mode to the demos. Point sprites allow an arbitrary
+            texture to be mapped onto a screen-aligned square primitive. This square is defined
+            by a single GL vertex. This is several times faster than the old way of creating
+            screen-aligned textured primitives, which required three or four vertices.</li>
+        <li>I removed the pDrawGroup* calls. It's pretty rare that they provide exactly what
+            you want, and they created a dependency on OpenGL. Instead, look at the code in
+            Example.cpp and DrawGroups.cpp to see ways of drawing with OpenGL.</li>
+    </ul>
+    <h1>
+        Version 1.2 Changes (November 1999)</h1>
+    <ul>
+        <li>Added a gaussian splat drawing mode to PSpray. You can draw either as a triangle
+            or a quad with a gaussian alpha texture.</li>
+        <li>Added a PDDisc domain for generating and bouncing.</li>
+        <li>Split the PDPlane domain into PDPlane, for infinite planes and half-spaces; and
+            PDRectangle, for rhombus-shaped planar patches.</li>
+        <li>Added pTargetVelocity to make all particles tend toward a given velocity. This is
+            a component of Boids.</li>
+        <li>Added pMatchVelocity to match velocity to near neighbors.</li>
+        <li>Added pAvoid to steer to avoid the given domain.</li>
+        <li>Added pSpeedLimit.</li>
+        <li>Removed pKillSlow. Instead use pSinkVelocity.</li>
+        <li>Fixed a bug in the Within logic for PDBlob so now it's right.</li>
+        <li>Demonstrated flocking behavior using a Boids demo.</li>
+        <li>Changed pGetParticles so that verts can be NULL. It now returns the number of particles
+            it's copying. This way you can just tell it the size of your array instead of having
+            to call pGetGroupCount.</li>
+        <li>Changed the particle size scalar to be a domain. This will allow greater expression
+            of particle shape. Orientation becomes more important. Added pSizeD to specify it.
+            Changed pGetParticles so that it returns three floats per particle for size.</li>
+        <li>For Windows, made it a DLL instead of a static library.</li>
+        <li>For Windows, ships with a DLL compiled with the Intel Vtune compiler (a bit faster).</li>
+        <li>Made pspray choose a demo randomly on startup.</li>
+        <li>Made pStartingAge take an optional parameter for the standard deviation of random
+            starting ages, centered at age.</li>
+        <li>Replaced the lifetime parameter of explosions with stdev and made the shock wave
+            be gaussian instead of square. This will fix the ugly stratification effects in
+            explosions of very dense particle clouds.</li>
+        <li>Updated the documentation.</li>
+        <li>Changed pCallActionList to be storable in action lists, as the docs said.</li>
+        <li>Added a trivial app. for learning the API.</li>
+        <li>Made a rocket demo. It has the rockets in one particle group and their sparks in
+            another, generated at the rocket positions.</li>
+        <li>When re-using an action list that was already generated, it now properly deletes
+            the previous actions.</li>
+    </ul>
+    <h1>
+        Version 1.11 Changes (February 2, 1999)</h1>
+    <ul>
+        <li>Added a length attribute</li>
+        <li>Added more domains</li>
+        <li>Added bug fixes</li>
+    </ul>
+</body>
+</html>

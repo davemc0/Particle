@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBliC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1">
+    <title>ParticleAPI: To Do</title>
+</head>
+<body>
+    <h1>
+        To Do</h1>
+    <p>
+        If anyone would like to do one of these, go for it! I might get to them eventually.</p>
+    <h2>
+        API</h2>
+    <ul>
+        <li>Use Nvidia's CUDA library to do the particle computation on the GPU</li>
+        <li>Use SSE better and use multiple CPU cores. I believe I will do this using CUDA for multicore.</li>
+        <li>Optimize compiled action lists by combining calls. I believe the CUDA implementation will handle this.</li>
+        <li>Bouncing off multiple nearby or intersecting domains is broken (see Waterfall).</li>
+        <li>Bouncing and avoiding of PDUnion domains. This may be the answer for obstacle avoidance.</li>
+        <li>Bounce off inside PDBox domain</li>
+        <li>Bounce off cylinders</li>
+        <li>Make actions conditional on domains.</li>
+        <li>Make the API more generic so many API calls can apply to any different attribute. Make attributes generic.</li>
+        <li>Have a secondary color for each particle.</li>
+        <li>DensityColor - color is f(density)</li>
+        <li>PositionColor - color is f(position)</li>
+        <li>RandomColor - random domain is added to color</li>
+        <li>VelocityColor - color is f(velocity)</li>
+        <li>VelocitySize - size is f(velocity)</li>
+    </ul>
+    <h2>
+        Demos</h2>
+    <ul>
+        <li>Environment reflected water drops</li>
+        <li>Make demos that use a wider variety of actions</li>
+        <li>Demo where you put particles all over the surface of a statue, explode the statue,
+            and then suck the particles back to the original position.</li>
+        <li>Toggle creation/killing of particles for all effects so the Snake doesn't kill them,
+            etc.</li>
+        <li>Make an actual Windows screensaver.</li>
+        <li>Integrate Boids into Effects.cpp.</li>
+    </ul>
+    <h2>
+        Documentation</h2>
+</body>
+</html>
