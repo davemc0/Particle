@@ -17,8 +17,8 @@
 // Do I just make an init function, or do I make a struct?
 
 #include "../PSpray/DrawGroups.h"
-#include "../PSpray/Effects.h"
 #include "../PSpray/Monarch.h"
+#include "../Effects/Effects.h"
 
 #include "Particle/pAPI.h"
 
@@ -49,8 +49,9 @@
 
 static bool MotionBlur = false, FreezeParticles = false, AntiAlias = true, DepthTest = false;
 static bool ConstColor = false, ShowText = true, ParticleCam = false, SortParticles = false, SphereTexture = true;
-static bool Immediate = false, DrawGround = false, CameraMotion = true, FullScreen = false, PointSpritesAllowed = true;
-static int DemoNum = 10, PrimType = GL_POINTS, DisplayListID = -1, SpotTexID = -1;
+static bool DrawGround = false, CameraMotion = true, FullScreen = false, PointSpritesAllowed = true;
+static ExecMode_e ExecMode = Internal_Mode;
+static int DemoNum = 0, PrimType = GL_POINTS, DisplayListID = -1, SpotTexID = -1;
 static const float DEMO_MIN_SEC = 6.0f;
 static int RandomDemo = 500; // A one-in-this-many chance of changing demos this frame
 static float BlurRate = 0.09;
@@ -59,20 +60,48 @@ static char *FName = NULL;
 
 static Timer Clock, RandomDemoClock;
 static ParticleContext_t P;
-static ParticleEffects Efx(P, 40000);
+
+
+// Render any geometry necessary to support the effects
+void RenderGeometry(const int SteerShape)
+{
+    glColor3f(1,1,0);
+    switch(SteerShape) {
+    case 0:
+        glutSolidSphere(1, 32, 16);
+        break;
+    case 1:
+        glBegin(GL_TRIANGLES);
+        glVertex3f(0,-1,0);
+        glVertex3f(2,0,0);
+        glVertex3f(0,2,0);
+        glEnd();
+        break;
+    case 2:
+        glBegin(GL_QUADS);
+        glVertex3f(0,-1,0);
+        glVertex3f(2,0,0);
+        glVertex3f(2,2,0);
+        glVertex3f(0,1,0);
+        glEnd();
+        break;
+    case 3:
+        glBegin(GL_QUADS);
+        glVertex3f(-2,-2,0);
+        glVertex3f(2,-2,0);
+        glVertex3f(2,2,0);
+        glVertex3f(-2,2,0);
+        glEnd();
+    }
+}
+
+#ifdef _DEBUG
+static ParticleEffects Efx(P, 2000, RenderGeometry);
+#else
+static ParticleEffects Efx(P, 40000, RenderGeometry);
+#endif
 
 void menu(int);
-
-static void SetupBenchmark()
-{
-    srand48(531);
-    Immediate = false;
-    CameraMotion = false;
-    SortParticles = false;
-    DemoNum = 22; // tornado
-    if(RandomDemo > 0) RandomDemo = -RandomDemo;
-    // RandomDemo = 10; // Try to do PGO on lots of effects.
-}
 
 // Symmetric gaussian centered at origin.
 // No covariance matrix. Give it X and Y.
@@ -125,7 +154,7 @@ void MakeSphereTexture()
 
     float *img = new float[DIM*DIM];
 
-    pVec light(1,1,3);
+    pVec light=pVec_(1,1,3);
     light.normalize();
 
     for(int y=0; y<DIM; y++) {
@@ -134,8 +163,8 @@ void MakeSphereTexture()
             if(x==0 || x==DIM-1 || y==0 || y==DIM-1)
                 img[y*DIM+x] = 0;
             else {
-                pVec p(x, y, 0);
-                p -= pVec(DIM2, DIM2, 0);
+                pVec p=pVec_(x, y, 0);
+                p -= pVec_(DIM2, DIM2, 0);
                 float len = p.length();
                 float z = sqrt(DIM2*DIM2 - len*len);
                 p.z() = z;
@@ -200,10 +229,10 @@ void InitProgs()
     // to eye space. The cube root of this estimates the 1D change in scale. Divide this by W
     // per point.
     float params[3] = {0.0f, 0.0f, 0.00003f};
-    glPointParameterfv(GL_POINT_DISTANCE_ATTENUATION, params);
-    glPointParameterf(GL_POINT_SIZE_MIN, 0);
-    glPointParameterf(GL_POINT_SIZE_MAX, 5000);
-    glPointParameterf(GL_POINT_FADE_THRESHOLD_SIZE, 1);
+    glPointParameterfv(GL_POINT_DISTANCE_ATTENUATION_ARB, params);
+    glPointParameterf(GL_POINT_SIZE_MIN_ARB, 0);
+    glPointParameterf(GL_POINT_SIZE_MAX_ARB, 5000);
+    glPointParameterf(GL_POINT_FADE_THRESHOLD_SIZE_ARB, 1);
 
     glEnable(GL_LINE_SMOOTH);
     glEnable(GL_POINT_SMOOTH);
@@ -266,8 +295,10 @@ void Draw()
         // Use a particle to model the camera motion
         CameraSystem = P.GenParticleGroups(1, 1);
         P.CurrentGroup(CameraSystem);
-        P.Velocity(PDSphere(pVec(0, 0, 0), 0.06, 0.06));
-        P.Vertex(pVec(0,-19,15));
+
+        pSourceState S;
+        S.Velocity(PDSphere_(pVec_(0, 0, 0), 0.06, 0.06));
+        P.Vertex(pVec_(0,-19,15), S);
     }
 
     glLoadIdentity();
@@ -294,7 +325,7 @@ void Draw()
     // Use a particle to model the camera motion
     P.CurrentGroup(CameraSystem);
     if(CameraMotion) {
-        P.Bounce(0, 1, 0.1, PDSphere(pVec(0, -10, 7), 15));
+        P.Bounce(0, 1, 0.1, PDSphere_(pVec_(0, -10, 7), 15));
         P.Move();
     }
 
@@ -308,7 +339,7 @@ void Draw()
 #if 0
     pVec At=Cam+Vel;
 #else
-    pVec At(0,0,3);
+    pVec At=pVec_(0,0,3);
 #endif
 
     gluLookAt(Cam.x(), Cam.y(), Cam.z(), At.x(), At.y(), At.z(), 0, 0, 1);
@@ -327,7 +358,7 @@ void Draw()
     if(!FreezeParticles) {
         P.CurrentGroup(Efx.particle_handle);
         for(int step = 0; step < Efx.numSteps; step++) {
-            Efx.CallDemo(DemoNum, false, Immediate);
+            Efx.CallDemo(DemoNum, ExecMode);
         }
     }
 
@@ -355,14 +386,14 @@ void Draw()
     } else if(PrimType == 0x100) {
         pVec view = At - Cam;
         view.normalize();
-        pVec up(0, 0, 1);
+        pVec up=pVec_(0, 0, 1);
         glEnable(GL_TEXTURE_2D);
         DrawGroupAsTriSprites(P, view, up, 0.16, true, true, ConstColor);
         glDisable(GL_TEXTURE_2D);
     } else if(PrimType == 0x101) {
         pVec view = At - Cam;
         view.normalize();
-        pVec up(0, 0, 1);
+        pVec up=pVec_(0, 0, 1);
         glEnable(GL_TEXTURE_2D);
         DrawGroupAsQuadSprites(P, view, up, 0.16, true, true, ConstColor);
         glDisable(GL_TEXTURE_2D);
@@ -389,10 +420,10 @@ void Draw()
             AntiAlias ? 'A':' ',
             (RandomDemo > 0) ? 'R':' ',
             DepthTest ? 'D':' ',
-            Immediate ? 'I':' ',
-            CameraMotion ? 'C':' ',
+            ((ExecMode == Immediate_Mode) ? 'I' : (ExecMode == Internal_Mode) ? 'N' : 'C'),
+            CameraMotion ? 'M':' ',
             SortParticles ? 'S':' ',
-            cnt, fps, PrimName, Efx.GetCurEffectName());
+            cnt, fps, PrimName, Efx.GetCurEffectName().c_str());
 
         showBitmapMessage(-0.95f, 0.85f, 0.0f, msg);
     }
@@ -414,7 +445,7 @@ void Draw()
     // Change to a different random demo
     if(RandomDemo > 0 && ((lrand48() % RandomDemo) == 0) && RandomDemoClock.Read() > DEMO_MIN_SEC) {
         RandomDemoClock.Reset();
-        DemoNum = Efx.CallDemo(lrand48(), true, Immediate);
+        DemoNum = Efx.CallDemo(-2, ExecMode);
     }
 }
 
@@ -433,30 +464,35 @@ void Reshape(int w, int h)
 
 void menu(int item)
 {
-    static int OldWidth, OldHeight;
+    static int OldWidth, OldHeight, OldX, OldY;
 
     switch(item) {
     case ' ':
-        DemoNum = Efx.CallDemo(10, true, Immediate); // Explosion
+        RandomDemoClock.Reset();
+        DemoNum = Efx.CallDemo(3, ExecMode); // Explosion
         break;
     case GLUT_KEY_UP + 0x1000:
-        DemoNum = Efx.CallDemo(13, true, Immediate); // Restore
+        RandomDemoClock.Reset();
+        DemoNum = Efx.CallDemo(13, ExecMode); // Restore
         break;
     case GLUT_KEY_DOWN + 0x1000:
-        DemoNum = Efx.CallDemo(lrand48(), true, Immediate);
+        RandomDemoClock.Reset();
+        DemoNum = Efx.CallDemo(-2, ExecMode);
         break;
     case GLUT_KEY_LEFT + 0x1000:
-        DemoNum--;
-        DemoNum = Efx.CallDemo(DemoNum, true, Immediate);
+        RandomDemoClock.Reset();
+        DemoNum = Efx.CallDemo(DemoNum-1, ExecMode);
         break;
     case GLUT_KEY_RIGHT + 0x1000:
-        DemoNum++;
-        DemoNum = Efx.CallDemo(DemoNum, true, Immediate);
+        RandomDemoClock.Reset();
+        DemoNum = Efx.CallDemo(DemoNum+1, ExecMode);
         break;
     case 'i':
-        Immediate = !Immediate;
-        std::cerr << "Switching to " << (Immediate ? "Immediate":"Action list") << " mode.\n";
-        Efx.CallDemo(DemoNum, true, Immediate);
+        if(ExecMode == Immediate_Mode) ExecMode = Internal_Mode;
+        else if(ExecMode == Internal_Mode) ExecMode = Compiled_Mode;
+        else ExecMode = Immediate_Mode;
+
+        std::cerr << "Switching to " << ((ExecMode == Immediate_Mode) ? "Immediate" : (ExecMode == Internal_Mode) ? "Internal" : "Compiled") << " mode.\n";
         break;
     case 'm':
         MotionBlur = !MotionBlur;
@@ -484,11 +520,14 @@ void menu(int item)
         if(FullScreen) {
             OldWidth = glutGet(GLenum(GLUT_WINDOW_WIDTH));
             OldHeight = glutGet(GLenum(GLUT_WINDOW_HEIGHT));
+            OldX = glutGet(GLenum(GLUT_WINDOW_X));
+            OldY = glutGet(GLenum(GLUT_WINDOW_Y));
             glutSetCursor(GLUT_CURSOR_NONE);
             glutFullScreen();
         } else {
             glutSetCursor(GLUT_CURSOR_LEFT_ARROW);
             glutReshapeWindow(OldWidth, OldHeight);
+            glutPositionWindow(OldX, OldY);
         }
         break;
     case 'p':
@@ -536,7 +575,7 @@ void menu(int item)
         ParticleCam = !ParticleCam;
         break;
     case 'z':
-        P.SinkVelocity(true, PDSphere(pVec(0, 0, 0), 0.01));
+        P.SinkVelocity(true, PDSphere_(pVec_(0, 0, 0), 0.01));
         break;
     case 'x':
         FreezeParticles = !FreezeParticles;
@@ -603,7 +642,6 @@ static void Args(int argc, char **argv)
 
     for(int i=1; i<argc; i++) {
         std::string starg(argv[i]);
-
         if (starg == "-h" || starg == "-help") {
             Usage(program, "Help:");
         } else if(starg == "-photo") {
@@ -611,9 +649,6 @@ static void Args(int argc, char **argv)
             Efx.SetPhoto(new uc3Image(FName));
 
             RemoveArgs(argc, argv, i, 2);
-        } else if(starg == "-bench") {
-            SetupBenchmark();
-            RemoveArgs(argc, argv, i);
         } else if(starg == "-spot") {
             SphereTexture = false;
             RemoveArgs(argc, argv, i);
@@ -668,7 +703,6 @@ int main(int argc, char **argv)
 {
     srand48( (unsigned)time( NULL ) );
 
-    DemoNum = lrand48();
     RandomDemoClock.Start();
 
     Args(argc, argv);
@@ -679,7 +713,11 @@ int main(int argc, char **argv)
 
     P.CurrentGroup(Efx.particle_handle);
 
-    Efx.CallDemo(DemoNum, true, Immediate);
+    Efx.MakeActionLists(ExecMode);
+
+    BindEffects(Efx);
+
+    DemoNum = Efx.CallDemo(-2, ExecMode);
 
     try {
         glutMainLoop();

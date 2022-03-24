@@ -3,7 +3,7 @@
 /// Copyright 1997-2007 by David K. McAllister
 /// http://www.ParticleSystems.org
 ///
-/// I used code Copyright 1997 by Jonathan P. Leech as an example in implementing this.
+/// I used code Copyright 1997 by Jonathan P. Leech as an example in implenting this.
 ///
 /// This file implements the dynamics of particle actions.
 
@@ -14,8 +14,47 @@
 #include <typeinfo>
 // For dumping errors
 #include <sstream>
+#include <string>
+
+using namespace std;
 
 namespace PAPI {
+
+    string PActionBase::name = "PActionBase";                    string PActionBase::abrv = "XXX";                                                                                                                   
+
+    string PAAvoid::name = "PAAvoid";                            string PAAvoid::abrv = "Av";                                                                                                                   
+    string PABounce::name = "PABounce";                          string PABounce::abrv = "Bo";                                                                                                                  
+    string PACallback::name = "PACallback";                      string PACallback::abrv = "CB";                                                                                                                
+    string PACallActionList::name = "PACallActionList";          string PACallActionList::abrv = "CAL";                                                                                                         
+    string PACopyVertexB::name = "PACopyVertexB";                string PACopyVertexB::abrv = "CVB";                                                                                                            
+    string PADamping::name = "PADamping";                        string PADamping::abrv = "Da";                                                                                                                 
+    string PARotDamping::name = "PARotDamping";                  string PARotDamping::abrv = "RT";                                                                                                              
+    string PAExplosion::name = "PAExplosion";                    string PAExplosion::abrv = "Ex";                                                                                                               
+    string PAFollow::name = "PAFollow";                          string PAFollow::abrv = "Fo";                                                                                                                  
+    string PAGravitate::name = "PAGravitate";                    string PAGravitate::abrv = "Gre";                                                                                                              
+    string PAGravity::name = "PAGravity";                        string PAGravity::abrv = "Gr";                                                                                                                 
+    string PAJet::name = "PAJet";                                string PAJet::abrv = "Jet";                                                                                                                    
+    string PAKillOld::name = "PAKillOld";                        string PAKillOld::abrv = "KO";                                                                                                                 
+    string PAMatchVelocity::name = "PAMatchVelocity";            string PAMatchVelocity::abrv = "MV";                                                                                                           
+    string PAMatchRotVelocity::name = "PAMatchRotVelocity";      string PAMatchRotVelocity::abrv = "MRV";                                                                                                       
+    string PAMove::name = "PAMove";                              string PAMove::abrv = "Mo";                                                                                                                    
+    string PAOrbitLine::name = "PAOrbitLine";                    string PAOrbitLine::abrv = "OL";                                                                                                               
+    string PAOrbitPoint::name = "PAOrbitPoint";                  string PAOrbitPoint::abrv = "OP";                                                                                                              
+    string PARandomAccel::name = "PARandomAccel";                string PARandomAccel::abrv = "RA";                                                                                                             
+    string PARandomDisplace::name = "PARandomDisplace";          string PARandomDisplace::abrv = "RD";                                                                                                          
+    string PARandomVelocity::name = "PARandomVelocity";          string PARandomVelocity::abrv = "RV";                                                                                                          
+    string PARandomRotVelocity::name = "PARandomRotVelocity";    string PARandomRotVelocity::abrv = "RRV";                                                                                                      
+    string PARestore::name = "PARestore";                        string PARestore::abrv = "Re";                                                                                                                 
+    string PASink::name = "PASink";                              string PASink::abrv = "Si";                                                                                                                    
+    string PASinkVelocity::name = "PASinkVelocity";              string PASinkVelocity::abrv = "SV";                                                                                                            
+    string PASort::name = "PASort";                              string PASort::abrv = "Srt";                                                                                                                   
+    string PASource::name = "PASource";                          string PASource::abrv = "Src";                                                                                                                 
+    string PASpeedLimit::name = "PASpeedLimit";                  string PASpeedLimit::abrv = "SL";                                                                                                              
+    string PATargetColor::name = "PATargetColor";                string PATargetColor::abrv = "TC";                                                                                                             
+    string PATargetSize::name = "PATargetSize";                  string PATargetSize::abrv = "TS";                                                                                                              
+    string PATargetVelocity::name = "PATargetVelocity";          string PATargetVelocity::abrv = "TV";                                                                                                          
+    string PATargetRotVelocity::name = "PATargetRotVelocity";    string PATargetRotVelocity::abrv = "TRV";                                                                                                      
+    string PAVortex::name = "PAVortex";                          string PAVortex::abrv = "Vo";                                                                                                                  
 
     void PAAvoid::Exec(const PDTriangle &dom, ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend)
     {
@@ -270,18 +309,22 @@ namespace PAPI {
 
     void PAAvoid::Execute(ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend)
     {
-        if(typeid(*position) == typeid(PDTriangle)) {
-            Exec(*dynamic_cast<const PDTriangle *>(position), group, ibegin, iend);
-        } else if(typeid(*position) == typeid(PDDisc)) {
-            Exec(*dynamic_cast<const PDDisc *>(position), group, ibegin, iend);
-        } else if(typeid(*position) == typeid(PDPlane)) {
-            Exec(*dynamic_cast<const PDPlane *>(position), group, ibegin, iend);
-        } else if(typeid(*position) == typeid(PDRectangle)) {
-            Exec(*dynamic_cast<const PDRectangle *>(position), group, ibegin, iend);
-        } else if(typeid(*position) == typeid(PDSphere)) {
-            Exec(*dynamic_cast<const PDSphere *>(position), group, ibegin, iend);
-        } else {
-            throw PErrNotImplemented(std::string("Avoid not implemented for domain ") + std::string(typeid(*position).name()));
+        // Can build generic bounce function that works on any domain by using the Within function and a normal.
+        switch(position.Which) {
+            // case PDUnion_e: return PDUnion_V.Within(pos); return;
+            // case PDPoint_e: return PDPoint_V.Within(pos); return;
+            // case PDLine_e: return PDLine_V.Within(pos); return;
+            case PDTriangle_e: Exec(position.PDTriangle_V, group, ibegin, iend); return;
+            case PDRectangle_e: Exec(position.PDRectangle_V, group, ibegin, iend); return;
+            case PDDisc_e: Exec(position.PDDisc_V, group, ibegin, iend); return;
+            case PDPlane_e: Exec(position.PDPlane_V, group, ibegin, iend); return;
+            // case PDBox_e: return PDBox_V.Within(pos); return;
+            // case PDCylinder_e: return PDCylinder_V.Within(pos); return;
+            // case PDCone_e: return PDCone_V.Within(pos); return;
+            case PDSphere_e: Exec(position.PDSphere_V, group, ibegin, iend); return;
+            // case PDBlob_e: return PDBlob_V.Within(pos); return;
+            default:
+                throw PErrNotImplemented(std::string("Avoid not implemented for domain ") + std::string(typeid(position).name()));
         }
     }
 
@@ -542,18 +585,22 @@ namespace PAPI {
 
     void PABounce::Execute(ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend)
     {
-        if(typeid(*position) == typeid(PDTriangle)) {
-            Exec(*dynamic_cast<const PDTriangle *>(position), group, ibegin, iend);
-        } else if(typeid(*position) == typeid(PDDisc)) {
-            Exec(*dynamic_cast<const PDDisc *>(position), group, ibegin, iend);
-        } else if(typeid(*position) == typeid(PDPlane)) {
-            Exec(*dynamic_cast<const PDPlane *>(position), group, ibegin, iend);
-        } else if(typeid(*position) == typeid(PDRectangle)) {
-            Exec(*dynamic_cast<const PDRectangle *>(position), group, ibegin, iend);
-        } else if(typeid(*position) == typeid(PDSphere)) {
-            Exec(*dynamic_cast<const PDSphere *>(position), group, ibegin, iend);
-        } else {
-            throw PErrNotImplemented(std::string("Bounce not implemented for domain ") + std::string(typeid(*position).name()));
+        // Can build generic bounce function that works on any domain by using the Within function and a normal.
+        switch(position.Which) {
+            // case PDUnion_e: return PDUnion_V.Within(pos); return;
+            // case PDPoint_e: return PDPoint_V.Within(pos); return;
+            // case PDLine_e: return PDLine_V.Within(pos); return;
+            case PDTriangle_e: Exec(position.PDTriangle_V, group, ibegin, iend); return;
+            case PDRectangle_e: Exec(position.PDRectangle_V, group, ibegin, iend); return;
+            case PDDisc_e: Exec(position.PDDisc_V, group, ibegin, iend); return;
+            case PDPlane_e: Exec(position.PDPlane_V, group, ibegin, iend); return;
+            // case PDBox_e: return PDBox_V.Within(pos); return;
+            // case PDCylinder_e: return PDCylinder_V.Within(pos); return;
+            // case PDCone_e: return PDCone_V.Within(pos); return;
+            case PDSphere_e: Exec(position.PDSphere_V, group, ibegin, iend); return;
+            // case PDBlob_e: return PDBlob_V.Within(pos); return;
+            default:
+                throw PErrNotImplemented(std::string("Bounce not implemented for domain ") + std::string(typeid(position).name()));
         }
     }
 
@@ -568,11 +615,12 @@ namespace PAPI {
 
     void PACallback::Execute(ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend)
     {
-        PASSERT(callback != NULL, "callback pointer was NULL");
+        if(callbackFunc == NULL)
+            return;
 
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
             Particle_t &m = (*it);
-            (*callback)(m, Data);
+            (*callbackFunc)(m, Data, dt);
         }
     }
 
@@ -604,7 +652,7 @@ namespace PAPI {
     void PADamping::Execute(ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend)
     {
         // This is important if dt is != 1.
-        pVec one(1,1,1);
+        pVec one=pVec_(1,1,1);
         pVec scale(one - ((one - damping) * dt));
 
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
@@ -621,7 +669,7 @@ namespace PAPI {
     void PARotDamping::Execute(ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend)
     {
         // This is important if dt is != 1.
-        pVec one(1,1,1);
+        pVec one=pVec_(1,1,1);
         pVec scale(one - ((one - damping) * dt));
 
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
@@ -778,8 +826,8 @@ namespace PAPI {
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
             Particle_t &m = (*it);
 
-            if(dom->Within(m.pos)) {
-                pVec accel = acc->Generate();
+            if(dom.Within(m.pos)) {
+                pVec accel = acc.Generate();
 
                 // Step velocity with acceleration
                 m.vel += accel * dt;
@@ -1068,7 +1116,7 @@ namespace PAPI {
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
             Particle_t &m = (*it);
 
-            pVec accel = gen_acc->Generate();
+            pVec accel = gen_acc.Generate();
 
             // dt will affect this by making a higher probability of
             // being near the original velocity after unit time. Smaller
@@ -1083,7 +1131,7 @@ namespace PAPI {
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
             Particle_t &m = (*it);
 
-            pVec disp = gen_disp->Generate();
+            pVec disp = gen_disp.Generate();
 
             // dt will affect this by making a higher probability of
             // being near the original position after unit time. Smaller
@@ -1098,7 +1146,7 @@ namespace PAPI {
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
             Particle_t &m = (*it);
 
-            pVec velocity = gen_vel->Generate();
+            pVec velocity = gen_vel.Generate();
 
             // Shouldn't multiply by dt because velocities are invariant of dt.
             m.vel = velocity;
@@ -1111,7 +1159,7 @@ namespace PAPI {
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
             Particle_t &m = (*it);
 
-            pVec velocity = gen_vel->Generate();
+            pVec velocity = gen_vel.Generate();
 
             // Shouldn't multiply by dt because velocities are invariant of dt.
             m.rvel = velocity;
@@ -1156,11 +1204,11 @@ namespace PAPI {
                 // Already constrained; keep it there.
                 if (restore_velocity) {
                     m.pos = m.posB;
-                    m.vel = pVec(0.0f,0.0f,0.0f);
+                    m.vel = pVec_(0.0f,0.0f,0.0f);
                 }
                 if (restore_rvelocity) {
                     m.up = m.upB;
-                    m.rvel = pVec(0.0f,0.0f,0.0f);
+                    m.rvel = pVec_(0.0f,0.0f,0.0f);
                 }
             }
         } else {
@@ -1190,7 +1238,7 @@ namespace PAPI {
             Particle_t &m = (*it);
 
             // Remove if inside/outside flag matches object's flag
-            if(!(position->Within(m.pos) ^ kill_inside)) {
+            if(!(position.Within(m.pos) ^ kill_inside)) {
                 it = group.Remove(it);
                 iend = group.end();
             } else
@@ -1208,7 +1256,7 @@ namespace PAPI {
             Particle_t &m = (*it);
 
             // Remove if inside/outside flag matches object's flag
-            if(!(velocity->Within(m.vel) ^ kill_inside)) {
+            if(!(velocity.Within(m.vel) ^ kill_inside)) {
                 it = group.Remove(it);
                 iend = group.end();
             } else
@@ -1252,17 +1300,17 @@ namespace PAPI {
         for(size_t i = 0; i < rate; i++) {
             Particle_t P;
 
-            P.pos = position->Generate();
-            P.posB = SrcSt.vertexB_tracks ? P.pos : SrcSt.VertexB->Generate();
-            P.up = SrcSt.Up->Generate();
-            P.vel = SrcSt.Vel->Generate();
-            P.rvel = SrcSt.RotVel->Generate();
-            P.size = SrcSt.Size->Generate();
-            P.color = SrcSt.Color->Generate();
-            P.alpha = SrcSt.Alpha->Generate().x();
-            P.age = SrcSt.Age + pNRandf(SrcSt.AgeSigma);
-            P.mass = SrcSt.Mass;
-            P.data = SrcSt.Data;
+            P.pos = position.Generate();
+            P.posB = SrcSt.vertexB_tracks_ ? P.pos : SrcSt.VertexB_.Generate();
+            P.up = SrcSt.Up_.Generate();
+            P.vel = SrcSt.Vel_.Generate();
+            P.rvel = SrcSt.RotVel_.Generate();
+            P.size = SrcSt.Size_.Generate();
+            P.color = SrcSt.Color_.Generate();
+            P.alpha = SrcSt.Alpha_.Generate().x();
+            P.age = SrcSt.Age_ + pNRandf(SrcSt.AgeSigma_);
+            P.mass = SrcSt.Mass_;
+            P.data = SrcSt.Data_;
 
             group.Add(P);
         }
@@ -1364,7 +1412,7 @@ namespace PAPI {
             float rSqr = parToAxis.length2();
 
             if(rSqr >= max_radiusSqr || axisScale < 0.0f || alongAxis > 1.0f) {
-                //m.color = pVec(0,0,1);
+                //m.color = pVec_(0,0,1);
                 continue;
             }
 
@@ -1376,11 +1424,11 @@ namespace PAPI {
                 // Accelerate toward axis. Force is NOT affected by 1/r^2.
                 pVec AccelIn = parToAxis * (inSpeed * dtOverMass);
                 m.vel += AccelIn;
-                //m.color = pVec(0,1,0);
+                //m.color = pVec_(0,1,0);
                 continue;
             }
 
-            //m.color = pVec(1,0,0);
+            //m.color = pVec_(1,0,0);
             // Accelerate up or down to simulate gravity or something
             pVec AccelUp = axisN * (upSpeed * dtOverMass);
 

@@ -5,25 +5,23 @@
 ///
 /// This application benchmarks particle system effects without doing graphics.
 
-#include "../PSpray/Effects.h"
+#include "../Effects/Effects.h"
 
-#include <Particle/pAPI.h>
+#include "Particle/pAPI.h"
 
 // The following header files are part of DMcTools.
 // DMcTools is part of the same source distribution as the Particle API.
-#include <Util/Timer.h>
-#include <Util/Utils.h>
-#include <Util/Assert.h>
+#include "Util/Timer.h"
+#include "Util/Utils.h"
+#include "Util/Assert.h"
 
 #include <iostream>
-#include <string>
+//#include <string>
+
 using namespace std;
 
-#include <math.h>
-#include <stdio.h>
-#include <string.h>
-
-static bool SortParticles = false, Immediate = false, ShowText = true;
+static ExecMode_e ExecMode = Internal_Mode;
+static bool SortParticles = false, ShowText = true;
 static int DemoNum = 6;
 
 static Timer Clock;
@@ -42,7 +40,7 @@ void Report()
         int cnt = (int)P.GetGroupCount();
 
         printf("%c%c n=%5d fps=%02.2f %s\n",
-            Immediate ? 'I':' ',
+            ExecMode == Immediate_Mode ? 'I':(ExecMode == Internal_Mode ? 'L':'C'),
             SortParticles ? 'S':' ',
             cnt, fps, Efx.GetCurEffectName());
         Clock.Start();
@@ -58,16 +56,16 @@ void RunBenchmarkCache()
 
     P.CurrentGroup(Efx.particle_handle);
 
-    Efx.CallDemo(DemoNum, true, Immediate);
+    Efx.CallDemo(DemoNum, ExecMode); // Prime it
 
     Clock.Start();
     for(int CacheSize = 1024 * 16; CacheSize < 8 * 1024 * 1024; CacheSize += (16 * 1024)) {
         P.SetWorkingSetSize(CacheSize);
         Clock.Reset();
         for(int i=0; i<100; i++) {
-            Efx.CallDemo(DemoNum, false, Immediate);
+            Efx.CallDemo(DemoNum, ExecMode);
             if(SortParticles)
-                P.Sort(pVec(0,-19,15), pVec(0,0,3));
+                P.Sort(pVec_(0,-19,15), pVec_(0,0,3));
             if(ShowText)
                 Report();
         }
@@ -82,13 +80,15 @@ void RunBenchmark()
 
     P.CurrentGroup(Efx.particle_handle);
 
-    Efx.CallDemo(DemoNum, true, Immediate);
+    BindEffects(Efx);
+
+    Efx.CallDemo(DemoNum, ExecMode);
 
 #if 1
     for(int i=0; i<1000; i++) {
-        Efx.CallDemo(DemoNum, false, Immediate);
+        Efx.CallDemo(DemoNum, ExecMode);
         if(SortParticles)
-            P.Sort(pVec(0,-19,15), pVec(0,0,3));
+            P.Sort(pVec_(0,-19,15), pVec_(0,0,3));
         Report();
     }
 #else
@@ -106,6 +106,8 @@ void RunBenchmark()
 #endif
 }
 
+// Test implementation of domains.
+// Generate a particle and ensure that it is within the domain.
 void TestOneDomain(pDomain &Dom)
 {
     cerr << "TestOneDomain()\n";
@@ -121,12 +123,12 @@ void TestOneDomain(pDomain &Dom)
         if(!isin) {
 #if 0
             cerr << "Bad: (" << i << ") " << pt << ": ";
-            cerr << Dom.Within(pt + pVec(EP,0,0));
-            cerr << Dom.Within(pt + pVec(-EP,0,0));
-            cerr << Dom.Within(pt + pVec(0,EP,0));
-            cerr << Dom.Within(pt + pVec(0,-EP,0));
-            cerr << Dom.Within(pt + pVec(0,0,EP));
-            cerr << Dom.Within(pt + pVec(0,0,-EP));
+            cerr << Dom.Within(pt + pVec_(EP,0,0));
+            cerr << Dom.Within(pt + pVec_(-EP,0,0));
+            cerr << Dom.Within(pt + pVec_(0,EP,0));
+            cerr << Dom.Within(pt + pVec_(0,-EP,0));
+            cerr << Dom.Within(pt + pVec_(0,0,EP));
+            cerr << Dom.Within(pt + pVec_(0,0,-EP));
             cerr << endl;
 #endif
             Bad++;
@@ -135,7 +137,7 @@ void TestOneDomain(pDomain &Dom)
     cerr << Bad << " / " << Loops << " are bad.\n";
 }
 
-float RN()
+inline float RN()
 {
     return DRand(-100, 100);
 }
@@ -146,17 +148,17 @@ void TestDomains()
 
     const int OuterLoops = 1000;
 
-    cerr << "PDPoint\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDPoint(pVec(RN(),RN(),RN())));
-    cerr << "PDLine\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDLine(pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN())));
-    cerr << "PDTriangle\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDTriangle(pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN())));
-    cerr << "PDRectangle\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDRectangle(pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN())));
-    cerr << "PDPlane\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDPlane(pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN())));
-    cerr << "PDBox\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDBox(pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN())));
-    cerr << "PDCylinder\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDCylinder(pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN()), fabs(RN()), fabs(RN())));
-    cerr << "PDCone\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDCone(pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN()), fabs(RN()), fabs(RN())));
-    cerr << "PDSphere\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDSphere(pVec(RN(),RN(),RN()), fabs(RN()), fabs(RN())));
-    cerr << "PDBlob\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDBlob(pVec(RN(),RN(),RN()), fabs(RN())));
-    cerr << "PDDisc\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDDisc(pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN()), fabs(RN()), fabs(RN())));
+    cerr << "PDPoint\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDPoint_(pVec_(RN(),RN(),RN())));
+    cerr << "PDLine\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDLine_(pVec_(RN(),RN(),RN()), pVec_(RN(),RN(),RN())));
+    cerr << "PDTriangle\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDTriangle_(pVec_(RN(),RN(),RN()), pVec_(RN(),RN(),RN()), pVec_(RN(),RN(),RN())));
+    cerr << "PDRectangle\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDRectangle_(pVec_(RN(),RN(),RN()), pVec_(RN(),RN(),RN()), pVec_(RN(),RN(),RN())));
+    cerr << "PDPlane\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDPlane_(pVec_(RN(),RN(),RN()), pVec_(RN(),RN(),RN())));
+    cerr << "PDBox\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDBox_(pVec_(RN(),RN(),RN()), pVec_(RN(),RN(),RN())));
+    cerr << "PDCylinder\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDCylinder_(pVec_(RN(),RN(),RN()), pVec_(RN(),RN(),RN()), fabs(RN()), fabs(RN())));
+    cerr << "PDCone\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDCone_(pVec_(RN(),RN(),RN()), pVec_(RN(),RN(),RN()), fabs(RN()), fabs(RN())));
+    cerr << "PDSphere\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDSphere_(pVec_(RN(),RN(),RN()), fabs(RN()), fabs(RN())));
+    cerr << "PDBlob\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDBlob_(pVec_(RN(),RN(),RN()), fabs(RN())));
+    cerr << "PDDisc\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDDisc_(pVec_(RN(),RN(),RN()), pVec_(RN(),RN(),RN()), fabs(RN()), fabs(RN())));
 
     cerr << "Done testing domains.\n";
 }
@@ -177,8 +179,18 @@ static void Args(int argc, char **argv)
     for(int i=1; i<argc; i++) {
         if(string(argv[i]) == "-h" || string(argv[i]) == "-help") {
             Usage(program, "Help:");
-        } else if(string(argv[i]) == "-list") {
-            Immediate = false;
+        } else if(string(argv[i]) == "-cache") {
+            RunBenchmarkCache();
+            RemoveArgs(argc, argv, i);
+        } else if(string(argv[i]) == "-test") {
+            TestDomains();
+            RemoveArgs(argc, argv, i);
+
+        } else if(string(argv[i]) == "-immed") {
+            ExecMode = Immediate_Mode;
+            RemoveArgs(argc, argv, i);
+        } else if(string(argv[i]) == "-compiled") {
+            ExecMode = Compiled_Mode;
             RemoveArgs(argc, argv, i);
         } else if(string(argv[i]) == "-sort") {
             SortParticles = true;
@@ -196,19 +208,7 @@ int main(int argc, char **argv)
 {
     Args(argc, argv);
 
-    try {
-        // RunBenchmark();
-        RunBenchmarkCache();
-        // TestDomains();
-    }
-    catch (PError_t &Er) {
-        cerr << "Particle API exception: " << Er.ErrMsg << endl;
-        throw Er;
-    }
-    catch (...) {
-        cerr << "Non-Particle-API exception caught. Bye.\n";
-        throw;
-    }
+    RunBenchmark();
 
     return 0;
 }

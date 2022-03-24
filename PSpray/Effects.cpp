@@ -8,11 +8,15 @@ using namespace PAPI;
 
 #ifndef NO_OGL_OBSTACLES
 // This is for drawing the obstacles for Shower().
-#include "GL/glut.h"
+#include "GL/glew.h"
+
+// This needs to come after GLEW
+#include "GL/freeglut.h"
 #endif
 
 #include <vector>
 #include <iostream>
+
 
 #ifdef WIN32
 #define lrand48() ((rand() << 16) ^ rand())
@@ -456,9 +460,8 @@ void ParticleEffects::PhotoShape(bool FirstTime, bool Immediate)
         for(int y=0; y<d; y++, fy+=sy) {
             float fx = 0.0f;
             for(int x=0; x<d; x++, fx+=sx) {
-                uc3Pixel puc;
-                sample2(puc, *Img, fx, fy);
-                f3Pixel p(puc);
+                f3Pixel p;
+                sample2(p, *Img, fx, fy);
                 P.Color(p.r(), p.g(), p.b());
                 pVec v(fx, 0, fy);
                 v /= float(Img->w());
