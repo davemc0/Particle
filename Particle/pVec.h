@@ -22,7 +22,7 @@
 
 #ifdef WIN32
 // This is because their stupid compiler thinks it's smart.
-#define inline __forceinline
+#define PINLINE __forceinline
 #endif
 
 namespace PAPI
@@ -32,21 +32,21 @@ namespace PAPI
     const float P_SQRT2PI = 2.506628274631000502415765284811045253006f;
     const float P_ONEOVERSQRT2PI = (1.f / P_SQRT2PI);
 
-    inline float fsqr(float f) { return f * f; }
+    PINLINE float fsqr(float f) { return f * f; }
 
 #ifdef unix
-    inline float pRandf() { return drand48(); }
-    inline void pSRandf(int x) { srand48(x); }
+    PINLINE float pRandf() { return drand48(); }
+    PINLINE void pSRandf(int x) { srand48(x); }
 #else
     const float P_ONEOVER_RAND_MAX = (1.0f/((float) RAND_MAX));
-    inline float pRandf() { return ((float) rand())*P_ONEOVER_RAND_MAX; }
-    inline void pSRandf(int x) { srand(x); }
+    PINLINE float pRandf() { return ((float) rand())*P_ONEOVER_RAND_MAX; }
+    PINLINE void pSRandf(int x) { srand(x); }
 #endif
 
-    inline bool pSameSign(const float &a, const float &b) { return a * b >= 0.0f; }
+    PINLINE bool pSameSign(const float &a, const float &b) { return a * b >= 0.0f; }
 
     /// Return a random number with a normal distribution.
-    inline float pNRandf(float sigma = 1.0f)
+    PINLINE float pNRandf(float sigma = 1.0f)
     {
         float x, y, r2;
         do {
@@ -74,9 +74,9 @@ namespace PAPI
         float vx, vy, vz;
 
     public:
-        inline pVec(float ax, float ay, float az) : vx(ax), vy(ay), vz(az) {}
-        inline pVec(float a) : vx(a), vy(a), vz(a) {}
-        inline pVec() {}
+        PINLINE pVec(float ax, float ay, float az) : vx(ax), vy(ay), vz(az) {}
+        PINLINE pVec(float a) : vx(a), vy(a), vz(a) {}
+        PINLINE pVec() {}
 
         const float& x() const { return vx; }
         const float& y() const { return vy; }
@@ -86,17 +86,17 @@ namespace PAPI
         float& y() { return vy; }
         float& z() { return vz; }
 
-        inline float length() const
+        PINLINE float length() const
         {
             return sqrtf(vx*vx+vy*vy+vz*vz);
         }
 
-        inline float length2() const
+        PINLINE float length2() const
         {
             return (vx*vx+vy*vy+vz*vz);
         }
 
-        inline float normalize()
+        PINLINE float normalize()
         {
             float onel = 1.0f / sqrtf(vx*vx+vy*vy+vz*vz);
             vx *= onel;
@@ -107,39 +107,39 @@ namespace PAPI
         }
 
         // Dot product
-        friend inline float dot(const pVec &a, const pVec &b)
+        friend PINLINE float dot(const pVec &a, const pVec &b)
         {
             return b.x()*a.x() + b.y()*a.y() + b.z()*a.z();
         }
 
         // Scalar multiply
-        inline pVec operator*(const float s) const
+        PINLINE pVec operator*(const float s) const
         {
             return pVec(vx*s, vy*s, vz*s);
         }
 
-        inline pVec operator/(const float s) const
+        PINLINE pVec operator/(const float s) const
         {
             float invs = 1.0f / s;
             return pVec(vx*invs, vy*invs, vz*invs);
         }
 
-        inline pVec operator+(const pVec& a) const
+        PINLINE pVec operator+(const pVec& a) const
         {
             return pVec(vx+a.x(), vy+a.y(), vz+a.z());
         }
 
-        inline pVec operator-(const pVec& a) const
+        PINLINE pVec operator-(const pVec& a) const
         {
             return pVec(vx-a.x(), vy-a.y(), vz-a.z());
         }
 
-        inline bool operator==(const pVec &a) const
+        PINLINE bool operator==(const pVec &a) const
         {
             return vx==a.x() && vy==a.y() && vz==a.z();
         }
 
-        inline pVec operator-()
+        PINLINE pVec operator-()
         {
             vx = -vx;
             vy = -vy;
@@ -147,7 +147,7 @@ namespace PAPI
             return *this;
         }
 
-        inline pVec& operator+=(const pVec& a)
+        PINLINE pVec& operator+=(const pVec& a)
         {
             vx += a.x();
             vy += a.y();
@@ -155,7 +155,7 @@ namespace PAPI
             return *this;
         }
 
-        inline pVec& operator-=(const pVec& a)
+        PINLINE pVec& operator-=(const pVec& a)
         {
             vx -= a.x();
             vy -= a.y();
@@ -163,7 +163,7 @@ namespace PAPI
             return *this;
         }
 
-        inline pVec& operator*=(const float a)
+        PINLINE pVec& operator*=(const float a)
         {
             vx *= a;
             vy *= a;
@@ -171,7 +171,7 @@ namespace PAPI
             return *this;
         }
 
-        inline pVec& operator/=(const float a)
+        PINLINE pVec& operator/=(const float a)
         {
             float b = 1.0f / a;
             vx *= b;
@@ -180,7 +180,7 @@ namespace PAPI
             return *this;
         }
 
-        inline pVec& operator=(const pVec& a)
+        PINLINE pVec& operator=(const pVec& a)
         {
             vx = a.x();
             vy = a.y();
@@ -189,18 +189,18 @@ namespace PAPI
         }
 
         // Component-wise absolute value
-        friend inline pVec Abs(const pVec &a)
+        friend PINLINE pVec Abs(const pVec &a)
         {
             return pVec(fabs(a.x()), fabs(a.y()), fabs(a.z()));
         }
 
         // Component-wise multiply
-        friend inline pVec CompMult(const pVec &a, const pVec& b)
+        friend PINLINE pVec CompMult(const pVec &a, const pVec& b)
         {
             return pVec(b.x()*a.x(), b.y()*a.y(), b.z()*a.z());
         }
 
-        friend inline pVec Cross(const pVec& a, const pVec& b)
+        friend PINLINE pVec Cross(const pVec& a, const pVec& b)
         {
             return pVec(
                 a.y()*b.z()-a.z()*b.y(),
@@ -208,7 +208,7 @@ namespace PAPI
                 a.x()*b.y()-a.y()*b.x());
         }
 
-        friend inline std::ostream& operator<<(std::ostream& os, const pVec& v)
+        friend PINLINE std::ostream& operator<<(std::ostream& os, const pVec& v)
         {
             os << &v << '[' << v.x() << ", " << v.y() << ", " << v.z() << ']';
 
@@ -219,12 +219,12 @@ namespace PAPI
     // To offset [0 .. 1] vectors to [-.5 .. .5]
     static pVec vHalf(0.5, 0.5, 0.5);
 
-    inline pVec pRandVec()
+    PINLINE pVec pRandVec()
     {
         return pVec(pRandf(), pRandf(), pRandf());
     }
 
-    inline pVec pNRandVec(float sigma)
+    PINLINE pVec pNRandVec(float sigma)
     {
         float x, y, r2;
         do {

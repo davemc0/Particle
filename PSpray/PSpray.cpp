@@ -28,17 +28,17 @@
 #include "Util/Utils.h"
 #include "Util/Assert.h"
 
-#define GLH_EXT_SINGLE_FILE
-#include "glh_extensions.h"
-#include "GL/glut.h"
+// OpenGL
+#include "GL/glew.h"
+
+// This needs to come after GLEW
+#include "GL/freeglut.h"
 
 #include <iostream>
 #include <string>
 #include <cmath>
 #include <cstring>
 #include <ctime>
-
-using namespace std;
 
 #ifdef WIN32
 #pragma warning (disable:4305) /* disable bogus conversion warnings */
@@ -189,15 +189,9 @@ static void showBitmapMessage(GLfloat x, GLfloat y, GLfloat z, char *message)
 
 void InitProgs()
 {
-    bool GotExt = true;
-    // GotExt = glh_init_extensions("GL_ARB_multitexture") && GotExt;
-    // GotExt = glh_init_extensions("GL_NV_vertex_program") && GotExt;
-    // GotExt = glh_init_extensions("GL_NV_fragment_program") && GotExt;
-    // GotExt = glh_init_extensions("WGL_ARB_pixel_format") && GotExt;
-    GotExt = glh_init_extensions("GL_ARB_point_parameters") && GotExt;
-    GotExt = glh_init_extensions("GL_ARB_point_sprite") && GotExt;
-    PointSpritesAllowed = GotExt;
-    if(PointSpritesAllowed) menu('p');
+    menu('p');
+
+    if (glewInit() != GLEW_OK) throw PError_t("No GLEW");
 
     // Make the point size attenuate with distance.
     // These numbers are arbitrary and need to be fixed for accuracy.
@@ -206,10 +200,10 @@ void InitProgs()
     // to eye space. The cube root of this estimates the 1D change in scale. Divide this by W
     // per point.
     float params[3] = {0.0f, 0.0f, 0.00003f};
-    glPointParameterfvARB(GL_POINT_DISTANCE_ATTENUATION_ARB, params);
-    glPointParameterfARB(GL_POINT_SIZE_MIN_ARB, 0);
-    glPointParameterfARB(GL_POINT_SIZE_MAX_ARB, 5000);
-    glPointParameterfARB(GL_POINT_FADE_THRESHOLD_SIZE_ARB, 1);
+    glPointParameterfv(GL_POINT_DISTANCE_ATTENUATION, params);
+    glPointParameterf(GL_POINT_SIZE_MIN, 0);
+    glPointParameterf(GL_POINT_SIZE_MAX, 5000);
+    glPointParameterf(GL_POINT_FADE_THRESHOLD_SIZE, 1);
 
     glEnable(GL_LINE_SMOOTH);
     glEnable(GL_POINT_SMOOTH);
@@ -412,7 +406,7 @@ void Draw()
         FrameCountForClock = 0;
     }
 
-    //  cerr << FrameCountForClock << " " << cnt << " " << fps << " " << ClockTime << endl;
+    //  std::cerr << FrameCountForClock << " " << cnt << " " << fps << " " << ClockTime << std::endl;
 
     if(!MotionBlur)
         glutSwapBuffers();
@@ -461,7 +455,7 @@ void menu(int item)
         break;
     case 'i':
         Immediate = !Immediate;
-        cerr << "Switching to " << (Immediate ? "Immediate":"Action list") << " mode.\n";
+        std::cerr << "Switching to " << (Immediate ? "Immediate":"Action list") << " mode.\n";
         Efx.CallDemo(DemoNum, true, Immediate);
         break;
     case 'm':
@@ -530,7 +524,7 @@ void menu(int item)
             glEnable(GL_DEPTH_TEST);
         else
             glDisable(GL_DEPTH_TEST);
-        cerr << "DepthTest " << (DepthTest ? "on":"off") << ".\n";
+        std::cerr << "DepthTest " << (DepthTest ? "on":"off") << ".\n";
         break;
     case 'g':
         DrawGround = !DrawGround;
@@ -551,14 +545,14 @@ void menu(int item)
     case '+':
         Efx.maxParticles += 1000;
         P.SetMaxParticles(Efx.maxParticles);
-        cerr << Efx.maxParticles << endl;
+        std::cerr << Efx.maxParticles << std::endl;
         break;
     case '-':
     case '_':
         Efx.maxParticles -= 1000;
         if(Efx.maxParticles<0) Efx.maxParticles = 0;
         P.SetMaxParticles(Efx.maxParticles);
-        cerr << Efx.maxParticles << endl;
+        std::cerr << Efx.maxParticles << std::endl;
         break;
     case '>':
         BlurRate -= 0.01;
@@ -597,9 +591,9 @@ void KeyPress(unsigned char key, int x, int y)
 static void Usage(char *program_name, char *message)
 {
     if (message)
-        cerr << message << endl;
+        std::cerr << message << std::endl;
 
-    cerr << "Usage: " << program_name << endl;
+    std::cerr << "Usage: " << program_name << std::endl;
     exit(1);
 }
 
@@ -608,17 +602,19 @@ static void Args(int argc, char **argv)
     char *program = argv[0];
 
     for(int i=1; i<argc; i++) {
-        if(string(argv[i]) == "-h" || string(argv[i]) == "-help") {
+        std::string starg(argv[i]);
+
+        if (starg == "-h" || starg == "-help") {
             Usage(program, "Help:");
-        } else if(string(argv[i]) == "-photo") {
+        } else if(starg == "-photo") {
             FName = argv[i+1];
             Efx.SetPhoto(new uc3Image(FName));
 
             RemoveArgs(argc, argv, i, 2);
-        } else if(string(argv[i]) == "-bench") {
+        } else if(starg == "-bench") {
             SetupBenchmark();
             RemoveArgs(argc, argv, i);
-        } else if(string(argv[i]) == "-spot") {
+        } else if(starg == "-spot") {
             SphereTexture = false;
             RemoveArgs(argc, argv, i);
         } else {
@@ -675,11 +671,6 @@ int main(int argc, char **argv)
     DemoNum = lrand48();
     RandomDemoClock.Start();
 
-    if(!HasSSE()) {
-        cerr << "Your CPU must have SSE to run this program. You should get an Intel or AMD CPU or recompile with SSE turned off.\n";
-        throw;
-    }
-
     Args(argc, argv);
     GlutSetup(argc, argv);
 
@@ -694,11 +685,11 @@ int main(int argc, char **argv)
         glutMainLoop();
     }
     catch (PError_t &Er) {
-        cerr << "Particle API exception: " << Er.ErrMsg << endl;
+        std::cerr << "Particle API exception: " << Er.ErrMsg << std::endl;
         throw Er;
     }
     catch (...) {
-        cerr << "Non-Particle-API exception caught. Bye.\n";
+        std::cerr << "Non-Particle-API exception caught. Bye.\n";
         throw;
     }
 

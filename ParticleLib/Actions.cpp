@@ -3,7 +3,7 @@
 /// Copyright 1997-2007 by David K. McAllister
 /// http://www.ParticleSystems.org
 ///
-/// I used code Copyright 1997 by Jonathan P. Leech as an example in implenting this.
+/// I used code Copyright 1997 by Jonathan P. Leech as an example in implementing this.
 ///
 /// This file implements the dynamics of particle actions.
 
