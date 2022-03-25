@@ -7,124 +7,13 @@
 
 #include "pAPI.h"
 #include "PInternalState.h"
+#include "CUDAGen.h"
 
-#include <iostream>
+#include <string>
+
+using namespace std;
 
 namespace PAPI {
-
-    ////////////////////////////////////////////////////////
-    // Source State setting calls
-
-    void PContextSourceState_t::Color(const float red, const float green, const float blue, const float alpha)
-    {
-        Color(pVec(red, green, blue), alpha);
-    }
-
-    void PContextSourceState_t::Color(const pVec &color, const float alpha)
-    {
-        Color(PDPoint(color), PDPoint(pVec(alpha)));
-    }
-
-    void PContextSourceState_t::Color(const pDomain &cdom)
-    {
-        Color(cdom, PDPoint(pVec(1)));
-    }
-
-    void PContextSourceState_t::Color(const pDomain &cdom, const pDomain &adom)
-    {
-        delete PSS->Color;
-        delete PSS->Alpha;
-        PSS->Color = cdom.copy();
-        PSS->Alpha = adom.copy();
-    }
-
-    void PContextSourceState_t::Data(const puint64 data)
-    {
-        PSS->Data = data;
-    }
-
-    void PContextSourceState_t::UpVec(const pVec &up)
-    {
-        delete PSS->Up;
-        PSS->Up = new PDPoint(up);
-    }
-
-    void PContextSourceState_t::UpVec(const pDomain &dom)
-    {
-        delete PSS->Up;
-        PSS->Up = dom.copy();
-    }
-
-    void PContextSourceState_t::Velocity(const pVec &v)
-    {
-        delete PSS->Vel;
-        PSS->Vel = new PDPoint(v);
-    }
-
-    void PContextSourceState_t::Velocity(const pDomain &dom)
-    {
-        delete PSS->Vel;
-        PSS->Vel = dom.copy();
-    }
-
-    void PContextSourceState_t::RotVelocity(const pVec &v)
-    {
-        delete PSS->RotVel;
-        PSS->RotVel = new PDPoint(v);
-    }
-
-    void PContextSourceState_t::RotVelocity(const pDomain &dom)
-    {
-        delete PSS->RotVel;
-        PSS->RotVel = dom.copy();
-    }
-
-    void PContextSourceState_t::VertexB(const pVec &v)
-    {
-        delete PSS->VertexB;
-        PSS->VertexB = new PDPoint(v);
-    }
-
-    void PContextSourceState_t::VertexB(const pDomain &dom)
-    {
-        delete PSS->VertexB;
-        PSS->VertexB = dom.copy();
-    }
-
-
-    void PContextSourceState_t::VertexBTracks(const bool trackVertex)
-    {
-        PSS->vertexB_tracks = trackVertex;
-    }
-
-    void PContextSourceState_t::Size(const pVec &size)
-    {
-        delete PSS->Size;
-        PSS->Size = new PDPoint(size);
-    }
-
-    void PContextSourceState_t::Size(const pDomain &dom)
-    {
-        delete PSS->Size;
-        PSS->Size = dom.copy();
-    }
-
-    void PContextSourceState_t::Mass(const float mass)
-    {
-        PSS->Mass = mass;
-    }
-
-    void PContextSourceState_t::StartingAge(const float age, const float sigma)
-    {
-        PSS->Age = age;
-        PSS->AgeSigma = sigma;
-    }
-
-    void PContextSourceState_t::ResetSourceState()
-    {
-        PInternalSourceState_t tmp;
-        PSS->set(tmp);
-    }
 
     ////////////////////////////////////////////////////////
     // Action List Calls
@@ -147,6 +36,8 @@ namespace PAPI {
 
         PS->in_new_list = true;
         PS->ALists[PS->alist_id].resize(0); // Remove any old actions
+
+        // Don't change ALFunc or Params since we might be recreating the same action list with different P_VARYING_* arguments.
     }
 
     void PContextActionList_t::EndActionList()
@@ -185,6 +76,29 @@ namespace PAPI {
             // Execute the specified action list.
             PS->ExecuteActionList(PS->ALists[action_list_num]);
         }
+    }
+
+    void PContextActionList_t::EmitActionList(const int action_list_num, string &Kernel, const string &KernelName, const EmitCodeParams_e Params)
+    {
+        if(PS->in_new_list) throw PErrInNewActionList("Can't call EmitActionList while in NewActionList.");
+
+        if(action_list_num < 0 || action_list_num >= (int)PS->ALists.size()) throw PErrActionList("Invalid action list number.");
+
+        // if(PS->ALists[action_list_num].size() < 1) throw PErrActionList("Action list is empty.");
+
+        Kernel = EmitActionListFile(PS->ALists[action_list_num], KernelName, Params);
+    }
+
+    void PContextActionList_t::BindEmittedActionList(const int action_list_num, P_PARTICLE_EMITTED_ACTION_LIST ALFunc, const EmitCodeParams_e Params)
+    {
+        if(PS->in_new_list) throw PErrInNewActionList("Can't call BindEmittedActionList while in NewActionList.");
+
+        if(action_list_num < 0 || action_list_num >= (int)PS->ALists.size()) throw PErrActionList("Invalid action list number.");
+
+        // if(PS->ALists[action_list_num].size() < 1) throw PErrActionList("Action list is empty.");
+
+        PS->ALists[action_list_num].ALFunc = ALFunc;
+        PS->ALists[action_list_num].Params = Params;
     }
 
     void PContextActionList_t::TimeStep(const float newDT)
@@ -393,14 +307,14 @@ namespace PAPI {
         return PS->PGroups[PS->pgroup_id].GetMaxParticles();
     }
 
-    void PContextParticleGroup_t::BirthCallback(P_PARTICLE_CALLBACK callback, puint64 data)
+    void PContextParticleGroup_t::BirthCallback(P_PARTICLE_CALLBACK callback, pdata_t data)
     {
         if(PS->in_new_list) throw PErrInNewActionList("Can't call BirthCallback while in NewActionList.");
 
         PS->PGroups[PS->pgroup_id].SetBirthCallback(callback, data);
     }
 
-    void PContextParticleGroup_t::DeathCallback(P_PARTICLE_CALLBACK callback, puint64 data)
+    void PContextParticleGroup_t::DeathCallback(P_PARTICLE_CALLBACK callback, pdata_t data)
     {
         if(PS->in_new_list) throw PErrInNewActionList("Can't call DeathCallback while in NewActionList.");
 

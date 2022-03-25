@@ -2,11 +2,11 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="ParticleLib"
-	ProjectGUID="{10A5B6FF-E786-46AC-BDBF-38EB443E49D9}"
-	RootNamespace="ParticleLib"
+	Name="CUDA_Effects_Gen"
+	ProjectGUID="{8B515587-48A7-4FB1-A490-EBC19C85528A}"
+	RootNamespace="CUDA_Effects_Gen"
 	Keyword="Win32Proj"
-	TargetFrameworkVersion="196613"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -20,7 +20,7 @@
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="4"
+			ConfigurationType="1"
 			CharacterSet="1"
 			>
 			<Tool
@@ -42,13 +42,14 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="../Particle"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				AdditionalIncludeDirectories="..;..\..\DMcTools"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;NO_OGL_OBSTACLES"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
+				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -61,10 +62,21 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLibrarianTool"
+				Name="VCLinkerTool"
+				AdditionalDependencies="DMcTools.lib Tiff.lib jpeg.lib libpng.lib zlib.lib"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="..\..\DMcTools\Debug;..\..\Goodies\Debug_vc90"
+				GenerateDebugInformation="true"
+				SubSystem="1"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
+				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -76,6 +88,9 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -83,7 +98,7 @@
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="4"
+			ConfigurationType="1"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -106,19 +121,18 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="3"
-				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
-				FavorSizeOrSpeed="1"
-				OmitFramePointers="true"
-				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="../Particle"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				AdditionalIncludeDirectories="..;..\..\DMcTools"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;NO_OGL_OBSTACLES"
+				ExceptionHandling="1"
 				RuntimeLibrary="2"
+				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				EnableEnhancedInstructionSet="1"
 				FloatingPointModel="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
+				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -131,10 +145,24 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLibrarianTool"
+				Name="VCLinkerTool"
+				AdditionalDependencies="DMcTools.lib Tiff.lib jpeg.lib libpng.lib zlib.lib"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories="..\..\DMcTools\Release;..\..\Goodies\Release_vc90"
+				GenerateDebugInformation="true"
+				SubSystem="1"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
+				TargetMachine="1"
+				Profile="true"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -144,6 +172,9 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -159,27 +190,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\Actions.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ActionsAPI.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\CUDAExecute.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\CUDAGen.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\OtherAPI.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\PInternalState.cpp"
+				RelativePath=".\CUDA_Effects_Gen.cpp"
 				>
 			</File>
 		</Filter>
@@ -188,50 +199,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\Actions.h"
-				>
-			</File>
-			<File
-				RelativePath=".\CUDAExecute.h"
-				>
-			</File>
-			<File
-				RelativePath=".\CUDAGen.h"
-				>
-			</File>
-			<File
-				RelativePath="..\Particle\pAPI.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Particle.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ParticleGroup.h"
-				>
-			</File>
-			<File
-				RelativePath="..\Particle\pDomain.h"
-				>
-			</File>
-			<File
-				RelativePath="..\Particle\pError.h"
-				>
-			</File>
-			<File
-				RelativePath=".\PInternalState.h"
-				>
-			</File>
-			<File
-				RelativePath="..\Particle\pSourceState.h"
-				>
-			</File>
-			<File
-				RelativePath="..\Particle\pVec.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
@@ -239,14 +206,10 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 		</Filter>
-		<File
-			RelativePath="..\Particle\CUDAActions.cuh"
+		<Filter
+			Name="CUDA Files"
 			>
-		</File>
-		<File
-			RelativePath="..\Particle\CUDADomains.cuh"
-			>
-		</File>
+		</Filter>
 	</Files>
 	<Globals>
 	</Globals>

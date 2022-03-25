@@ -40,8 +40,9 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="../Particle;..;..\..\DMcTools;..\..\Goodies\include;..\..\Goodies\include\glh"
+				AdditionalIncludeDirectories="../Particle;../ParticleLib;..;..\..\DMcTools;..\..\Goodies\include;..\..\Goodies\include\glh"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -119,13 +120,14 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="3"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="../Particle;..;..\..\DMcTools;..\..\Goodies\include;..\..\Goodies\include\glh"
+				AdditionalIncludeDirectories="../Particle;../ParticleLib;..;..\..\DMcTools;..\..\Goodies\include;..\..\Goodies\include\glh"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"
@@ -195,10 +197,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Effects.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\Monarch.cpp"
 				>
 			</File>
@@ -217,10 +215,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Effects.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Monarch.h"
 				>
 			</File>
@@ -229,6 +223,10 @@
 			Name="Resource Files"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
+			>
+		</Filter>
+		<Filter
+			Name="CUDA Files"
 			>
 		</Filter>
 	</Files>

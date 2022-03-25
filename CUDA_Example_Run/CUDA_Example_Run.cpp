@@ -1,17 +1,14 @@
-// Example.cpp - An example of the Particle System API in OpenGL.
+// CUDA_ExampleRun.cpp - An example of running a kernel function for a Particle System action list.
 //
-// Copyright 1999-2006 by David K. McAllister
+// Copyright 2008 by David K. McAllister
 
 #include "Particle/pAPI.h"
 using namespace PAPI;
 
-// OpenGL
-#include "GL/glew.h"
-
-// This needs to come after GLEW
-#include "GL/freeglut.h"
+#include "GL/glut.h"
 
 ParticleContext_t P;
+int ActionListNum;
 
 // A fountain spraying up in the middle of the screen
 void ComputeParticles()
@@ -30,11 +27,26 @@ void ComputeParticles()
     // Bounce particles off a disc of radius 5.
     P.Bounce(-0.05f, 0.35f, 0, PDDisc_(pVec_(0, 0, 0), pVec_(0, 0, 1), 5));
 
-    // Kill particles below Z=-3.
-    P.Sink(false, PDPlane_(pVec_(0,0,-3), pVec_(0,0,1)));
-
     // Move particles to their new positions.
     P.Move(true, false);
+
+    // Kill particles below Z=-3.
+    P.Sink(false, PDPlane_(pVec_(0,0,-3), pVec_(0,0,1)));
+}
+
+// Create the action list and convert it to a string.
+void PrepareActionListKernel()
+{
+    ActionListNum = P.GenActionLists();
+
+    P.NewActionList(ActionListNum);
+    ComputeParticles();
+    P.EndActionList();
+
+    // extern P_PARTICLE_EMITTED_ACTION_LIST Gen_Example;
+    extern void Gen_Example(const void *A, void *P, const float dt, const int block_size);
+
+    P.BindEmittedActionList(ActionListNum, Gen_Example, P_CPU_CPP_CODE);
 }
 
 // Draw as points using vertex arrays
@@ -85,7 +97,7 @@ void Draw()
     glEnd();
 
     // Do what the particles do.
-    ComputeParticles();
+    P.CallActionList(ActionListNum);
 
     // Draw the particles.
     DrawGroupAsPoints();
@@ -111,7 +123,7 @@ int main(int argc, char **argv)
     // Make a normal 3D window.
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
     glutInitWindowSize(512, 512);
-    glutCreateWindow("Particle Example");
+    glutCreateWindow("CUDA Particle Example");
 
     glutDisplayFunc(Draw);
     glutIdleFunc(Draw);
@@ -121,18 +133,15 @@ int main(int argc, char **argv)
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
+    // Get the action list ready
+    PrepareActionListKernel();
+
     // Make a particle group
     int particle_handle = P.GenParticleGroups(1, 10000);
 
     P.CurrentGroup(particle_handle);
 
-    try {
-        glutMainLoop();
-    }
-    catch (PError_t &Er) {
-        std::cerr << "Particle API exception: " << Er.ErrMsg << std::endl;
-        throw Er;
-    }
+    glutMainLoop();
 
     return 0;
 }

@@ -1,46 +1,46 @@
 # Particle
 The Particle System API, since 1999, using C++, OpenGL, GLUT, and CMake
-Particle System API
+
 by David McAllister
-version 2.21
-December 30, 2008
+version 3.0 alpha 1
+June 2009
 
-http://www.particlesystems.org
+Was previously hosted at: http://www.particlesystems.org
+Now on https://github.com/davemc0/Particle.git
 
-This distribution contains three source trees. Here is an explanation of each:
+=================
+The big idea with this release is to emit CUDA source code for an action list,
+then compile that with CUDA and at app run time execute the generated action list on the device
 
-Particle2:  The Particle System API
-            The Particle2 library is released under your choice of the following two licenses:
-            * The GNU LGPL
-            * You may use the code in any way you see fit, including modification, inclusion in
-              other software products, repackaging, republication, etc. with the sole condition
-              that credit be given to David K. McAllister and a reference to www.particlesystems.org
-              be placed in the Credits or About section or other suitable user-visible location of
-              any released software that includes code from the Particle System API.
+It's not done and doesn't work very well. Only the Example test runs so far. Lots of porting and coding to do.
+=================
 
-Goodies:    Libs I use on Windows, like GLUT, JPEG, TIFF, PNG, Half, etc.
-            None of this code was written by me. Each individual piece has a different author, a different
-            copyright, and different terms of use. I am distributing these packages simply to facilitate
-            building the demos. t is not part of the Particle System API, and the API itself does not
-            depend on this code.
+Building ParticleLib can be accomplished using just this code, CMake, and a C++ compiler.
+It has no external dependencies.
 
-DMcTools:   This has my collection of graphics tools - matrix class, image stuff,
-            3D vector class, random numbers, stop watch, VRML loader, etc.
-            It is only needed by the PSpray and ParBench demo, not the API or the Example demo.
-            DMcTools is copyright by me, and maybe others.
+However, the examples and demos also depend on DMcTools: https://github.com/davemc0/DMcTools.git
 
+DMcTools has my collection of graphics tools - matrix class, image stuff,
+3D vector class, random numbers, timer, 3D model loader, etc.
+It is only needed by the PSpray and ParBench demo, not the API or the Example demo.
+DMcTools is copyright by me, and maybe others.
+
+To build everything you will also need:
+CMake 3.20 or newer. (You could try an older one, but no guarantees.)
+FreeGLUT. I use 3.2.2.
+GLEW. I use 2.2.0.
 
 How to build:
-Using Visual Studio 2008, load the DMcTools_vc90.sln solution and build it.
-Then load the Particle2.sln and build it.
+In the main directory, do something like:
+mkdir build ; cd build ; cmake .. -G "Visual Studio 16 2019" -A x64 ; cd ..
 
-If you are using Visual. Studio 2005, load DMcTools_vc80.sln and build it.
-Then replace all of the .vcproj files under Particle2/ with their corresponding ones in the VC8 folder.
-Then load the Particle2.sln and build it.
+Then you can build from the command line:
+cmake --build build/ --config Release
+or launch build/ParticleSolution.sln in Visual Studio.
 
+=================
 
-If the demo doesn't work for you, I'd be happy to try to help. Please include as much detail as
+If the demos don't work for you, I'd be happy to try to help. Please include as much detail as
 you can about your system and the nature of the problem.
 
-If you have any questions, code contributions or suggestions you can mail me at davemc@cs.unc.edu.
-I work for Nvidia now, but don't want my Nvidia email address posted where spambots can find it.
+If you have any questions, code contributions or suggestions use github issues or contact me however.

@@ -17,19 +17,30 @@
 
 namespace PAPI {
 
-typedef void (*P_PARTICLE_CALLBACK)(struct Particle_t &particle, puint64 data); // Also defined in pAPI.h.
+    // Also defined in pAPI.h.
+    // This is the type of the particle birth and death callback functions that you can register.
+    typedef void (*P_PARTICLE_CALLBACK)(struct Particle_t &particle, pdata_t data);
 
-typedef std::vector<Particle_t> ParticleList;
+    // This is the type of the callback functions that you can register for the Callback() action.
+    typedef void (*P_PARTICLE_CALLBACK_ACTION)(struct Particle_t &particle, pdata_t data, float dt);
+
+    typedef std::vector<Particle_t> ParticleList;
 
 class ParticleGroup
 {
     ParticleList list;
 
+    Particle_t *DeviceParticles; // A pointer to the CUDA device's particle list
+public:
+    bool update_host_from_device; // True if the CUDA device's particle list has been modified on the device
+    bool update_device_from_host; // True if the host's particle list has been modified
+
+private:
     size_t max_particles;	// Max particles allowed in group
     P_PARTICLE_CALLBACK cb_birth; // Call this function for each created particle
     P_PARTICLE_CALLBACK cb_death; // Call this function for each destroyed particle
-    puint64 group_birth_data; // Pass this to the birth callback
-    puint64 group_death_data; // Pass this to the death callback
+    pdata_t group_birth_data; // Pass this to the birth callback
+    pdata_t group_death_data; // Pass this to the death callback
 
 public:
     ParticleGroup()
@@ -37,8 +48,11 @@ public:
         max_particles = 0;
         cb_birth = NULL;
         cb_death = NULL;
-        group_birth_data = NULL;
-        group_death_data = NULL;
+        group_birth_data = 0;
+        group_death_data = 0;
+        DeviceParticles = NULL;
+        update_host_from_device = false;
+        update_device_from_host = true;
     }
 
     ParticleGroup(size_t maxp) : max_particles(maxp)
@@ -48,6 +62,9 @@ public:
         cb_death = NULL;
         group_birth_data = NULL;
         group_death_data = NULL;
+        DeviceParticles = NULL;
+        update_host_from_device = false;
+        update_device_from_host = true;
     }
 
     ParticleGroup(const ParticleGroup &rhs) : list(rhs.list)
@@ -57,6 +74,9 @@ public:
         cb_death = rhs.cb_death;
         group_birth_data = rhs.group_birth_data;
         group_death_data = rhs.group_death_data;
+        DeviceParticles = NULL;
+        update_host_from_device = false;
+        update_device_from_host = true;
     }
 
     ~ParticleGroup()
@@ -65,6 +85,10 @@ public:
             ParticleList::iterator it;
             for (it = list.begin(); it != list.end(); ++it)
                 (*cb_death)((*it), group_death_data);
+        }
+
+        if(DeviceParticles != NULL) {
+            FreeDeviceMemory();
         }
     }
 
@@ -88,14 +112,15 @@ public:
 
     inline size_t GetMaxParticles() { return max_particles; }
     inline ParticleList &GetList() { return list; }
+    inline Particle_t *GetDevicePtr() { return DeviceParticles; }
 
-    inline void SetBirthCallback(P_PARTICLE_CALLBACK callback, puint64 group_data)
+    inline void SetBirthCallback(P_PARTICLE_CALLBACK callback, pdata_t group_data)
     {
         cb_birth = callback;
         group_birth_data = group_data;
     }
 
-    inline void SetDeathCallback(P_PARTICLE_CALLBACK callback, puint64 group_data)
+    inline void SetDeathCallback(P_PARTICLE_CALLBACK callback, pdata_t group_data)
     {
         cb_death = callback;
         group_death_data = group_data;
@@ -148,6 +173,10 @@ public:
             return true;
         }
     }
+    
+    void UpdateHostFromDevice();
+    void UpdateDeviceFromHost();
+    void FreeDeviceMemory();
 };
 
 };

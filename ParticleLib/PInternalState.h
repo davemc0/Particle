@@ -19,7 +19,18 @@
 
 namespace PAPI {
 
-    typedef std::vector<PActionBase *> ActionList;
+    class ActionList : public std::vector<PActionBase *>
+    {
+    public:
+         P_PARTICLE_EMITTED_ACTION_LIST ALFunc;
+         EmitCodeParams_e Params;
+
+         ActionList()
+         {
+             ALFunc = NULL;
+             Params = P_INTERNAL_CODE;
+         }
+    };
 
     // This is the per-thread state of the API.
     // All API calls get their data from here.
@@ -27,8 +38,6 @@ namespace PAPI {
     class PInternalState_t
     {
     public:
-        PInternalSourceState_t SrcSt; // Any particles created will get their attributes from here.
-
         float dt;
         bool in_call_list;
         bool in_new_list;
