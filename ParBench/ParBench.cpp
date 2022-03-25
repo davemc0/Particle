@@ -137,7 +137,7 @@ void TestOneDomain(pDomain &Dom)
 
 float RN()
 {
-    return DRand(-100, 100);
+    return drand(-100, 100);
 }
 
 void TestDomains()
