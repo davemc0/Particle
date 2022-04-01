@@ -7,7 +7,6 @@
 
 #include "pAPI.h"
 #include "PInternalState.h"
-#include "CUDAGen.h"
 
 #include <string>
 
@@ -84,9 +83,7 @@ namespace PAPI {
 
         if(action_list_num < 0 || action_list_num >= (int)PS->ALists.size()) throw PErrActionList("Invalid action list number.");
 
-        // if(PS->ALists[action_list_num].size() < 1) throw PErrActionList("Action list is empty.");
-
-        Kernel = EmitActionListFile(PS->ALists[action_list_num], KernelName, Params);
+        throw PErrNotImplemented("EmitActionList");
     }
 
     void PContextActionList_t::BindEmittedActionList(const int action_list_num, P_PARTICLE_EMITTED_ACTION_LIST ALFunc, const EmitCodeParams_e Params)
@@ -95,10 +92,7 @@ namespace PAPI {
 
         if(action_list_num < 0 || action_list_num >= (int)PS->ALists.size()) throw PErrActionList("Invalid action list number.");
 
-        // if(PS->ALists[action_list_num].size() < 1) throw PErrActionList("Action list is empty.");
-
-        PS->ALists[action_list_num].ALFunc = ALFunc;
-        PS->ALists[action_list_num].Params = Params;
+        throw PErrNotImplemented("BindEmittedActionList");
     }
 
     void PContextActionList_t::TimeStep(const float newDT)

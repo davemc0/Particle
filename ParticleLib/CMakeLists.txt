@@ -8,10 +8,6 @@ set(LIB_SOURCES
     Actions.cpp    
     Actions.h    
     ActionsAPI.cpp    
-    CUDAExecute.cpp
-    CUDAExecute.h
-    CUDAGen.cpp
-    CUDAGen.h
     OtherAPI.cpp    
     PInternalSourceState.h    
     PInternalState.cpp
@@ -21,8 +17,6 @@ set(LIB_SOURCES
 )
 
 set(API_SOURCES
-    ../Particle/CUDAActions.cuh
-    ../Particle/CUDADomains.cuh
     ../Particle/pAPI.h
     ../Particle/pDomain.h
     ../Particle/pError.h

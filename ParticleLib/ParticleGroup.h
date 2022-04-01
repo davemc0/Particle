@@ -174,9 +174,7 @@ public:
         }
     }
     
-    void UpdateHostFromDevice();
-    void UpdateDeviceFromHost();
-    void FreeDeviceMemory();
+    void FreeDeviceMemory() {}
 };
 
 };

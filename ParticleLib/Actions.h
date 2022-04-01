@@ -19,7 +19,6 @@ namespace PAPI {
     static std::string name, abrv; \
     inline std::string GetName() const { return name; } \
     inline std::string GetAbrv() const { return abrv; } \
-    std::string EmitCall(const std::string &name_in, int &var_cnt, bool call); \
     void Execute(ParticleGroup &pg, ParticleList::iterator ibegin, ParticleList::iterator iend);
 
 class PInternalState_t;
@@ -43,7 +42,6 @@ struct PActionBase
     // Return a std::string to be included in a CUDA kernel for calling this action
     // var_cnt is how many VARYING variables have already been emitted.
     // call is true if we're emitting the host calling function. False if we're emitting the kernel that gets called.
-    virtual std::string EmitCall(const std::string &name_in, int &var_cnt, bool call) = 0;
     virtual std::string GetName() const { return name; }
     virtual std::string GetAbrv() const { return abrv; }
 
