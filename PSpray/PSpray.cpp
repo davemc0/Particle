@@ -715,7 +715,7 @@ int main(int argc, char **argv)
 
     Efx.MakeActionLists(ExecMode);
 
-    BindEffects(Efx);
+    // BindEffects(Efx);
 
     DemoNum = Efx.CallDemo(-2, ExecMode);
 

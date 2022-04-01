@@ -332,7 +332,4 @@ public:
     void MakeActionLists(ExecMode_e EM);
 };
 
-// Not in the class so I can avoid defining it if I don't want to.
-extern void BindEffects(ParticleEffects &Efx);
-
 #endif

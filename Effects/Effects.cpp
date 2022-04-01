@@ -9,8 +9,6 @@ using namespace PAPI;
 #include <vector>
 #include <iostream>
 
-using namespace std;
-
 #ifdef WIN32
 #define lrand48() ((rand() << 16) ^ rand())
 #endif
@@ -651,8 +649,9 @@ void PhotoShape::StartEffect(ParticleEffects &Efx)
     for(int y=0; y<d; y++, fy+=sy) {
         float fx = 0.0f;
         for(int x=0; x<d; x++, fx+=sx) {
-            f3Pixel p;
-            sample2(p, *Efx.Img, fx, fy);
+            uc3Pixel puc;
+            sample2(puc, *Efx.Img, fx, fy);
+            f3Pixel p(puc);
             S.Color(p.r(), p.g(), p.b());
             pVec v=pVec_(fx, 0, fy);
             v /= float(Efx.Img->w());

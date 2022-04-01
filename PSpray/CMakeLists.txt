@@ -30,8 +30,8 @@ link_libraries(${GLUT_LIBRARIES})
 set(SOURCES
     DrawGroups.cpp
     DrawGroups.h
-    Effects.cpp
-    Effects.h
+    ../Effects/Effects.cpp
+    ../Effects/Effects.h
     Monarch.cpp
     Monarch.h
     PSpray.cpp
