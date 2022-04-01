@@ -38,7 +38,6 @@ namespace PAPI {
     /// These tell EmitActionList what kind of code to emit.
     enum EmitCodeParams_e {
         P_INTERNAL_CODE = 0,
-        P_CUDA_CODE = 1,
         P_CPU_CPP_CODE = 2
     };
 

@@ -39,9 +39,6 @@ struct PActionBase
 
     virtual void Execute(ParticleGroup &pg, ParticleList::iterator ibegin, ParticleList::iterator iend) = 0;
 
-    // Return a std::string to be included in a CUDA kernel for calling this action
-    // var_cnt is how many VARYING variables have already been emitted.
-    // call is true if we're emitting the host calling function. False if we're emitting the kernel that gets called.
     virtual std::string GetName() const { return name; }
     virtual std::string GetAbrv() const { return abrv; }
 
@@ -51,7 +48,6 @@ private:
     // This doesn't work if the application of an action to a particle is a function of other particles in the group.
     bool bDoNotSegment;   // True if this action cannot be done in segments
 
-    // On CUDA the set of actions that need special attention is different.
     bool bKillsParticles; // True if this action cannot be part of a normal combined kernel
 
 protected:

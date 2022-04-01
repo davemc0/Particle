@@ -114,12 +114,7 @@ namespace PAPI {
         PASSERT((AList.ALFunc == NULL && AList.Params == P_INTERNAL_CODE) ||
             (AList.ALFunc && AList.Params != P_INTERNAL_CODE), "ALFunc and Params mismatch.");
 
-        if(AList.Params & P_CUDA_CODE) {
-            // Need to make sure the particle group is on the GPU.
-            AList.ALFunc(&AList, &pg, dt, 0);
-            // Need to mark the particles as being out-of-date on the host.
-            // Handle killing.
-        } else if(AList.Params & P_CPU_CPP_CODE) {
+        if(AList.Params & P_CPU_CPP_CODE) {
             AList.ALFunc(&AList, &pg, dt, 0);
         } else {
             ActionList::iterator it = AList.begin();

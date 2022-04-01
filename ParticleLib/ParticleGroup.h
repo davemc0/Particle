@@ -30,11 +30,6 @@ class ParticleGroup
 {
     ParticleList list;
 
-    Particle_t *DeviceParticles; // A pointer to the CUDA device's particle list
-public:
-    bool update_host_from_device; // True if the CUDA device's particle list has been modified on the device
-    bool update_device_from_host; // True if the host's particle list has been modified
-
 private:
     size_t max_particles;	// Max particles allowed in group
     P_PARTICLE_CALLBACK cb_birth; // Call this function for each created particle
@@ -50,9 +45,6 @@ public:
         cb_death = NULL;
         group_birth_data = 0;
         group_death_data = 0;
-        DeviceParticles = NULL;
-        update_host_from_device = false;
-        update_device_from_host = true;
     }
 
     ParticleGroup(size_t maxp) : max_particles(maxp)
@@ -62,9 +54,6 @@ public:
         cb_death = NULL;
         group_birth_data = NULL;
         group_death_data = NULL;
-        DeviceParticles = NULL;
-        update_host_from_device = false;
-        update_device_from_host = true;
     }
 
     ParticleGroup(const ParticleGroup &rhs) : list(rhs.list)
@@ -74,9 +63,6 @@ public:
         cb_death = rhs.cb_death;
         group_birth_data = rhs.group_birth_data;
         group_death_data = rhs.group_death_data;
-        DeviceParticles = NULL;
-        update_host_from_device = false;
-        update_device_from_host = true;
     }
 
     ~ParticleGroup()
@@ -85,10 +71,6 @@ public:
             ParticleList::iterator it;
             for (it = list.begin(); it != list.end(); ++it)
                 (*cb_death)((*it), group_death_data);
-        }
-
-        if(DeviceParticles != NULL) {
-            FreeDeviceMemory();
         }
     }
 
@@ -112,7 +94,6 @@ public:
 
     inline size_t GetMaxParticles() { return max_particles; }
     inline ParticleList &GetList() { return list; }
-    inline Particle_t *GetDevicePtr() { return DeviceParticles; }
 
     inline void SetBirthCallback(P_PARTICLE_CALLBACK callback, pdata_t group_data)
     {

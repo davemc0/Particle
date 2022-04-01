@@ -86,9 +86,8 @@ namespace PAPI
                 if(Choose <= PastProb)
                     return it->Generate();
             }
-#ifndef __CUDACC__
+
             throw PErrInternalError("Sizes didn't add up to TotalSize in PDUnion::Generate().");
-#endif
 #endif
             return pVec_(0,0,0);
         }
@@ -1047,9 +1046,9 @@ namespace PAPI
 
     PINLINE pDomain PDDisc_(const pVec &Center, const pVec Normal, const float OuterRadius, const float InnerRadius = 0.0f)
     {
-#ifndef __CUDACC__
+
         if(InnerRadius < 0 || OuterRadius < 0) throw PErrInvalidValue("Can't have negative radius.");
-#endif
+
         pDomain D;
         D.Which = PDDisc_e;
         D.Varying = Varies(Center) || Varies(Normal) || Varies(OuterRadius) || Varies(InnerRadius);
@@ -1094,9 +1093,8 @@ namespace PAPI
 
     PINLINE pDomain PDCylinder_(const pVec &e0, const pVec &e1, const float OuterRadius, const float InnerRadius = 0.0f)
     {
-#ifndef __CUDACC__
         if(InnerRadius < 0 || OuterRadius < 0) throw PErrInvalidValue("Can't have negative radius.");
-#endif
+
         pDomain D;
         D.Which = PDCylinder_e;
         D.Varying = Varies(e0) || Varies(e1) || Varies(OuterRadius) || Varies(InnerRadius);
@@ -1113,9 +1111,8 @@ namespace PAPI
 
     PINLINE pDomain PDCone_(const pVec &e0, const pVec &e1, const float OuterRadius, const float InnerRadius = 0.0f)
     {
-#ifndef __CUDACC__
         if(InnerRadius < 0 || OuterRadius < 0) throw PErrInvalidValue("Can't have negative radius.");
-#endif
+
         pDomain D;
         D.Which = PDCone_e;
         D.Varying = Varies(e0) || Varies(e1) || Varies(OuterRadius) || Varies(InnerRadius);
@@ -1132,9 +1129,8 @@ namespace PAPI
 
     PINLINE pDomain PDSphere_(const pVec &Center, const float OuterRadius, const float InnerRadius = 0.0f)
     {
-#ifndef __CUDACC__
         if(InnerRadius < 0 || OuterRadius < 0) throw PErrInvalidValue("Can't have negative radius.");
-#endif
+
         pDomain D;
         D.Which = PDSphere_e;
         D.Varying = Varies(Center) || Varies(OuterRadius) || Varies(InnerRadius);
