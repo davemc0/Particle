@@ -45,13 +45,13 @@ void GLObject::RenderInOpenGL()
 
       // Assume texcoords are actually 2D and ignore the third component.
       if(texcoords.size() == 1)
-	glTexCoord2dv((GLdouble *) &texcoords[0]);
+ glTexCoord2dv((GLdouble *) &texcoords[0]);
       else if(texcoords.size() > 0)
-	{
-	  ASSERT_R(texcoords.size() == verts.size());
-	  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	  glTexCoordPointer(2, GL_DOUBLE, 3*sizeof(double), &texcoords[0]);
-	}
+ {
+   ASSERT_R(texcoords.size() == verts.size());
+   glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+   glTexCoordPointer(2, GL_DOUBLE, 3*sizeof(double), &texcoords[0]);
+ }
     }
   else
     glDisable(GL_TEXTURE_2D);
@@ -66,7 +66,7 @@ void GLObject::RenderInOpenGL()
       glEnableClientState(GL_NORMAL_ARRAY);
       glNormalPointer(GL_DOUBLE, 0, &normals[0]);
     }
-		
+
   GL_ASSERT();
 
   if(dcolors.size() == 1)
@@ -74,28 +74,28 @@ void GLObject::RenderInOpenGL()
       // std::cerr << "One color\n";
       glColor3dv((GLdouble *) &dcolors[0]);
       if(alpha.size() == 1)
-	glColor4f(dcolors[0].x, dcolors[0].y, dcolors[0].z, alpha[0]);
+ glColor4f(dcolors[0].x, dcolors[0].y, dcolors[0].z, alpha[0]);
     }
   else if(dcolors.size() > 0)
     {
       ASSERT_R(dcolors.size() == verts.size());
       glEnableClientState(GL_COLOR_ARRAY);
       if(alpha.size() == verts.size())
-	{
-	  // Alpha is defined separately. Must fix it.
-	  float *Colors = new float[dcolors.size()*4];
-	  for(int i=0,j=0; i<dcolors.size(); i++)
-	    {
-	      Colors[j++] = dcolors[i].x;
-	      Colors[j++] = dcolors[i].y;
-	      Colors[j++] = dcolors[i].z;
-	      Colors[j++] = alpha[i];
-	    }
-	  glColorPointer(4, GL_FLOAT, 0, Colors);
-	  delete [] Colors;
-	}
+ {
+   // Alpha is defined separately. Must fix it.
+   float *Colors = new float[dcolors.size()*4];
+   for(int i=0,j=0; i<dcolors.size(); i++)
+     {
+       Colors[j++] = dcolors[i].x;
+       Colors[j++] = dcolors[i].y;
+       Colors[j++] = dcolors[i].z;
+       Colors[j++] = alpha[i];
+     }
+   glColorPointer(4, GL_FLOAT, 0, Colors);
+   delete [] Colors;
+ }
       else
-	glColorPointer(3, GL_DOUBLE, 0, &dcolors[0]);
+ glColorPointer(3, GL_DOUBLE, 0, &dcolors[0]);
     }
   else
     {
@@ -107,7 +107,7 @@ void GLObject::RenderInOpenGL()
 
   // Use the vertices in order.
   glDrawArrays((GLenum)PrimType, 0, verts.size());
-		
+
   GL_ASSERT();
 }
 
@@ -152,10 +152,10 @@ void LoadTexture(int TexID)
 
 #if 1
     gluBuild2DMipmaps(GL_TEXTURE_2D, TexIm->chan, TexIm->wid, TexIm->hgt,
-		      (TexIm->chan == 3) ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, TexIm->Pix);
+        (TexIm->chan == 3) ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, TexIm->Pix);
 #else
     glTexImage2D(GL_TEXTURE_2D, 0, TexIm->chan, TexIm->wid, TexIm->hgt, 0,
-		 (TexIm->chan == 3) ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, TexIm->Pix);
+   (TexIm->chan == 3) ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, TexIm->Pix);
 #endif
 
   ASSERT_R(glIsTexture(tid));

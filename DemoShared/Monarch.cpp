@@ -1,4 +1,3 @@
-
 // OpenGL
 #include "GL/glew.h"
 

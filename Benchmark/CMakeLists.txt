@@ -27,7 +27,7 @@ add_definitions(-DFREEGLUT_STATIC)
 include_directories(${GLUT_INCLUDE_DIR})
 link_libraries(${GLUT_LIBRARIES})
 
-set(SOURCES	
+set(SOURCES
     ../DemoShared/Effects.cpp
     ../DemoShared/Effects.h
     Benchmark.cpp

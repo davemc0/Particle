@@ -9,7 +9,6 @@
 
 // This needs to come after GLEW
 #include "GL/freeglut.h"
-
 #include "Particle/pAPI.h"
 
 using namespace PAPI;
@@ -17,39 +16,38 @@ using namespace PAPI;
 // Emit OpenGL calls to draw the particles as GL_LINES.
 // The color is set per primitive or is constant.
 // The other vertex of the line is the velocity vector.
-void DrawGroupAsLines(ParticleContext_t &P, bool const_color)
+void DrawGroupAsLines(ParticleContext_t& P, bool const_color)
 {
     int cnt = (int)P.GetGroupCount();
-    if(cnt < 1) return;
+    if (cnt < 1) return;
 
-    float *ptr;
+    float* ptr;
     size_t flstride, pos3Ofs, posB3Ofs, size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs, up3Ofs, rvel3Ofs, upB3Ofs, mass1Ofs, data1Ofs;
-;
+    ;
 
-    cnt = (int)P.GetParticlePointer(ptr, flstride, pos3Ofs, posB3Ofs,
-        size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs,
-        up3Ofs, rvel3Ofs, upB3Ofs, mass1Ofs, data1Ofs);
-    if(cnt < 1) return;
+    cnt = (int)P.GetParticlePointer(ptr, flstride, pos3Ofs, posB3Ofs, size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs, up3Ofs, rvel3Ofs, upB3Ofs,
+                                    mass1Ofs, data1Ofs);
+    if (cnt < 1) return;
 
     glBegin(GL_LINES);
 
-    if(!const_color) {
-        for(int i = 0; i < cnt; i++) {
+    if (!const_color) {
+        for (int i = 0; i < cnt; i++) {
             // Warning: this depends on alpha following color in the Particle struct.
-            glColor4fv((GLfloat *)ptr + flstride*i + color3Ofs);
-            glVertex3fv((GLfloat *)ptr + flstride*i + pos3Ofs);
+            glColor4fv((GLfloat*)ptr + flstride * i + color3Ofs);
+            glVertex3fv((GLfloat*)ptr + flstride * i + pos3Ofs);
 
             // Make a tail with the velocity vector's direction and length.
-            pVec tail = (*(pVec *)(ptr + flstride*i + pos3Ofs)) - (*(pVec *)(ptr + flstride*i + vel3Ofs));
-            glVertex3fv((GLfloat *)&tail);
+            pVec tail = (*(pVec*)(ptr + flstride * i + pos3Ofs)) - (*(pVec*)(ptr + flstride * i + vel3Ofs));
+            glVertex3fv((GLfloat*)&tail);
         }
     } else {
-        for(int i = 0; i < cnt; i++) {
-            glVertex3fv((GLfloat *)ptr + flstride*i + pos3Ofs);
+        for (int i = 0; i < cnt; i++) {
+            glVertex3fv((GLfloat*)ptr + flstride * i + pos3Ofs);
 
             // Make a tail with the velocity vector's direction and length.
-            pVec tail = (*(pVec *)(ptr + flstride*i + pos3Ofs)) - (*(pVec *)(ptr + flstride*i + vel3Ofs));
-            glVertex3fv((GLfloat *)&tail);
+            pVec tail = (*(pVec*)(ptr + flstride * i + pos3Ofs)) - (*(pVec*)(ptr + flstride * i + vel3Ofs));
+            glVertex3fv((GLfloat*)&tail);
         }
     }
     glEnd();
@@ -58,32 +56,31 @@ void DrawGroupAsLines(ParticleContext_t &P, bool const_color)
 // Draw each particle by translating, scaling, and rotating the display list
 // to the position and orientation of the particle. Also sets the glColor
 // before calling the display list for each particle.
-void DrawGroupAsDisplayLists(ParticleContext_t &P, int dlist, bool const_color, bool const_rotation)
+void DrawGroupAsDisplayLists(ParticleContext_t& P, int dlist, bool const_color, bool const_rotation)
 {
     int cnt = (int)P.GetGroupCount();
-    if(cnt < 1) return;
+    if (cnt < 1) return;
 
-    float *ptr;
+    float* ptr;
     size_t flstride, pos3Ofs, posB3Ofs, size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs, up3Ofs, rvel3Ofs, upB3Ofs, mass1Ofs, data1Ofs;
 
-    cnt = (int)P.GetParticlePointer(ptr, flstride, pos3Ofs, posB3Ofs,
-        size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs,
-        up3Ofs, rvel3Ofs, upB3Ofs, mass1Ofs, data1Ofs);
+    cnt = (int)P.GetParticlePointer(ptr, flstride, pos3Ofs, posB3Ofs, size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs, up3Ofs, rvel3Ofs, upB3Ofs,
+                                    mass1Ofs, data1Ofs);
 
-    for(int i = 0; i < cnt; i++) {
+    for (int i = 0; i < cnt; i++) {
         glPushMatrix();
-        pVec &m_pos = *(pVec *)ptr;
+        pVec& m_pos = *(pVec*)ptr;
         glTranslatef(m_pos.x(), m_pos.y(), m_pos.z());
 
-        pVec &m_size = *(pVec *)(ptr + size3Ofs);
+        pVec& m_size = *(pVec*)(ptr + size3Ofs);
         glScalef(m_size.x(), m_size.y(), m_size.z());
 
-        if(!const_rotation) {
+        if (!const_rotation) {
             // Expensive!
             // velB stores the velocity from last frame.
             // vel ^ velB points to the side.
-            pVec &m_vel = *(pVec *)(ptr + vel3Ofs);
-            pVec &m_velB = *(pVec *)(ptr + velB3Ofs);
+            pVec& m_vel = *(pVec*)(ptr + vel3Ofs);
+            pVec& m_velB = *(pVec*)(ptr + velB3Ofs);
 
             pVec vN(m_vel);
             vN.normalize();
@@ -91,7 +88,7 @@ void DrawGroupAsDisplayLists(ParticleContext_t &P, int dlist, bool const_color, 
             voN.normalize();
 
             pVec biN;
-            if(voN.x() == vN.x() && voN.y() == vN.y() && voN.z() == vN.z())
+            if (voN.x() == vN.x() && voN.y() == vN.y() && voN.z() == vN.z())
                 biN = pVec(0, 1, 0);
             else
                 biN = Cross(vN, voN);
@@ -110,8 +107,7 @@ void DrawGroupAsDisplayLists(ParticleContext_t &P, int dlist, bool const_color, 
         }
 
         // Warning: this depends on alpha following color in the Particle struct.
-        if(!const_color)
-            glColor4fv((GLfloat *)(ptr + color3Ofs));
+        if (!const_color) glColor4fv((GLfloat*)(ptr + color3Ofs));
 
         glCallList(dlist);
 
@@ -130,20 +126,18 @@ void DrawGroupAsDisplayLists(ParticleContext_t &P, int dlist, bool const_color, 
 // the rasterization and shading time.
 // However, the quad has four vertices whereas the tri has 3, so the quad
 // takes more geometry processing time.
-void DrawGroupAsTriSprites(ParticleContext_t &P, const pVec &view, const pVec &up,
-                           float size_scale = 1.0f, bool draw_tex=false,
-                           bool const_size=false, bool const_color=false)
+void DrawGroupAsTriSprites(ParticleContext_t& P, const pVec& view, const pVec& up, float size_scale = 1.0f, bool draw_tex = false, bool const_size = false,
+                           bool const_color = false)
 {
     int cnt = (int)P.GetGroupCount();
 
-    if(cnt < 1)
-        return;
+    if (cnt < 1) return;
 
-    pVec *ppos = new pVec[cnt];
-    float *color = const_color ? NULL : new float[cnt * 4];
-    pVec *size = const_size ? NULL : new pVec[cnt];
+    pVec* ppos = new pVec[cnt];
+    float* color = const_color ? NULL : new float[cnt * 4];
+    pVec* size = const_size ? NULL : new pVec[cnt];
 
-    P.GetParticles(0, cnt, (float *)ppos, color, NULL, (float *)size);
+    P.GetParticles(0, cnt, (float*)ppos, color, NULL, (float*)size);
 
     // Compute the vectors from the particle to the corners of its tri.
     // 2
@@ -164,41 +158,39 @@ void DrawGroupAsTriSprites(ParticleContext_t &P, const pVec &view, const pVec &u
 
     glBegin(GL_TRIANGLES);
 
-    for(int i = 0; i < cnt; i++) {
-        pVec &p = ppos[i];
+    for (int i = 0; i < cnt; i++) {
+        pVec& p = ppos[i];
 
-        if(!const_color)
-            glColor4fv((GLfloat *)&color[i*4]);
+        if (!const_color) glColor4fv((GLfloat*)&color[i * 4]);
 
         pVec sV0 = V0;
         pVec sV1 = V1;
         pVec sV2 = V2;
 
-        if(!const_size)
-        {
+        if (!const_size) {
             sV0 *= size[i].x();
             sV1 *= size[i].x();
             sV2 *= size[i].x();
         }
 
-        if(draw_tex) glTexCoord2f(0,0);
+        if (draw_tex) glTexCoord2f(0, 0);
         pVec ver = p + sV0;
-        glVertex3fv((GLfloat *)&ver);
+        glVertex3fv((GLfloat*)&ver);
 
-        if(draw_tex) glTexCoord2f(2,0);
+        if (draw_tex) glTexCoord2f(2, 0);
         ver = p + sV1;
-        glVertex3fv((GLfloat *)&ver);
+        glVertex3fv((GLfloat*)&ver);
 
-        if(draw_tex) glTexCoord2f(0,2);
+        if (draw_tex) glTexCoord2f(0, 2);
         ver = p + sV2;
-        glVertex3fv((GLfloat *)&ver);
+        glVertex3fv((GLfloat*)&ver);
     }
 
     glEnd();
 
-    delete [] ppos;
-    if(color) delete [] color;
-    if(size) delete [] size;
+    delete[] ppos;
+    if (color) delete[] color;
+    if (size) delete[] size;
 }
 
 // Draw each particle as a screen-aligned quad with texture.
@@ -213,20 +205,18 @@ void DrawGroupAsTriSprites(ParticleContext_t &P, const pVec &view, const pVec &u
 // takes more geometry processing time.
 
 // Draw each particle as a screen-aligned quad with texture.
-void DrawGroupAsQuadSprites(ParticleContext_t &P, const pVec &view, const pVec &up,
-                            float size_scale = 1.0f, bool draw_tex=false,
-                            bool const_size=false, bool const_color=false)
+void DrawGroupAsQuadSprites(ParticleContext_t& P, const pVec& view, const pVec& up, float size_scale = 1.0f, bool draw_tex = false, bool const_size = false,
+                            bool const_color = false)
 {
     int cnt = (int)P.GetGroupCount();
 
-    if(cnt < 1)
-        return;
+    if (cnt < 1) return;
 
-    pVec *ppos = new pVec[cnt];
-    float *color = const_color ? NULL : new float[cnt * 4];
-    pVec *size = const_size ? NULL : new pVec[cnt];
+    pVec* ppos = new pVec[cnt];
+    float* color = const_color ? NULL : new float[cnt * 4];
+    pVec* size = const_size ? NULL : new pVec[cnt];
 
-    P.GetParticles(0, cnt, (float *)ppos, color, NULL, (float *)size);
+    P.GetParticles(0, cnt, (float*)ppos, color, NULL, (float*)size);
 
     // Compute the vectors from the particle to the corners of its quad.
     // The particle is at the center of the x.
@@ -245,76 +235,72 @@ void DrawGroupAsQuadSprites(ParticleContext_t &P, const pVec &view, const pVec &
     pVec V2 = right + nup;
     pVec V3 = nup - right;
 
-    //cerr << "x " << view.x() << " " << view.y() << " " << view.z() << std::endl;
-    //cerr << "x " << nup.x() << " " << nup.y() << " " << nup.z() << std::endl;
-    //cerr << "x " << right.x() << " " << right.y() << " " << right.z() << std::endl;
-    //cerr << "x " << V0.x() << " " << V0.y() << " " << V0.z() << std::endl;
+    // cerr << "x " << view.x() << " " << view.y() << " " << view.z() << std::endl;
+    // cerr << "x " << nup.x() << " " << nup.y() << " " << nup.z() << std::endl;
+    // cerr << "x " << right.x() << " " << right.y() << " " << right.z() << std::endl;
+    // cerr << "x " << V0.x() << " " << V0.y() << " " << V0.z() << std::endl;
 
     glBegin(GL_QUADS);
 
-    for(int i = 0; i < cnt; i++)
-    {
-        pVec &p = ppos[i];
-        //cerr << p.x() << " " << p.y() << " " << p.z() << std::endl;
+    for (int i = 0; i < cnt; i++) {
+        pVec& p = ppos[i];
+        // cerr << p.x() << " " << p.y() << " " << p.z() << std::endl;
         // std::cerr << color[i*4+3] << std::endl;
 
-        if(!const_color)
-            glColor4fv((GLfloat *)&color[i*4]);
+        if (!const_color) glColor4fv((GLfloat*)&color[i * 4]);
 
         pVec sV0 = V0;
         pVec sV1 = V1;
         pVec sV2 = V2;
         pVec sV3 = V3;
 
-        if(!const_size)
-        {
+        if (!const_size) {
             sV0 *= size[i].x();
             sV1 *= size[i].x();
             sV2 *= size[i].x();
             sV3 *= size[i].x();
         }
 
-        if(draw_tex) glTexCoord2f(0,0);
+        if (draw_tex) glTexCoord2f(0, 0);
         pVec ver = p + sV0;
-        glVertex3fv((GLfloat *)&ver);
+        glVertex3fv((GLfloat*)&ver);
 
-        if(draw_tex) glTexCoord2f(1,0);
+        if (draw_tex) glTexCoord2f(1, 0);
         ver = p + sV1;
-        glVertex3fv((GLfloat *)&ver);
+        glVertex3fv((GLfloat*)&ver);
 
-        if(draw_tex) glTexCoord2f(1,1);
+        if (draw_tex) glTexCoord2f(1, 1);
         ver = p + sV2;
-        glVertex3fv((GLfloat *)&ver);
+        glVertex3fv((GLfloat*)&ver);
 
-        if(draw_tex) glTexCoord2f(0,1);
+        if (draw_tex) glTexCoord2f(0, 1);
         ver = p + sV3;
-        glVertex3fv((GLfloat *)&ver);
+        glVertex3fv((GLfloat*)&ver);
     }
 
     glEnd();
 
-    delete [] ppos;
-    if(color) delete [] color;
-    if(size) delete [] size;
+    delete[] ppos;
+    if (color) delete[] color;
+    if (size) delete[] size;
 }
 
 // Draw as points using vertex arrays
 // To draw as textured point sprites just call
 // glEnable(GL_POINT_SPRITE_ARB) before calling this function.
-void DrawGroupAsPoints(ParticleContext_t &P, const bool const_color)
+void DrawGroupAsPoints(ParticleContext_t& P, const bool const_color)
 {
     int cnt = (int)P.GetGroupCount();
-    if(cnt < 1) return;
+    if (cnt < 1) return;
 
-    float *ptr;
+    float* ptr;
     size_t flstride, pos3Ofs, posB3Ofs, size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs, up3Ofs, rvel3Ofs, upB3Ofs, mass1Ofs, data1Ofs;
 
-    cnt = (int)P.GetParticlePointer(ptr, flstride, pos3Ofs, posB3Ofs,
-        size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs,
-        up3Ofs, rvel3Ofs, upB3Ofs, mass1Ofs, data1Ofs);
-    if(cnt < 1) return;
+    cnt = (int)P.GetParticlePointer(ptr, flstride, pos3Ofs, posB3Ofs, size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs, up3Ofs, rvel3Ofs, upB3Ofs,
+                                    mass1Ofs, data1Ofs);
+    if (cnt < 1) return;
 
-    if(!const_color) {
+    if (!const_color) {
         glEnableClientState(GL_COLOR_ARRAY);
         glColorPointer(4, GL_FLOAT, int(flstride) * sizeof(float), ptr + color3Ofs);
     }
@@ -324,6 +310,5 @@ void DrawGroupAsPoints(ParticleContext_t &P, const bool const_color)
 
     glDrawArrays(GL_POINTS, 0, cnt);
     glDisableClientState(GL_VERTEX_ARRAY);
-    if(!const_color)
-        glDisableClientState(GL_COLOR_ARRAY);
+    if (!const_color) glDisableClientState(GL_COLOR_ARRAY);
 }
