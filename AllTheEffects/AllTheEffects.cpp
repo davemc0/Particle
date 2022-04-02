@@ -1,4 +1,4 @@
-// PSpray.cpp
+// AllTheEffects.cpp
 //
 // Copyright 1998-2006 by David K. McAllister
 //
@@ -16,9 +16,9 @@
 //   motion blur, kill before start, primitive, texture, depth test, speed, particle size
 // Do I just make an init function, or do I make a struct?
 
-#include "../PSpray/DrawGroups.h"
-#include "../PSpray/Monarch.h"
-#include "../Effects/Effects.h"
+#include "../DemoShared/DrawGroups.h"
+#include "../DemoShared/Monarch.h"
+#include "../DemoShared/Effects.h"
 
 #include "Particle/pAPI.h"
 
@@ -664,8 +664,8 @@ void GlutSetup(int argc, char **argv)
     glutInit(&argc, argv);
 
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_MULTISAMPLE);
-    glutInitWindowSize(900, 900);
-    glutInitWindowPosition(200, 200);
+    glutInitWindowSize(1024, 1024);
+    glutInitWindowPosition(20, 0);
     glutCreateWindow("Particle Spray");
 
     glutDisplayFunc(Draw);
