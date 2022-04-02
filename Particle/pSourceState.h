@@ -1,7 +1,6 @@
 /// PSourceState.h
 ///
-/// Copyright 1997-2009 by David K. McAllister
-/// http://www.ParticleSystems.org
+/// Copyright 1997-2007, 2022 by David K. McAllister
 ///
 /// Defines these classes: pSourceState
 

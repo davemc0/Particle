@@ -1,7 +1,6 @@
 /// ParticleGroup.h
 ///
-/// Copyright 1997-2007 by David K. McAllister
-/// http://www.ParticleSystems.org
+/// Copyright 1997-2007, 2022 by David K. McAllister
 ///
 /// A group of particles - Info and an array of Particles
 ///

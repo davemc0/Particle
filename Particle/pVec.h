@@ -1,8 +1,6 @@
-/// PVec.h - yet another 3D vector class.
+/// PVec.h - yet another 3D vector class
 ///
-/// Copyright 1997-2007 by David K. McAllister
-/// Based on code Copyright 1997 by Jonathan P. Leech
-/// http://www.ParticleSystems.org
+/// Copyright 1997-2007, 2022 by David K. McAllister
 ///
 /// A simple 3D float vector class for internal use by the particle systems.
 ///

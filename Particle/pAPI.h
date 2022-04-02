@@ -1,7 +1,6 @@
 /// PAPI.h
 ///
-/// Copyright 1997-2007 by David K. McAllister
-/// http://www.ParticleSystems.org
+/// Copyright 1997-2007, 2022 by David K. McAllister
 ///
 /// Include this file in all applications that use the Particle System API.
 /// The Particle System API is distributed under the GNU LGPL.

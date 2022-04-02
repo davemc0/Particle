@@ -1,7 +1,6 @@
 /// ActionsAPI.cpp
 ///
-/// Copyright 1997-2007 by David K. McAllister
-/// http://www.ParticleSystems.org
+/// Copyright 1997-2007, 2022 by David K. McAllister
 ///
 /// This file implements the action API calls by creating action class instances,
 /// which are either executed or added to an action list.
