@@ -7,26 +7,30 @@
 //
 // Copyright 1999 by David K. McAllister
 
-#include <particle/papi.h>
+#include "Particle/pAPI.h"
+using namespace PAPI;
 
-#include <Util/Timer.h>
-#include <Util/Utils.h>
-#include <Math/Vector.h>
-#include <Model/Model.h>
+#include "../PSpray/DrawGroups.h"
 
-#include <GL/glut.h>
+#include "Util/Timer.h"
+#include "Util/Utils.h"
+#include "Math/Random.h"
+#include "Math/Vector.h"
+#include "Model/Model.h"
+#include "Model/RenderObject.h"
+
+// OpenGL
+#include "GL/glew.h"
+
+// This needs to come after GLEW
+#include "GL/freeglut.h"
 
 #include <math.h>
 #include <string.h>
 #include <time.h>
 #include <stdio.h>
 
-#ifdef __sgi
-#include <iostream.h>
-#else
 #include <iostream>
-using namespace std;
-#endif
 
 // XXX extern void RenderModel(Model &M);
 
@@ -38,38 +42,44 @@ bool ShowText = true, ConstColor = false, DoMotion = false;
 bool BoidGravity = true, BoidDamping = true, BoidFollowPoint = true, BoidCentering = true;
 bool BoidMatchVel = true, BoidNgbrCol = true, BoidAvoid = true;
 
+ParticleContext_t P;
+
 int maxParticles = 100;
-int numSteps = 1, prim = -1, listID = -1;
-#define BOIDLEN 0.3
+int numSteps = 1, geomType = -1, listID = -1;
+const float BOIDLEN = 0.3f;
 
 void BoidPrep()
 {
-	pSetMaxParticles(0);
-	pSetMaxParticles(maxParticles);
-	pColorD(1, PDBox, 0,0,0, 1,1,1);
-	pSize(BOIDLEN, BOIDLEN, BOIDLEN);
-	pStartingAge(0);
+    P.SetMaxParticles(0);
+    P.SetMaxParticles(maxParticles);
+
+	pSourceState S;
+
+	S.Color(PDBox(pVec( 0,0,0), pVec(1,1,1)));
+	S.Size(pVec(BOIDLEN));
+	S.StartingAge(0);
 #if 0
 	pVelocityD(PDBlob, 0, 0, 0, 0.02);
 #else
-	pVelocityD(PDPoint, 0.04, 0, -0.08);
+	S.Velocity(pVec(0.04, 0, -0.08));
 #endif
-	pSource(100000, PDBox, -7,-7,7, -1,7,11);
+	P.Source(100000, PDBox(pVec( -7,-7,7),pVec( -1,7,11)), S);
 }
 
 void AvoidModel(Model &M)
 {
 	for(int i=0; i<M.Objs.size(); i++)
     {
-		Object &Ob = M.Objs[i];
-		ASSERT0(Ob.verts.size() % 3 == 0);
+        RenderObject* Ob = dynamic_cast < RenderObject*>(M.Objs[i]);
+		ASSERT_R(Ob->verts.size() % 3 == 0);
 		
-		for(int j=0; j<Ob.verts.size(); j+=3)
+		// TODO: Need to make this a PDUnion so the birds avoid all triangles jointly
+		for(int j=0; j<Ob->verts.size(); j+=3)
 		{
-			//	  cerr << "Avoid: " << Ob.verts[j] << Ob.verts[j+1] << Ob.verts[j+2] << endl;
-			pAvoid(0.1, 1.0, 100, PDTriangle, Ob.verts[j].x, Ob.verts[j].y, Ob.verts[j].z,
-				Ob.verts[j+1].x, Ob.verts[j+1].y, Ob.verts[j+1].z,
-				Ob.verts[j+2].x, Ob.verts[j+2].y, Ob.verts[j+2].z);
+			//	  std::cerr << "Avoid: " << Ob->verts[j] << Ob->verts[j+1] << Ob->verts[j+2] << '\n';
+			P.Avoid(0.1, 1.0, 100, PDTriangle(pVec(Ob->verts[j].x, Ob->verts[j].y, Ob->verts[j].z),
+				pVec(Ob->verts[j+1].x, Ob->verts[j+1].y, Ob->verts[j+1].z),
+				pVec(Ob->verts[j+2].x, Ob->verts[j+2].y, Ob->verts[j+2].z)));
 		}
     }
 }
@@ -78,8 +88,8 @@ void AvoidModel(Model &M)
 void Boids()
 {
 #define GOAL_SPEED 0.05
-	static Vector goal(0,0,4);
-	static Vector dgoal(DRand(), DRand(), DRand());
+	static f3vec goal(0,0,4);
+    static f3vec dgoal(frand(), frand(), frand()); // 0..1 XXX Do we want makeRandOnSphere?
 	dgoal.normalize();
 	dgoal *= GOAL_SPEED;
 	
@@ -89,35 +99,35 @@ void Boids()
 	if(goal.y > 16 || goal.y < -16) dgoal.y = -dgoal.y;
 	if(goal.z > 7 || goal.z < 3) dgoal.z = -dgoal.z;
 	
-	pCopyVertexB(false, true);
+	P.CopyVertexB(false, true);
 	
-	if(BoidGravity) pGravity(0, 0, -0.0001);
+	if(BoidGravity) P.Gravity(pVec(0, 0, -0.0001));
 	
 #define DAMPING 0.996
-	if(BoidDamping) pDamping(DAMPING, DAMPING, DAMPING);
+	if(BoidDamping) P.Damping(DAMPING, DAMPING, DAMPING);
 	
-	if(BoidFollowPoint) pOrbitPoint(goal.x, goal.y, goal.z, 0.001, 0.1); // Follow goal.
+	if(BoidFollowPoint) P.OrbitPoint(pVec(goal.data()), 0.001, 0.1); // Follow goal.
 	
-	if(BoidCentering) pGravitate(BOIDLEN*0.0006, BOIDLEN*7); // Flock centering.
+	if(BoidCentering) P.Gravitate(BOIDLEN*0.0006, BOIDLEN*7); // Flock centering.
 	
-	if(BoidMatchVel) pMatchVelocity(BOIDLEN*0.003, BOIDLEN*5); // Velocity matching.
+	if(BoidMatchVel) P.MatchVelocity(BOIDLEN*0.003, BOIDLEN*5); // Velocity matching.
 	
-	if(BoidNgbrCol) pGravitate(-BOIDLEN*0.0005, BOIDLEN*2); // Neighbor collision avoidance.
+	if(BoidNgbrCol) P.Gravitate(-BOIDLEN*0.0005, BOIDLEN*2); // Neighbor collision avoidance.
 	
 	if(BoidAvoid)
 	{ // Static collision avoidance.
-		pAvoid(0.1, 1.0, 100, PDPlane, 0,0,0, 0,0,1);
+		P.Avoid(0.1, 1.0, 100, PDPlane(pVec(0,0,0), pVec(0,0,1)));
 		AvoidModel(Mod);
 		
 		// Draw the model.
 		// XXX RenderModel(Mod);
 	}
 	
-	//if(BoidAvoid) pBounce(0, 1, 0, PDPlane, 0,0,0, 0,0,1); // Static collision avoidance.
+	//if(BoidAvoid) P.Bounce(0, 1, 0, PDPlane, 0,0,0, 0,0,1); // Static collision avoidance.
 	
-	pSpeedLimit(0.03);
+	P.SpeedLimit(0.03);
 	
-	pMove();
+	P.Move();
 	
 	if(BoidFollowPoint)
 	{
@@ -653,19 +663,19 @@ void Draw()
 	
 	GL_ASSERT();
 	
-	if(prim < 0)
+	if(geomType < 0)
 	{
 		if(listID < 0)
 		{
 			listID = glGenLists(1);
 			monarch(listID);
 		}
-		pDrawGroupl(listID, true, ConstColor);
+                DrawGroupAsDisplayLists(P, listID, true, ConstColor);
 	}
 	else
 	{
 		glDisable(GL_TEXTURE_2D);
-		pDrawGroupp(prim, true, ConstColor);
+		DrawGroupAsPoints(P, ConstColor);
 	}
 	
 	GL_ASSERT();
@@ -682,7 +692,7 @@ void Draw()
 			BoidFollowPoint?'F':' ', BoidCentering?'C':' ', BoidMatchVel?'M':' ',
 			BoidNgbrCol?'N':' ', BoidAvoid?'A':' ');
 		showBitmapMessage(-0.4f, 0.85f, 0.0f, msg);
-		sprintf(msg, "%d particles drawn", pGetGroupCount());
+		sprintf(msg, "%d particles drawn", (int)P.GetGroupCount());
 		showBitmapMessage(0.1f, 0.85f, 0.0f, msg);
 	}
 	
@@ -764,7 +774,7 @@ menu(int item)
 		}
 		break;
 	case 'd':
-		prim = -1;
+		geomType = -1;
 		glDisable(GL_TEXTURE_2D);
 		break;
 	case 'w':
@@ -776,19 +786,19 @@ menu(int item)
 			{
 			case 0:
 				glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-				cerr << "REPLACE\n";
+				std::cerr << "REPLACE\n";
 				break;
 			case 1:
 				glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-				cerr << "MODULATE\n";
+				std::cerr << "MODULATE\n";
 				break;
 			case 2:
 				glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-				cerr << "DECAL\n";
+				std::cerr << "DECAL\n";
 				break;
 			case 3:
 				glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_BLEND);
-				cerr << "BLEND\n";
+				std::cerr << "BLEND\n";
 				break;
 			}
 			break;
@@ -809,32 +819,32 @@ menu(int item)
 		}
 		break;
 	case 'p':
-		prim = GL_POINTS;
+		geomType = GL_POINTS;
 		glDisable(GL_TEXTURE_2D);
 		break;
 	case 'l':
-		prim = GL_LINES;
+		geomType = GL_LINES;
 		glDisable(GL_TEXTURE_2D);
 		break;
 	case 'g':
 		drawGround = !drawGround;
 		break;
 	case 'z':
-		pSinkVelocity(true, PDSphere, 0, 0, 0, 0.01);
+		P.SinkVelocity(true, PDSphere(pVec(0, 0, 0), 0.01));
 		break;
 	case 'x':
 		FreezeParticles = !FreezeParticles;
 		break;
 	case '+':
 		maxParticles += 50;
-		pSetMaxParticles(maxParticles);
-		cerr << maxParticles << endl;
+        P.SetMaxParticles(maxParticles);
+		std::cerr << maxParticles << '\n';
 		break;
 	case '-':
 		maxParticles -= 50;
 		if(maxParticles<0) maxParticles = 0;
-		pSetMaxParticles(maxParticles);
-		cerr << maxParticles << endl;
+		P.SetMaxParticles(maxParticles);
+		std::cerr << maxParticles << '\n';
 		break;
 	case 'q':
 	case '\033': /* ESC key: quit */
@@ -845,7 +855,7 @@ menu(int item)
 	if(item > '0' && item <= '9')
 	{
 		numSteps = item - '0';
-		pTimeStep(1 / float(numSteps));
+		P.TimeStep(1 / float(numSteps));
 	}
 	
 	glutPostRedisplay();
@@ -861,10 +871,10 @@ static void
 Usage(char *program_name, char *message)
 {
 	if (message)
-		cerr << message << endl;
+		std::cerr << message << '\n';
 	
-	cerr << "Usage: " << program_name << endl;
-	cerr << "-model <model_name.wrl> | <model_name.obj>\n";
+	std::cerr << "Usage: " << program_name << '\n';
+	std::cerr << "-model <model_name.wrl> | <model_name.obj>\n";
 	exit(1);
 }
 
@@ -886,16 +896,16 @@ Args(int argc, char **argv)
 			
 			Mod.Flatten();
 			
-			cerr << "BBox is " << Mod.Box << endl;
-			float len = Mod.Box.MaxDim();
-			Vector Ctr = Mod.Box.Center();
+			std::cerr << "BBox is " << Mod.Box << '\n';
+			float len = Mod.Box.extent().max();
+			f3vec Ctr = Mod.Box.centroid();
 			
-			Matrix44 Mat;
+			Matrix44 < f3vec> Mat;
 			Mat.Scale(10./len);
-			Mat.Rotate(1.57, Vector(0,0,1));
-			Mat.Translate(Vector(-Ctr.x, -Ctr.y, -Mod.Box.MinV.z));
+			Mat.Rotate(1.57, f3vec(0,0,1));
+			Mat.Translate(f3vec(-Ctr.x, -Ctr.y, -Mod.Box.lo().z));
 			
-			Mod.Transform(Mat);
+			Mod.ApplyTransform( Mat);
 			
 			argv++; argc--;
 		}
@@ -964,9 +974,9 @@ int main(int argc, char **argv)
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	
 	// Make a particle group
-	int particle_handle = pGenParticleGroups(1, maxParticles);
+	int particle_handle = P.GenParticleGroups(1, maxParticles);
 	
-	pCurrentGroup(particle_handle);
+	P.CurrentGroup(particle_handle);
 	
 	BoidPrep();
 	

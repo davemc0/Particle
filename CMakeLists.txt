@@ -17,6 +17,7 @@ add_subdirectory(${PROJECT_ROOT_DIR}/../DMcTools ${CMAKE_CURRENT_BINARY_DIR}/DMc
 
 add_subdirectory(${PROJECT_ROOT_DIR}/ParticleLib ${CMAKE_CURRENT_BINARY_DIR}/ParticleLib)
 
+add_subdirectory(${PROJECT_ROOT_DIR}/Boids ${CMAKE_CURRENT_BINARY_DIR}/Boids)
 add_subdirectory(${PROJECT_ROOT_DIR}/Example ${CMAKE_CURRENT_BINARY_DIR}/Example)
 add_subdirectory(${PROJECT_ROOT_DIR}/PSpray ${CMAKE_CURRENT_BINARY_DIR}/PSpray)
 add_subdirectory(${PROJECT_ROOT_DIR}/ParBench ${CMAKE_CURRENT_BINARY_DIR}/ParBench)

@@ -363,7 +363,7 @@ void Fireworks::DoActions(ParticleEffects &Efx) const
     // The action list for moving the sparks
     pSourceState S;
     S.StartingAge(0, 6);
-    S.Velocity(PDBlob(pVec(0), 0.006));
+    S.Velocity(PDBlob(pVec(0.f), 0.006f));
 
     // For emitting we should have a constant max number of rockets and vary their params.
     for(int i=0; i<MaxRockets; i++) {
@@ -580,7 +580,7 @@ void JetSpray::PerFrame(ExecMode_e EM, ParticleEffects &Efx)
 
 void JetSpray::StartEffect(ParticleEffects &Efx)
 {
-    jet = pVec(0);
+    jet = pVec(0.f);
     djet = pRandVec() * 0.5f;
     djet.z() = 0.0f;
 }
@@ -666,7 +666,7 @@ void Rain::DoActions(ParticleEffects &Efx) const
 {
     ParticleContext_t &P = Efx.P;
     pSourceState S;
-    S.Velocity(pVec(0));
+    S.Velocity(pVec(0.f));
     S.Color(PDSphere(pVec(0.4, 0.4, 0.9), .1));
     S.Size(pVec(1.5));
     S.StartingAge(0);
@@ -726,7 +726,7 @@ void Shower::DoActions(ParticleEffects &Efx) const
 {
     ParticleContext_t &P = Efx.P;
     pSourceState S;
-    S.Velocity(PDBlob(pVec(0), 0.001f));
+    S.Velocity(PDBlob(pVec(0.f), 0.001f));
     S.Size(pVec(1.5));
     S.StartingAge(0);
     S.Color(PDBlob(pVec(.7,.7,.2), .2));
@@ -803,7 +803,7 @@ void Snake::StartEffect(ParticleEffects &Efx)
     ParticleContext_t &P = Efx.P;
 
     pSourceState S;
-    S.Velocity(pVec(0));
+    S.Velocity(pVec(0.f));
     S.Size(pVec(1.0));
     S.Color(PDSphere(pVec(0.93, 0.93, 0), 0.05));
 

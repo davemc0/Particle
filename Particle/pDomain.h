@@ -1128,7 +1128,7 @@ public:
         }
 
         PINLINE pVec Generate() const 
-        { return pVec(0);
+        { return pVec(0.f);
         }
 
         PINLINE float Size() const 

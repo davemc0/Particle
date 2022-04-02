@@ -195,7 +195,8 @@ namespace PAPI {
         ///
         /// The default Up vector is 0,1,0.
         PINLINE void UpVec(const pDomain &dom)
-        { Up_ = dom.copy();
+        {
+            Up_ = dom.copy();
         }
 
         /// Specify the initial velocity vector of particles to be created.
@@ -212,7 +213,8 @@ namespace PAPI {
         ///
         /// The default Velocity vector is 0,0,0.
         PINLINE void Velocity(const pDomain &dom)
-        { Vel_ = dom.copy();
+        {
+            Vel_ = dom.copy();
         }
 
         /// Specify the initial secondary position of new particles.
@@ -250,9 +252,7 @@ namespace PAPI {
         /// All state set by the pSourceState functions will be reset.
         PINLINE void Reset()
         {
-#ifndef __CUDACC__
             *this = pSourceState();
-#endif
         }
     };
 

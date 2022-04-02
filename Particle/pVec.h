@@ -85,6 +85,7 @@ namespace PAPI
         PINLINE pVec(float ax, float ay, float az) : vx(ax), vy(ay), vz(az) {}
         PINLINE pVec(float a) : vx(a), vy(a), vz(a) {}
         PINLINE pVec() = default;
+        PINLINE pVec(float* v) : vx(v[0]), vy(v[1]), vz(v[2]) {}
 
         const float& x() const { return vx; }
         const float& y() const { return vy; }
