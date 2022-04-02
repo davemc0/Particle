@@ -5,13 +5,10 @@
 using namespace PAPI;
 
 #include "Image/ImageAlgorithms.h"
+#include "Math/Random.h"
 
 #include <iostream>
 #include <vector>
-
-#ifdef WIN32
-#define lrand48() ((rand() << 16) ^ rand())
-#endif
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -159,7 +156,7 @@ int Effect::NextEffect(ParticleEffects& Efx)
 {
     ParticleContext_t& P = Efx.P;
 
-    int DemoNum = lrand48() % Efx.NumEffects;
+    int DemoNum = irand(Efx.NumEffects);
 
     return DemoNum;
 }
@@ -754,7 +751,7 @@ void Shower::PerFrame(ExecMode_e EM, ParticleEffects& Efx)
 
 void Shower::StartEffect(ParticleEffects& Efx)
 {
-    SteerShape = lrand48() % 4;
+    SteerShape = irand(4);
     jet = pVec(0, 0, 5);
     djet = pRandVec() * 0.01f;
     djet.z() = 0.0f;

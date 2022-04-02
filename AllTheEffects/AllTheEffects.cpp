@@ -23,9 +23,9 @@
 
 // The following header files are part of DMcTools.
 // DMcTools is part of the same source distribution as the Particle API.
+#include "Math/Random.h"
 #include "Util/Assert.h"
 #include "Util/Timer.h"
-#include "Util/Utils.h"
 
 // OpenGL
 #include "GL/glew.h"
@@ -35,15 +35,11 @@
 
 #include <cmath>
 #include <cstring>
-#include <ctime>
 #include <iostream>
 #include <string>
 
 #ifdef WIN32
 #pragma warning(disable : 4305) /* disable bogus conversion warnings */
-#define drand48() (((float)rand()) / ((float)RAND_MAX))
-#define lrand48() ((rand() << 15) ^ rand())
-#define srand48(x) srand(x)
 #endif
 
 static bool MotionBlur = false, FreezeParticles = false, AntiAlias = true, DepthTest = false;
@@ -430,7 +426,7 @@ void Draw()
     if (!MotionBlur) glutSwapBuffers();
 
     // Change to a different random demo
-    if (RandomDemo > 0 && ((lrand48() % RandomDemo) == 0) && RandomDemoClock.Read() > DEMO_MIN_SEC) {
+    if (RandomDemo > 0 && irand(RandomDemo) == 0 && RandomDemoClock.Read() > DEMO_MIN_SEC) {
         RandomDemoClock.Reset();
         DemoNum = Efx.CallDemo(-2, ExecMode);
     }
@@ -663,7 +659,7 @@ void GlutSetup(int argc, char** argv)
 
 int main(int argc, char** argv)
 {
-    srand48((unsigned)time(NULL));
+    SRand();
 
     RandomDemoClock.Start();
 
