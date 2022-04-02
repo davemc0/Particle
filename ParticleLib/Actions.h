@@ -59,7 +59,7 @@ protected:
 
 struct PAAvoid : public PActionBase
 {
-    pDomain position;	// Avoid region
+    pDomain *position;	// Avoid region
     float look_ahead;	// how many time units ahead to look
     float magnitude;	// what percent of the way to go each time
     float epsilon;		// add to r^2 for softening
@@ -75,7 +75,7 @@ struct PAAvoid : public PActionBase
 
 struct PABounce : public PActionBase
 {
-    pDomain position;	// Bounce region
+    pDomain *position;	// Bounce region
     float oneMinusFriction;	// Friction tangent to surface
     float resilience;	// Resilence perpendicular to surface
     float cutoffSqr;	// cutoff velocity; friction applies iff v > cutoff
@@ -169,8 +169,8 @@ struct PAGravity : public PActionBase
 
 struct PAJet : public PActionBase
 {
-    pDomain dom;		// Accelerate particles that are within this domain
-    pDomain acc;		// Acceleration vector domain
+    pDomain *dom;		// Accelerate particles that are within this domain
+    pDomain *acc;		// Acceleration vector domain
 
     COMMON_ITEMS
 };
@@ -231,28 +231,28 @@ struct PAOrbitPoint : public PActionBase
 
 struct PARandomAccel : public PActionBase
 {
-    pDomain gen_acc;	// The domain of random accelerations.
+    pDomain *gen_acc;	// The domain of random accelerations.
 
     COMMON_ITEMS
 };
 
 struct PARandomDisplace : public PActionBase
 {
-    pDomain gen_disp;	// The domain of random displacements.
+    pDomain *gen_disp;	// The domain of random displacements.
 
     COMMON_ITEMS
 };
 
 struct PARandomVelocity : public PActionBase
 {
-    pDomain gen_vel;	// The domain of random velocities.
+    pDomain *gen_vel;	// The domain of random velocities.
 
     COMMON_ITEMS
 };
 
 struct PARandomRotVelocity : public PActionBase
 {
-    pDomain gen_vel;	// The domain of random velocities.
+    pDomain *gen_vel;	// The domain of random velocities.
 
     COMMON_ITEMS
 };
@@ -269,7 +269,7 @@ struct PARestore : public PActionBase
 struct PASink : public PActionBase
 {
     bool kill_inside;	// True to dispose of particles *inside* domain
-    pDomain position;	// Disposal region
+    pDomain *position;	// Disposal region
 
     COMMON_ITEMS
 };
@@ -277,7 +277,7 @@ struct PASink : public PActionBase
 struct PASinkVelocity : public PActionBase
 {
     bool kill_inside;	// True to dispose of particles with vel *inside* domain
-    pDomain velocity;	// Disposal region
+    pDomain *velocity;	// Disposal region
 
     COMMON_ITEMS
 };
@@ -294,7 +294,7 @@ struct PASort : public PActionBase
 
 struct PASource : public PActionBase
 {
-    pDomain position;     // Choose a position in this domain
+    pDomain *position;     // Choose a position in this domain
     float particle_rate;  // Particles to generate per unit time
     pSourceState SrcSt;   // The state needed to create a new particle
 

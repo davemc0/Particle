@@ -310,21 +310,21 @@ namespace PAPI {
     void PAAvoid::Execute(ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend)
     {
         // Can build generic bounce function that works on any domain by using the Within function and a normal.
-        switch(position.Which) {
-            // case PDUnion_e: return PDUnion_V.Within(pos); return;
-            // case PDPoint_e: return PDPoint_V.Within(pos); return;
-            // case PDLine_e: return PDLine_V.Within(pos); return;
-            case PDTriangle_e: Exec(position.PDTriangle_V, group, ibegin, iend); return;
-            case PDRectangle_e: Exec(position.PDRectangle_V, group, ibegin, iend); return;
-            case PDDisc_e: Exec(position.PDDisc_V, group, ibegin, iend); return;
-            case PDPlane_e: Exec(position.PDPlane_V, group, ibegin, iend); return;
-            // case PDBox_e: return PDBox_V.Within(pos); return;
-            // case PDCylinder_e: return PDCylinder_V.Within(pos); return;
-            // case PDCone_e: return PDCone_V.Within(pos); return;
-            case PDSphere_e: Exec(position.PDSphere_V, group, ibegin, iend); return;
-            // case PDBlob_e: return PDBlob_V.Within(pos); return;
-            default:
-                throw PErrNotImplemented(std::string("Avoid not implemented for domain ") + std::string(typeid(position).name()));
+
+        switch (position->Which) {
+        // case PDUnion_e: Exec(*dynamic_cast<const PDUnion_e*>(position), group, ibegin, iend); return;
+        // case PDPoint_e: Exec(*dynamic_cast<const PDPoint_e*>(position), group, ibegin, iend); return;
+        // case PDLine_e: Exec(*dynamic_cast<const PDLine_e*>(position), group, ibegin, iend); return;
+        case PDTriangle_e: Exec(*dynamic_cast<const PDTriangle*>(position), group, ibegin, iend); return;
+        case PDRectangle_e: Exec(*dynamic_cast<const PDRectangle*>(position), group, ibegin, iend); return;
+        case PDDisc_e: Exec(*dynamic_cast<const PDDisc*>(position), group, ibegin, iend); return;
+        case PDPlane_e: Exec(*dynamic_cast<const PDPlane*>(position), group, ibegin, iend); return;
+        // case PDBox_e: Exec(*dynamic_cast<const PDBox_e*>(position), group, ibegin, iend); return;
+        // case PDCylinder_e: Exec(*dynamic_cast<const PDCylinder_e*>(position), group, ibegin, iend); return;
+        // case PDCone_e: Exec(*dynamic_cast<const PDCone_e*>(position), group, ibegin, iend); return;
+        case PDSphere_e: Exec(*dynamic_cast<const PDSphere*>(position), group, ibegin, iend); return;
+        // case PDBlob_e: Exec(*dynamic_cast<const PDBlob_e*>(position), group, ibegin, iend); return;
+        default: throw PErrNotImplemented(std::string("Avoid not implemented for domain ") + std::string(typeid(position).name()));
         }
     }
 
@@ -586,19 +586,19 @@ namespace PAPI {
     void PABounce::Execute(ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend)
     {
         // Can build generic bounce function that works on any domain by using the Within function and a normal.
-        switch(position.Which) {
-            // case PDUnion_e: return PDUnion_V.Within(pos); return;
-            // case PDPoint_e: return PDPoint_V.Within(pos); return;
-            // case PDLine_e: return PDLine_V.Within(pos); return;
-            case PDTriangle_e: Exec(position.PDTriangle_V, group, ibegin, iend); return;
-            case PDRectangle_e: Exec(position.PDRectangle_V, group, ibegin, iend); return;
-            case PDDisc_e: Exec(position.PDDisc_V, group, ibegin, iend); return;
-            case PDPlane_e: Exec(position.PDPlane_V, group, ibegin, iend); return;
-            // case PDBox_e: return PDBox_V.Within(pos); return;
-            // case PDCylinder_e: return PDCylinder_V.Within(pos); return;
-            // case PDCone_e: return PDCone_V.Within(pos); return;
-            case PDSphere_e: Exec(position.PDSphere_V, group, ibegin, iend); return;
-            // case PDBlob_e: return PDBlob_V.Within(pos); return;
+        switch(position->Which) {
+            // case PDUnion_e: Exec(*dynamic_cast<const PDUnion*>(position), group, ibegin, iend); return;
+            // case PDPoint_e: Exec(*dynamic_cast<const PDPoint*>(position), group, ibegin, iend); return;
+            // case PDLine_e: Exec(*dynamic_cast<const PDLine*>(position), group, ibegin, iend); return;
+        case PDTriangle_e: Exec(*dynamic_cast<const PDTriangle*>(position), group, ibegin, iend); return;
+        case PDRectangle_e: Exec(*dynamic_cast<const PDRectangle*>(position), group, ibegin, iend); return;
+        case PDDisc_e: Exec(*dynamic_cast<const PDDisc*>(position), group, ibegin, iend); return;
+        case PDPlane_e: Exec(*dynamic_cast<const PDPlane*>(position), group, ibegin, iend); return;
+            // case PDBox_e: Exec(*dynamic_cast<const PDBox*>(position), group, ibegin, iend); return;
+            // case PDCylinder_e: Exec(*dynamic_cast<const PDCylinder*>(position), group, ibegin, iend); return;
+            // case PDCone_e: Exec(*dynamic_cast<const PDCone*>(position), group, ibegin, iend); return;
+        case PDSphere_e: Exec(*dynamic_cast<const PDSphere*>(position), group, ibegin, iend); return;
+            // case PDBlob_e: Exec(*dynamic_cast<const PDBlob*>(position), group, ibegin, iend); return;
             default:
                 throw PErrNotImplemented(std::string("Bounce not implemented for domain ") + std::string(typeid(position).name()));
         }
@@ -826,8 +826,8 @@ namespace PAPI {
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
             Particle_t &m = (*it);
 
-            if(dom.Within(m.pos)) {
-                pVec accel = acc.Generate();
+            if(dom->Within(m.pos)) {
+                pVec accel = acc->Generate();
 
                 // Step velocity with acceleration
                 m.vel += accel * dt;
@@ -1116,7 +1116,7 @@ namespace PAPI {
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
             Particle_t &m = (*it);
 
-            pVec accel = gen_acc.Generate();
+            pVec accel = gen_acc->Generate();
 
             // dt will affect this by making a higher probability of
             // being near the original velocity after unit time. Smaller
@@ -1131,7 +1131,7 @@ namespace PAPI {
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
             Particle_t &m = (*it);
 
-            pVec disp = gen_disp.Generate();
+            pVec disp = gen_disp->Generate();
 
             // dt will affect this by making a higher probability of
             // being near the original position after unit time. Smaller
@@ -1146,7 +1146,7 @@ namespace PAPI {
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
             Particle_t &m = (*it);
 
-            pVec velocity = gen_vel.Generate();
+            pVec velocity = gen_vel->Generate();
 
             // Shouldn't multiply by dt because velocities are invariant of dt.
             m.vel = velocity;
@@ -1159,7 +1159,7 @@ namespace PAPI {
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
             Particle_t &m = (*it);
 
-            pVec velocity = gen_vel.Generate();
+            pVec velocity = gen_vel->Generate();
 
             // Shouldn't multiply by dt because velocities are invariant of dt.
             m.rvel = velocity;
@@ -1238,7 +1238,7 @@ namespace PAPI {
             Particle_t &m = (*it);
 
             // Remove if inside/outside flag matches object's flag
-            if(!(position.Within(m.pos) ^ kill_inside)) {
+            if(!(position->Within(m.pos) ^ kill_inside)) {
                 it = group.Remove(it);
                 iend = group.end();
             } else
@@ -1256,7 +1256,7 @@ namespace PAPI {
             Particle_t &m = (*it);
 
             // Remove if inside/outside flag matches object's flag
-            if(!(velocity.Within(m.vel) ^ kill_inside)) {
+            if(!(velocity->Within(m.vel) ^ kill_inside)) {
                 it = group.Remove(it);
                 iend = group.end();
             } else
@@ -1300,14 +1300,14 @@ namespace PAPI {
         for(size_t i = 0; i < rate; i++) {
             Particle_t P;
 
-            P.pos = position.Generate();
-            P.posB = SrcSt.vertexB_tracks_ ? P.pos : SrcSt.VertexB_.Generate();
-            P.up = SrcSt.Up_.Generate();
-            P.vel = SrcSt.Vel_.Generate();
-            P.rvel = SrcSt.RotVel_.Generate();
-            P.size = SrcSt.Size_.Generate();
-            P.color = SrcSt.Color_.Generate();
-            P.alpha = SrcSt.Alpha_.Generate().x();
+            P.pos = position->Generate();
+            P.posB = SrcSt.vertexB_tracks_ ? P.pos : SrcSt.VertexB_->Generate();
+            P.up = SrcSt.Up_->Generate();
+            P.vel = SrcSt.Vel_->Generate();
+            P.rvel = SrcSt.RotVel_->Generate();
+            P.size = SrcSt.Size_->Generate();
+            P.color = SrcSt.Color_->Generate();
+            P.alpha = SrcSt.Alpha_->Generate().x();
             P.age = SrcSt.Age_ + pNRandf(SrcSt.AgeSigma_);
             P.mass = SrcSt.Mass_;
             P.data = SrcSt.Data_;

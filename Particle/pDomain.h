@@ -20,6 +20,66 @@ namespace PAPI
     ///< How small the dot product must be to declare that a point is in a plane for Within().
 #define P_PLANAR_EPSILON 1e-3f
 
+/// Enums for the different types of domains that can be stored in a pDomain
+enum pDomainType_E {
+    PDUnion_e,
+    PDPoint_e,
+    PDLine_e,
+    PDTriangle_e,
+    PDRectangle_e,
+    PDDisc_e,
+    PDPlane_e,
+    PDBox_e,
+    PDCylinder_e,
+    PDCone_e,
+    PDSphere_e,
+    PDBlob_e,
+    PDVarying_e = P_VARYING_INT // Used to tell the action list emitter that the whole domain is varying
+};
+
+/// Store the raw input parameters of one of the other domains.
+///
+/// This is necessary if any parameters are VARYING because it means that construction must happen in the kernel,
+/// not at action list creation time. Hence, the input parameters must be preserved.
+struct PDRaw{
+    pVec v0, v1, v2;
+    float f0, f1;
+};
+
+/// A representation of a region of space.
+///
+/// A Domain is a representation of a region of space. For example, the Source action uses a domain to describe the volume in which a particle
+/// will be created. A random point within the domain is chosen as the initial position of the particle. The Avoid, Sink and Bounce actions,
+/// for example, use domains to describe a volume in space for particles to steer around, die when they enter, or bounce off, respectively.
+///
+/// Domains can be used to describe velocities. Picture the velocity vector as having its tail at the origin and its tip being in the domain.
+/// Domains can be used to describe colors in any three-valued color space. They can be used to describe three-valued sizes, such as Length, Width, Height.
+///
+/// Several types of domains can be specified, such as points, lines, planes, discs, spheres, gaussian blobs, etc. Each subclass of the pDomain
+/// struct represents a different kind of domain.
+///
+/// All domains support two basic operations. The first is Generate, which returns a random point in the domain.
+///
+/// The second basic operation is Within, which tells whether a given point is within the domain.
+///
+/// The application programmer never calls the Generate or Within functions. The application will use the pDomain struct and its derivatives solely
+/// as a way to communicate the domain to the API. The API's action commands will then perform operations on the domain, such as generating particles within it.
+class pDomain {
+public:
+#define P_N_FLOATS_IN_DOMAIN 30
+    pDomainType_E Which;
+    bool Varying;
+    PDRaw PDRaw_V; // XXX Double storage hack!!!
+
+    virtual bool Within(const pVec&) const = 0; ///< Returns true if the given point is within the domain.
+    virtual pVec Generate() const = 0;          ///< Returns a random point in the domain.
+    virtual float Size() const = 0;             ///< Returns the size of the domain (length, area, or volume).
+
+    virtual pDomain* copy() const = 0; // Returns a pointer to a heap-allocated copy of the derived class
+
+    virtual ~pDomain() {}
+};
+
     namespace {
         ///< These are for internal use for determining that the variable is meant to vary from one call to the next.
         PINLINE bool Varies(float v)
@@ -68,10 +128,58 @@ namespace PAPI
     /// Thus, to properly distribute probability of Generate() choosing each domain, it is wise to only combine domains that have the same
     /// dimensionality. Note that thin shelled cylinders, cones, and spheres, where InnerRadius==OuterRadius, are considered 2D, not 3D.
     /// Thin shelled discs (circles) are considered 1D. Points are 0D.
-    struct PDUnion
-    {
+    class PDUnion : public pDomain {
         float TotalSize;
+
+    
+    /// Use this one to create an empty PDUnion then call .insert() to add each item to it.
+        PINLINE  PDUnion()
+        {
+            Which = PDUnion_e;
+            Varying = false;
+            TotalSize = 0.0f;
+        }
+
 #if 0
+    PINLINE  PDUnion_(const pDomain &A, const pDomain &B)
+    {
+        TotalSize = A.Size() + B.Size();
+        Doms.push_back(A);
+        Doms.push_back(B);
+    }
+
+    PINLINE  PDUnion_(const pDomain &A, const pDomain &B, const pDomain &C)
+    {
+        TotalSize = A.Size() + B.Size() + C.Size();
+        Doms.push_back(A);
+        Doms.push_back(B);
+        Doms.push_back(C);
+    }
+
+    /// Makes a copy of all the subdomains and point to the copies.
+    ///
+    /// Note that the Generate() function gets a performance boost if you supply DomList with the largest domains first.
+    PINLINE  PDUnion_(const std::vector<pDomain> &DomList)
+    {
+        TotalSize = 0.0f;
+        for(std::vector<pDomain>::const_iterator it = DomList.begin(); it != DomList.end(); it++) {
+            Doms.push_back(*it);
+            TotalSize += it->Size();
+        }
+    }
+
+    // Makes a copy of all the subdomains and point to the copies.
+    PINLINE  PDUnion_(const PDUnion &P)
+    {
+        TotalSize = 0.0f;
+        for(std::vector<pDomain>::const_iterator it = P.Doms.begin(); it != P.Doms.end(); it++) {
+            Doms.push_back(*it);
+            TotalSize += it->Size();
+        }
+    }
+#endif
+
+    #if 0
         std::vector<pDomain> Doms;
 
         /// Insert another domain into this PDUnion.
@@ -110,14 +218,29 @@ namespace PAPI
         {
             return TotalSize;
         }
+
+        pDomain* copy() const
+        {
+            return new PDUnion(*this);
+        }
     };
 
     /// A single point.
     ///
     /// Generate always returns this point. Within returns true if the point is exactly equal.
-    struct PDPoint
-    {
+    struct PDPoint : public pDomain {
         pVec p;
+
+        PINLINE  PDPoint(const pVec& p0)
+        {
+            Which = PDPoint_e;
+            Varying = Varies(p0);
+            if (Varying) {
+                PDRaw_V.v0 = p0;
+            } else {
+                PDPoint_Cons(p0);
+            }
+        }
 
         PINLINE void PDPoint_Cons(const pVec &p0)
         {
@@ -138,6 +261,11 @@ namespace PAPI
         {
             return 1.0f;
         }
+
+        pDomain* copy() const
+        {
+            return new PDPoint(*this);
+        }
     };
 
     /// A line segment.
@@ -145,10 +273,22 @@ namespace PAPI
     /// e0 and e1 are the endpoints of the segment.
     ///
     /// Generate returns a random point on this segment. Within returns true for points within epsilon of the line segment.
-    struct PDLine
-    {
+    struct PDLine : public pDomain {
         pVec p0, p1, vec, vecNrm;
         float len;
+            
+        PINLINE  PDLine(const pVec& e0, const pVec& e1)
+        {
+            Which = PDLine_e;
+            Varying = Varies(e0) || Varies(e1);
+            if (Varying) {
+                PDRaw_V.v0 = e0;
+                PDRaw_V.v1 = e1;
+            } else {
+               PDLine_Cons(e0, e1);
+            }
+           
+        }
 
         PINLINE void PDLine_Cons(const pVec &e0, const pVec &e1)
         {
@@ -177,6 +317,11 @@ namespace PAPI
         {
             return len;
         }
+
+        pDomain* copy() const
+        {
+            return new PDLine(*this);
+        }
     };
 
     /// A Triangle.
@@ -186,10 +331,23 @@ namespace PAPI
     ///
     /// Generate returns a random point in the triangle. Within returns true for points within epsilon of the triangle. Currently it is not
     /// possible to sink particles that enter/exit a polygonal model. Suggestions?
-    struct PDTriangle
+    struct PDTriangle : public pDomain
     {
         pVec p, u, v, uNrm, vNrm, nrm, s1, s2;
         float uLen, vLen, D, area;
+
+        PINLINE  PDTriangle(const pVec& p0, const pVec& p1, const pVec& p2)
+        {
+            Which = PDTriangle_e;
+            Varying = Varies(p0) || Varies(p1) || Varies(p2);
+            if (Varying) {
+                PDRaw_V.v0 = p0;
+                PDRaw_V.v1 = p1;
+                PDRaw_V.v2 = p2;
+            } else {
+                PDTriangle_Cons(p0, p1, p2);
+            }
+        }
 
         PINLINE void PDTriangle_Cons(const pVec &p0, const pVec &p1, const pVec &p2)
         {
@@ -252,6 +410,11 @@ namespace PAPI
         {
             return area;
         }
+
+        pDomain* copy() const
+        {
+            return  new PDTriangle(*this);
+        }
     };
 
     /// Rhombus-shaped planar region.
@@ -259,10 +422,23 @@ namespace PAPI
     /// p0 is a point on the plane. u0 and v0 are (non-parallel) basis vectors in the plane. They don't need to be normal or orthogonal.
     ///
     /// Generate returns a random point in the diamond-shaped patch whose corners are o, o+u, o+u+v, and o+v. Within returns true for points within epsilon of the patch.
-    struct PDRectangle
+    struct PDRectangle : public pDomain
     {
         pVec p, u, v, uNrm, vNrm, nrm, s1, s2;
         float uLen, vLen, D, area;
+
+        PINLINE PDRectangle(const pVec& p0, const pVec& u0, const pVec& v0)
+        {
+            Which = PDRectangle_e;
+            Varying = Varies(p0) || Varies(u0) || Varies(v0);
+            if (Varying) {
+                PDRaw_V.v0 = p0;
+                PDRaw_V.v1 = u0;
+                PDRaw_V.v2 = v0;
+            } else {
+                PDRectangle_Cons(p0, u0, v0);
+            }
+        }
 
         PINLINE void PDRectangle_Cons(const pVec &p0, const pVec &u0, const pVec &v0)
         {
@@ -314,6 +490,11 @@ namespace PAPI
         {
             return area;
         }
+
+        pDomain* copy() const
+        {
+            return new PDRectangle(*this);
+        }
     };
 
     /// Arbitrarily-oriented disc
@@ -322,10 +503,26 @@ namespace PAPI
     /// the domain is a flat washer, rather than a disc. The normal will get normalized, so it need not already be unit length.
     ///
     /// Generate returns a point inside the disc shell. Within returns true for points within epsilon of the disc.
-    struct PDDisc
+    struct PDDisc : public pDomain
     {
         pVec p, nrm, u, v;
         float radIn, radOut, radInSqr, radOutSqr, dif, D, area;
+
+        PINLINE PDDisc(const pVec& Center, const pVec Normal, const float OuterRadius, const float InnerRadius = 0.0f)
+        {
+            if (InnerRadius < 0 || OuterRadius < 0) throw PErrInvalidValue("Can't have negative radius.");
+
+            Which = PDDisc_e;
+            Varying = Varies(Center) || Varies(Normal) || Varies(OuterRadius) || Varies(InnerRadius);
+            if (Varying) {
+                PDRaw_V.v0 = Center;
+                PDRaw_V.v1 = Normal;
+                PDRaw_V.f0 = OuterRadius;
+                PDRaw_V.f1 = InnerRadius;
+            } else {
+                PDDisc_Cons(Center, Normal, OuterRadius, InnerRadius);
+            }
+        }
 
         PINLINE void PDDisc_Cons(const pVec &Center, const pVec Normal, const float OuterRadius, const float InnerRadius = 0.0f)
         {
@@ -390,6 +587,11 @@ namespace PAPI
         {
             return 1.0f; // A plane is infinite, so what sensible thing can I return?
         }
+
+        pDomain* copy() const
+        {
+            return new PDDisc(*this);
+        }
     };
 
     /// Arbitrarily-oriented plane.
@@ -398,10 +600,22 @@ namespace PAPI
     /// n = [a,b,c] and you can compute a suitable point p0 as p0 = -n*d. The normal will get normalized, so it need not already be unit length.
     ///
     /// Generate returns the point p0. Within returns true if the point is in the positive half-space of the plane (in the plane or on the side that Normal points to).
-    struct PDPlane
+    struct PDPlane : public pDomain
     {
         pVec p, nrm;
         float D;
+
+        PINLINE PDPlane(const pVec& p0, const pVec& Normal)
+        {
+            Which = PDPlane_e;
+            Varying = Varies(p0) || Varies(Normal);
+            if (Varying) {
+                PDRaw_V.v0 = p0;
+                PDRaw_V.v1 = Normal;
+            } else {
+                PDPlane_Cons(p0, Normal);
+            }
+        }
 
         PINLINE void PDPlane_Cons(const pVec &p0, const pVec &Normal)
         {
@@ -428,6 +642,11 @@ namespace PAPI
         {
             return 1.0f; // A plane is infinite, so what sensible thing can I return?
         }
+
+        pDomain* copy() const
+        {
+            return new PDPlane(*this);
+        }
     };
 
     /// Axis-aligned box
@@ -438,11 +657,23 @@ namespace PAPI
     ///
     /// It is only possible to bounce particles off the outside of the box, not the inside. Likewise, particles can only Avoid
     /// the box from the outside. To use the Avoid action inside a box, define the box as six planes.
-    struct PDBox
+    struct PDBox : public pDomain
     {
         // p0 is the min corner. p1 is the max corner.
         pVec p0, p1, dif;
         float vol;
+
+        PINLINE PDBox(const pVec& e0, const pVec& e1)
+        {
+            Which = PDBox_e;
+            Varying = Varies(e0) || Varies(e1);
+            if (Varying) {
+                PDRaw_V.v0 = e0;
+                PDRaw_V.v1 = e1;
+            } else {
+                PDBox_Cons(e0, e1);
+            }
+        }
 
         PINLINE void PDBox_Cons(const pVec &e0, const pVec &e1)
         {
@@ -473,6 +704,11 @@ namespace PAPI
         {
             return vol;
         }
+
+        pDomain* copy() const
+        {
+            return new PDBox(*this);
+        }
     };
 
     /// Cylinder
@@ -481,11 +717,27 @@ namespace PAPI
     /// radius for a cylindrical shell. InnerRadius = 0 for a solid cylinder with no empty space in the middle.
     ///
     /// Generate returns a random point in the cylindrical shell. Within returns true if the point is within the cylindrical shell.
-    struct PDCylinder
+    struct PDCylinder : public pDomain
     {
         pVec apex, axis, u, v; // Apex is one end. Axis is vector from one end to the other.
         float radIn, radOut, radInSqr, radOutSqr, radDif, axisLenInvSqr, vol;
         bool ThinShell;
+
+        PINLINE PDCylinder(const pVec& e0, const pVec& e1, const float OuterRadius, const float InnerRadius = 0.0f)
+        {
+            if (InnerRadius < 0 || OuterRadius < 0) throw PErrInvalidValue("Can't have negative radius.");
+
+            Which = PDCylinder_e;
+            Varying = Varies(e0) || Varies(e1) || Varies(OuterRadius) || Varies(InnerRadius);
+            if (Varying) {
+                PDRaw_V.v0 = e0;
+                PDRaw_V.v1 = e1;
+                PDRaw_V.f0 = OuterRadius;
+                PDRaw_V.f1 = InnerRadius;
+            } else {
+                PDCylinder_Cons(e0, e1, OuterRadius, InnerRadius);
+            }
+        }
 
         PINLINE void PDCylinder_Cons(const pVec &e0, const pVec &e1, const float OuterRadius, const float InnerRadius = 0.0f)
         {
@@ -574,6 +826,10 @@ namespace PAPI
         {
             return vol;
         }
+
+        pDomain* copy() const
+        { return new PDCylinder(*this);
+        }
     };
 
     ///  Cone
@@ -585,11 +841,27 @@ namespace PAPI
     /// no empty space in the middle.
     ///
     /// Generate returns a random point in the conical shell. Within returns true if the point is within the conical shell.
-    struct PDCone
+    struct PDCone : public pDomain
     {
         pVec apex, axis, u, v; // Apex is one end. Axis is vector from one end to the other.
         float radIn, radOut, radInSqr, radOutSqr, radDif, axisLenInvSqr, vol;
         bool ThinShell;
+
+        PINLINE PDCone(const pVec& e0, const pVec& e1, const float OuterRadius, const float InnerRadius = 0.0f)
+        {
+            if (InnerRadius < 0 || OuterRadius < 0) throw PErrInvalidValue("Can't have negative radius.");
+
+            Which = PDCone_e;
+            Varying = Varies(e0) || Varies(e1) || Varies(OuterRadius) || Varies(InnerRadius);
+            if (Varying) {
+                PDRaw_V.v0 = e0;
+                PDRaw_V.v1 = e1;
+                PDRaw_V.f0 = OuterRadius;
+                PDRaw_V.f1 = InnerRadius;
+            } else {
+                PDCone_Cons(e0, e1, OuterRadius, InnerRadius);
+            }
+        }
 
         PINLINE void PDCone_Cons(const pVec &e0, const pVec &e1, const float OuterRadius, const float InnerRadius = 0.0f)
         {
@@ -686,6 +958,11 @@ namespace PAPI
         {
             return vol;
         }
+
+        pDomain* copy() const
+        {
+            return new PDCone(*this);
+        }
     };
 
     /// Sphere
@@ -694,11 +971,26 @@ namespace PAPI
     ///
     /// Generate returns a random point in the thick shell at a distance between OuterRadius and InnerRadius from point Center. If InnerRadius
     /// is 0, then it is the whole sphere. Within returns true if the point lies within the thick shell at a distance between InnerRadius to OuterRadius from point Center.
-    struct PDSphere
+    struct PDSphere : public pDomain
     {
         pVec ctr;
         float radIn, radOut, radInSqr, radOutSqr, radDif, vol;
         bool ThinShell;
+
+        PINLINE PDSphere(const pVec& Center, const float OuterRadius, const float InnerRadius = 0.0f)
+        {
+            if (InnerRadius < 0 || OuterRadius < 0) throw PErrInvalidValue("Can't have negative radius.");
+
+            Which = PDSphere_e;
+            Varying = Varies(Center) || Varies(OuterRadius) || Varies(InnerRadius);
+            if (Varying) {
+                PDRaw_V.v0 = Center;
+                PDRaw_V.f0 = OuterRadius;
+                PDRaw_V.f1 = InnerRadius;
+            } else {
+                PDSphere_Cons(Center, OuterRadius, InnerRadius);
+            }
+        }
 
         PINLINE void PDSphere_Cons(const pVec &Center, const float OuterRadius, const float InnerRadius = 0.0f)
         {
@@ -754,6 +1046,11 @@ namespace PAPI
         {
             return vol;
         }
+
+        pDomain* copy() const
+        {
+            return new PDSphere(*this);
+        }
     };
 
     /// Gaussian blob
@@ -762,10 +1059,22 @@ namespace PAPI
     /// The blob domain allows for some very natural-looking effects because there is no sharp, artificial-looking boundary at the edge of the domain.
     ///
     /// Generate returns a point with normal probability density. Within has a probability of returning true equal to the probability density at the specified point.
-    struct PDBlob
+    struct PDBlob : public pDomain
     {
         pVec ctr;
         float stdev, Scale1, Scale2;
+
+        PINLINE PDBlob(const pVec& Center, const float StandardDev)
+        {
+            Which = PDBlob_e;
+            Varying = Varies(Center) || Varies(StandardDev);
+            if (Varying) {
+                PDRaw_V.v0 = Center;
+                PDRaw_V.f0 = StandardDev;
+            } else {
+                PDBlob_Cons(Center, StandardDev);
+            }
+        }
 
         PINLINE void PDBlob_Cons(const pVec &Center, const float StandardDev)
         {
@@ -792,133 +1101,10 @@ namespace PAPI
         {
             return 1.0f;
         }
-    };
 
-    /// Store the raw input parameters of one of the other domains.
-    ///
-    /// This is necessary if any parameters are VARYING because it means that construction must happen in the kernel,
-    /// not at action list creation time. Hence, the input parameters must be preserved.
-    struct PDRaw
-    {
-        pVec v0, v1, v2;
-        float f0, f1;
-    };
-
-    /// Enums for the different types of domains that can be stored in a pDomain
-    enum pDomainType_E
-    {
-        PDUnion_e,
-        PDPoint_e,
-        PDLine_e,
-        PDTriangle_e,
-        PDRectangle_e,
-        PDDisc_e,
-        PDPlane_e,
-        PDBox_e,
-        PDCylinder_e,
-        PDCone_e,
-        PDSphere_e,
-        PDBlob_e,
-        PDVarying_e = P_VARYING_INT // Used to tell the action list emitter that the whole domain is varying
-    };
-
-    /// A representation of a region of space.
-    ///
-    /// A Domain is a representation of a region of space. For example, the Source action uses a domain to describe the volume in which a particle
-    /// will be created. A random point within the domain is chosen as the initial position of the particle. The Avoid, Sink and Bounce actions,
-    /// for example, use domains to describe a volume in space for particles to steer around, die when they enter, or bounce off, respectively.
-    ///
-    /// Domains can be used to describe velocities. Picture the velocity vector as having its tail at the origin and its tip being in the domain.
-    /// Domains can be used to describe colors in any three-valued color space. They can be used to describe three-valued sizes, such as Length, Width, Height.
-    ///
-    /// Several types of domains can be specified, such as points, lines, planes, discs, spheres, gaussian blobs, etc. Each subclass of the pDomain
-    /// struct represents a different kind of domain.
-    ///
-    /// All domains support two basic operations. The first is Generate, which returns a random point in the domain.
-    ///
-    /// The second basic operation is Within, which tells whether a given point is within the domain.
-    ///
-    /// The application programmer never calls the Generate or Within functions. The application will use the pDomain struct and its derivatives solely
-    /// as a way to communicate the domain to the API. The API's action commands will then perform operations on the domain, such as generating particles within it.
-    struct pDomain
-    {
-#define P_N_FLOATS_IN_DOMAIN 30
-        pDomainType_E Which;
-        bool Varying;
-
-        union
+        pDomain* copy() const
         {
-            unsigned int PDData_V[P_N_FLOATS_IN_DOMAIN];
-            PDRaw        PDRaw_V;
-            PDUnion      PDUnion_V;
-            PDPoint      PDPoint_V;
-            PDLine       PDLine_V;
-            PDTriangle   PDTriangle_V;
-            PDRectangle  PDRectangle_V;
-            PDDisc       PDDisc_V;
-            PDPlane      PDPlane_V;
-            PDBox        PDBox_V;
-            PDCylinder   PDCylinder_V;
-            PDCone       PDCone_V;
-            PDSphere     PDSphere_V;
-            PDBlob       PDBlob_V;
-        };
-
-        PINLINE bool Within(const pVec &pos) const
-        {
-            switch(Which) {
-            case PDUnion_e: return PDUnion_V.Within(pos);
-            case PDPoint_e: return PDPoint_V.Within(pos);
-            case PDLine_e: return PDLine_V.Within(pos);
-            case PDTriangle_e: return PDTriangle_V.Within(pos);
-            case PDRectangle_e: return PDRectangle_V.Within(pos);
-            case PDDisc_e: return PDDisc_V.Within(pos);
-            case PDPlane_e: return PDPlane_V.Within(pos);
-            case PDBox_e: return PDBox_V.Within(pos);
-            case PDCylinder_e: return PDCylinder_V.Within(pos);
-            case PDCone_e: return PDCone_V.Within(pos);
-            case PDSphere_e: return PDSphere_V.Within(pos);
-            case PDBlob_e: return PDBlob_V.Within(pos);
-            default: return false;
-            };
-        }
-
-        PINLINE pVec Generate() const
-        {
-            switch(Which) {
-            case PDUnion_e: return PDUnion_V.Generate();
-            case PDPoint_e: return PDPoint_V.Generate();
-            case PDLine_e: return PDLine_V.Generate();
-            case PDTriangle_e: return PDTriangle_V.Generate();
-            case PDRectangle_e: return PDRectangle_V.Generate();
-            case PDDisc_e: return PDDisc_V.Generate();
-            case PDPlane_e: return PDPlane_V.Generate();
-            case PDBox_e: return PDBox_V.Generate();
-            case PDCylinder_e: return PDCylinder_V.Generate();
-            case PDCone_e: return PDCone_V.Generate();
-            case PDSphere_e: return PDSphere_V.Generate();
-            case PDBlob_e: return PDBlob_V.Generate();
-            default: return pVec(0,0,0);
-            };
-        }
-
-        PINLINE float Size() const
-        {
-            switch(Which) {
-            case PDUnion_e: return PDUnion_V.Size();
-            case PDPoint_e: return PDPoint_V.Size();
-            case PDLine_e: return PDLine_V.Size();
-            case PDTriangle_e: return PDTriangle_V.Size();
-            case PDRectangle_e: return PDRectangle_V.Size();
-            case PDDisc_e: return PDDisc_V.Size();
-            case PDPlane_e: return PDPlane_V.Size();
-            case PDBox_e: return PDBox_V.Size();
-            case PDCylinder_e: return PDCylinder_V.Size();
-            case PDCone_e: return PDCone_V.Size();
-            case PDSphere_e: return PDSphere_V.Size();
-            case PDBlob_e: return PDBlob_V.Size();
-            default: return 0;
-            };
+            return new PDBlob(*this);
         }
     };
 
@@ -926,238 +1112,35 @@ namespace PAPI
     // They return a pDomain struct.
 
     /// A fake domain used to indicate to the action list emitter that the entire domain is varying.
-    PINLINE pDomain PDVarying_()
-    {
-        pDomain D;
-        D.Which = PDVarying_e;
-        D.Varying = true;
-        D.PDRaw_V.v0 = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
-        D.PDRaw_V.v1 = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
-        D.PDRaw_V.v2 = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
-        D.PDRaw_V.f0 = P_VARYING_FLOAT;
-        D.PDRaw_V.f1 = P_VARYING_FLOAT;
-        return D;
-    }
-
-    /// Use this one to create an empty PDUnion then call .insert() to add each item to it.
-    PINLINE pDomain PDUnion_()
-    {
-        pDomain D;
-        D.Which = PDUnion_e;
-        D.Varying = false;
-        D.PDUnion_V.TotalSize = 0.0f;
-        return D;
-    }
-
-#if 0
-    PINLINE pDomain PDUnion_(const pDomain &A, const pDomain &B)
-    {
-        TotalSize = A.Size() + B.Size();
-        Doms.push_back(A);
-        Doms.push_back(B);
-    }
-
-    PINLINE pDomain PDUnion_(const pDomain &A, const pDomain &B, const pDomain &C)
-    {
-        TotalSize = A.Size() + B.Size() + C.Size();
-        Doms.push_back(A);
-        Doms.push_back(B);
-        Doms.push_back(C);
-    }
-
-    /// Makes a copy of all the subdomains and point to the copies.
-    ///
-    /// Note that the Generate() function gets a performance boost if you supply DomList with the largest domains first.
-    PINLINE pDomain PDUnion_(const std::vector<pDomain> &DomList)
-    {
-        TotalSize = 0.0f;
-        for(std::vector<pDomain>::const_iterator it = DomList.begin(); it != DomList.end(); it++) {
-            Doms.push_back(*it);
-            TotalSize += it->Size();
+    struct PDVarying : public pDomain {
+        PINLINE PDVarying()
+        {
+            Which = PDVarying_e;
+            Varying = true;
+            PDRaw_V.v0 = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
+            PDRaw_V.v1 = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
+            PDRaw_V.v2 = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
+            PDRaw_V.f0 = P_VARYING_FLOAT;
+            PDRaw_V.f1 = P_VARYING_FLOAT;
         }
-    }
 
-    // Makes a copy of all the subdomains and point to the copies.
-    PINLINE pDomain PDUnion_(const PDUnion &P)
-    {
-        TotalSize = 0.0f;
-        for(std::vector<pDomain>::const_iterator it = P.Doms.begin(); it != P.Doms.end(); it++) {
-            Doms.push_back(*it);
-            TotalSize += it->Size();
+        PINLINE bool Within(const pVec& pos) const { return false;
         }
-    }
-#endif
 
-    PINLINE pDomain PDPoint_(const pVec &p0)
-    {
-        pDomain D;
-        D.Which = PDPoint_e;
-        D.Varying = Varies(p0);
-        if(D.Varying) {
-            D.PDRaw_V.v0 = p0;
-        } else {
-            D.PDPoint_V.PDPoint_Cons(p0);
+        PINLINE pVec Generate() const 
+        { return pVec(0);
         }
-        return D;
-    }
 
-    PINLINE pDomain PDLine_(const pVec &e0, const pVec &e1)
-    {
-        pDomain D;
-        D.Which = PDLine_e;
-        D.Varying = Varies(e0) || Varies(e1);
-        if(D.Varying) {
-            D.PDRaw_V.v0 = e0;
-            D.PDRaw_V.v1 = e1;
-        } else {
-            D.PDLine_V.PDLine_Cons(e0, e1);
+        PINLINE float Size() const 
+        {
+            return 1.0f;
         }
-        return D;
-    }
 
-    PINLINE pDomain PDTriangle_(const pVec &p0, const pVec &p1, const pVec &p2)
-    {
-        pDomain D;
-        D.Which = PDTriangle_e;
-        D.Varying = Varies(p0) || Varies(p1) || Varies(p2);
-        if(D.Varying) {
-            D.PDRaw_V.v0 = p0;
-            D.PDRaw_V.v1 = p1;
-            D.PDRaw_V.v2 = p2;
-        } else {
-            D.PDTriangle_V.PDTriangle_Cons(p0, p1, p2);
+        pDomain* copy() const
+        {
+            return new PDVarying(*this);
         }
-        return D;
-    }
-
-    PINLINE pDomain PDRectangle_(const pVec &p0, const pVec &u0, const pVec &v0)
-    {
-        pDomain D;
-        D.Which = PDRectangle_e;
-        D.Varying = Varies(p0) || Varies(u0) || Varies(v0);
-        if(D.Varying) {
-            D.PDRaw_V.v0 = p0;
-            D.PDRaw_V.v1 = u0;
-            D.PDRaw_V.v2 = v0;
-        } else {
-            D.PDRectangle_V.PDRectangle_Cons(p0, u0, v0);
-        }
-        return D;
-    }
-
-    PINLINE pDomain PDDisc_(const pVec &Center, const pVec Normal, const float OuterRadius, const float InnerRadius = 0.0f)
-    {
-
-        if(InnerRadius < 0 || OuterRadius < 0) throw PErrInvalidValue("Can't have negative radius.");
-
-        pDomain D;
-        D.Which = PDDisc_e;
-        D.Varying = Varies(Center) || Varies(Normal) || Varies(OuterRadius) || Varies(InnerRadius);
-        if(D.Varying) {
-            D.PDRaw_V.v0 = Center;
-            D.PDRaw_V.v1 = Normal;
-            D.PDRaw_V.f0 = OuterRadius;
-            D.PDRaw_V.f1 = InnerRadius;
-        } else {
-            D.PDDisc_V.PDDisc_Cons(Center, Normal, OuterRadius, InnerRadius);
-        }
-        return D;
-    }
-
-    PINLINE pDomain PDPlane_(const pVec &p0, const pVec &Normal)
-    {
-        pDomain D;
-        D.Which = PDPlane_e;
-        D.Varying = Varies(p0) || Varies(Normal);
-        if(D.Varying) {
-            D.PDRaw_V.v0 = p0;
-            D.PDRaw_V.v1 = Normal;
-        } else {
-            D.PDPlane_V.PDPlane_Cons(p0, Normal);
-        }
-        return D;
-    }
-
-    PINLINE pDomain PDBox_(const pVec &e0, const pVec &e1)
-    {
-        pDomain D;
-        D.Which = PDBox_e;
-        D.Varying = Varies(e0) || Varies(e1);
-        if(D.Varying) {
-            D.PDRaw_V.v0 = e0;
-            D.PDRaw_V.v1 = e1;
-        } else {
-            D.PDBox_V.PDBox_Cons(e0, e1);
-        }
-        return D;
-    }
-
-    PINLINE pDomain PDCylinder_(const pVec &e0, const pVec &e1, const float OuterRadius, const float InnerRadius = 0.0f)
-    {
-        if(InnerRadius < 0 || OuterRadius < 0) throw PErrInvalidValue("Can't have negative radius.");
-
-        pDomain D;
-        D.Which = PDCylinder_e;
-        D.Varying = Varies(e0) || Varies(e1) || Varies(OuterRadius) || Varies(InnerRadius);
-        if(D.Varying) {
-            D.PDRaw_V.v0 = e0;
-            D.PDRaw_V.v1 = e1;
-            D.PDRaw_V.f0 = OuterRadius;
-            D.PDRaw_V.f1 = InnerRadius;
-        } else {
-            D.PDCylinder_V.PDCylinder_Cons(e0, e1, OuterRadius, InnerRadius);
-        }
-        return D;
-    }
-
-    PINLINE pDomain PDCone_(const pVec &e0, const pVec &e1, const float OuterRadius, const float InnerRadius = 0.0f)
-    {
-        if(InnerRadius < 0 || OuterRadius < 0) throw PErrInvalidValue("Can't have negative radius.");
-
-        pDomain D;
-        D.Which = PDCone_e;
-        D.Varying = Varies(e0) || Varies(e1) || Varies(OuterRadius) || Varies(InnerRadius);
-        if(D.Varying) {
-            D.PDRaw_V.v0 = e0;
-            D.PDRaw_V.v1 = e1;
-            D.PDRaw_V.f0 = OuterRadius;
-            D.PDRaw_V.f1 = InnerRadius;
-        } else {
-            D.PDCone_V.PDCone_Cons(e0, e1, OuterRadius, InnerRadius);
-        }
-        return D;
-    }
-
-    PINLINE pDomain PDSphere_(const pVec &Center, const float OuterRadius, const float InnerRadius = 0.0f)
-    {
-        if(InnerRadius < 0 || OuterRadius < 0) throw PErrInvalidValue("Can't have negative radius.");
-
-        pDomain D;
-        D.Which = PDSphere_e;
-        D.Varying = Varies(Center) || Varies(OuterRadius) || Varies(InnerRadius);
-        if(D.Varying) {
-            D.PDRaw_V.v0 = Center;
-            D.PDRaw_V.f0 = OuterRadius;
-            D.PDRaw_V.f1 = InnerRadius;
-        } else {
-            D.PDSphere_V.PDSphere_Cons(Center, OuterRadius, InnerRadius);
-        }
-        return D;
-    }
-
-    PINLINE pDomain PDBlob_(const pVec &Center, const float StandardDev)
-    {
-        pDomain D;
-        D.Which = PDBlob_e;
-        D.Varying = Varies(Center) || Varies(StandardDev);
-        if(D.Varying) {
-            D.PDRaw_V.v0 = Center;
-            D.PDRaw_V.f0 = StandardDev;
-        } else {
-            D.PDBlob_V.PDBlob_Cons(Center, StandardDev);
-        }
-        return D;
-    }
+    };
 
 };
 

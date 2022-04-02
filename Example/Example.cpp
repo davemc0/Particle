@@ -18,20 +18,20 @@ void ComputeParticles()
 {
     // Set up the state.
     pSourceState S;
-    S.Velocity(PDCylinder_(pVec(0.0f, -0.01f, 0.25f), pVec(0.0f, -0.01f, 0.27f), 0.021f, 0.019f));
-    S.Color(PDLine_(pVec(0.8f, 0.9f, 1.0f), pVec(1.0f, 1.0f, 1.0f)));
+    S.Velocity(PDCylinder(pVec(0.0f, -0.01f, 0.25f), pVec(0.0f, -0.01f, 0.27f), 0.021f, 0.019f));
+    S.Color(PDLine(pVec(0.8f, 0.9f, 1.0f), pVec(1.0f, 1.0f, 1.0f)));
 
     // Generate particles along a very small line in the nozzle.
-    P.Source(100, PDLine_(pVec(0, 0, 0), pVec(0, 0, 0.4f)), S);
+    P.Source(100, PDLine(pVec(0, 0, 0), pVec(0, 0, 0.4f)), S);
 
     // Gravity.
     P.Gravity(pVec(0, 0, -0.01f));
 
     // Bounce particles off a disc of radius 5.
-    P.Bounce(-0.05f, 0.35f, 0, PDDisc_(pVec(0, 0, 0), pVec(0, 0, 1), 5));
+    P.Bounce(-0.05f, 0.35f, 0, PDDisc(pVec(0, 0, 0), pVec(0, 0, 1), 5));
 
     // Kill particles below Z=-3.
-    P.Sink(false, PDPlane_(pVec(0,0,-3), pVec(0,0,1)));
+    P.Sink(false, PDPlane(pVec(0,0,-3), pVec(0,0,1)));
 
     // Move particles to their new positions.
     P.Move(true, false);

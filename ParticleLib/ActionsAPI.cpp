@@ -15,7 +15,7 @@ void PContextActions_t::Avoid(const float magnitude, const float epsilon, const 
 {
     PAAvoid *A = new PAAvoid;
 
-    A->position = dom;
+    A->position = dom.copy();
     A->magnitude = magnitude;
     A->epsilon = epsilon;
     A->look_ahead = look_ahead;
@@ -30,7 +30,7 @@ void PContextActions_t::Bounce(const float friction, const float resilience, con
 {
     PABounce *A = new PABounce;
 
-    A->position = dom;
+    A->position = dom.copy();
     A->oneMinusFriction = 1.0f - friction;
     A->resilience = resilience;
     A->cutoffSqr = fsqr(cutoff);
@@ -38,8 +38,8 @@ void PContextActions_t::Bounce(const float friction, const float resilience, con
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
-    if(dom.Which == PDSphere_e) {
-        PASSERT(dom.PDSphere_V.radIn == 0.0f, "Bouncing doesn't work on thick shells. radIn must be 0.");
+    if (dom.Which == PDSphere_e) {
+        PASSERT(dynamic_cast<const PDSphere*>(&dom)->radIn == 0.0f, "Bouncing doesn't work on thick shells. radIn must be 0.");
     }
 
     PS->SendAction(A);
@@ -165,8 +165,8 @@ void PContextActions_t::Jet(const pDomain &dom, const pDomain &accel)
 {
     PAJet *A = new PAJet;
 
-    A->dom = dom;
-    A->acc = accel;
+    A->dom = dom.copy();
+    A->acc = accel.copy();
 
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
@@ -265,7 +265,7 @@ void PContextActions_t::RandomAccel(const pDomain &dom)
 {
     PARandomAccel *A = new PARandomAccel;
 
-    A->gen_acc = dom;
+    A->gen_acc = dom.copy();
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
@@ -276,7 +276,7 @@ void PContextActions_t::RandomDisplace(const pDomain &dom)
 {
     PARandomDisplace *A = new PARandomDisplace;
 
-    A->gen_disp = dom;
+    A->gen_disp = dom.copy();
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
@@ -287,7 +287,7 @@ void PContextActions_t::RandomVelocity(const pDomain &dom)
 {
     PARandomVelocity *A = new PARandomVelocity;
 
-    A->gen_vel = dom;
+    A->gen_vel = dom.copy();
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
@@ -298,7 +298,7 @@ void PContextActions_t::RandomRotVelocity(const pDomain &dom)
 {
     PARandomRotVelocity *A = new PARandomRotVelocity;
 
-    A->gen_vel = dom;
+    A->gen_vel = dom.copy();
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
@@ -323,7 +323,7 @@ void PContextActions_t::Sink(const bool kill_inside, const pDomain &dom)
 {
     PASink *A = new PASink;
 
-    A->position = dom;
+    A->position = dom.copy();
     A->kill_inside = kill_inside;
 
     A->SetKillsParticles(true); // Kills.
@@ -336,7 +336,7 @@ void PContextActions_t::SinkVelocity(const bool kill_inside, const pDomain &dom)
 {
     PASinkVelocity *A = new PASinkVelocity;
 
-    A->velocity = dom;
+    A->velocity = dom.copy();
     A->kill_inside = kill_inside;
 
     A->SetKillsParticles(true); // Kills.
@@ -364,7 +364,7 @@ void PContextActions_t::Source(const float particle_rate, const pDomain &dom, co
 {
     PASource *A = new PASource;
 
-    A->position = dom;
+    A->position = dom.copy();
     A->particle_rate = particle_rate;
     A->SrcSt = SrcSt;
 
@@ -447,7 +447,7 @@ void PContextActions_t::Vertex(const pVec &pos, const pSourceState &SrcSt, const
     if(PS->in_new_list) {
         pSourceState TmpSrcSt(SrcSt);
         TmpSrcSt.Data_ = data;
-        Source(1, PDPoint_(pos), TmpSrcSt);
+        Source(1, PDPoint(pos), TmpSrcSt);
         return;
     }
 
@@ -455,13 +455,13 @@ void PContextActions_t::Vertex(const pVec &pos, const pSourceState &SrcSt, const
     Particle_t P;
 
     P.pos = pos;
-    P.posB = SrcSt.vertexB_tracks_ ? pos : SrcSt.VertexB_.Generate();
-    P.size = SrcSt.Size_.Generate();
-    P.up = SrcSt.Up_.Generate();
-    P.vel = SrcSt.Vel_.Generate();
-    P.rvel = SrcSt.RotVel_.Generate();
-    P.color = SrcSt.Color_.Generate();
-    P.alpha = SrcSt.Alpha_.Generate().x();
+    P.posB = SrcSt.vertexB_tracks_ ? pos : SrcSt.VertexB_->Generate();
+    P.size = SrcSt.Size_->Generate();
+    P.up = SrcSt.Up_->Generate();
+    P.vel = SrcSt.Vel_->Generate();
+    P.rvel = SrcSt.RotVel_->Generate();
+    P.color = SrcSt.Color_->Generate();
+    P.alpha = SrcSt.Alpha_->Generate().x();
     P.age = SrcSt.Age_ + pNRandf(SrcSt.AgeSigma_);
     P.mass = SrcSt.Mass_;
     P.data = data;

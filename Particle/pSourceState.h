@@ -22,21 +22,22 @@ namespace PAPI {
     class pSourceState
     {
     public:
-        pDomain Up_;
-        pDomain Vel_;
-        pDomain RotVel_;
-        pDomain VertexB_;
-        pDomain Size_;
-        pDomain Color_;
-        pDomain Alpha_;
+        pDomain *Up_;
+        pDomain *Vel_;
+        pDomain *RotVel_;
+        pDomain *VertexB_;
+        pDomain *Size_;
+        pDomain *Color_;
+        pDomain *Alpha_;
         pdata_t Data_;
         float Age_;
         float AgeSigma_;
         float Mass_;
         bool vertexB_tracks_;
 
-        PINLINE pSourceState() : Up_(PDPoint_(pVec(0,1,0))), Vel_(PDPoint_(pVec(0,0,0))), RotVel_(PDPoint_(pVec(0,0,0))),
-            VertexB_(PDPoint_(pVec(0,0,0))), Size_(PDPoint_(pVec(1,1,1))), Color_(PDPoint_(pVec(1,1,1))), Alpha_(PDPoint_(pVec(1,1,1)))
+        PINLINE pSourceState() :
+            Up_(new PDPoint(pVec(0, 1, 0))), Vel_(new PDPoint(pVec(0, 0, 0))), RotVel_(new PDPoint(pVec(0, 0, 0))), VertexB_(new PDPoint(pVec(0, 0, 0))),
+            Size_(new PDPoint(pVec(1, 1, 1))), Color_(new PDPoint(pVec(1, 1, 1))), Alpha_(new PDPoint(pVec(1, 1, 1)))
         {
             Data_ = 0;
             Age_ = 0.0f;
@@ -52,7 +53,7 @@ namespace PAPI {
         /// The default color is 1,1,1,1 (opaque white if you interpret it as RGBA).
         PINLINE void Color(const pVec &color, const float alpha = 1.0f)
         {
-            Color(PDPoint_(color), PDPoint_(pVec(alpha)));
+            Color(PDPoint(color), PDPoint(pVec(alpha)));
         }
 
         /// Specify the color of particles to be created.
@@ -77,8 +78,8 @@ namespace PAPI {
         /// The default color is 1,1,1,1 (opaque white).
         PINLINE void Color(const pDomain &cdom) ///< The color domain.
         {
-            Color_ = cdom;
-            Alpha_ = PDPoint_(pVec(1));
+            Color_ = cdom.copy();
+            Alpha_ = new PDPoint(pVec(1));
         }
 
         /// Specify the domain for colors and alpha value of new particles.
@@ -95,8 +96,8 @@ namespace PAPI {
             const pDomain &adom ///< The X dimension of the alpha domain is used for alpha.
             )
         {
-            Color_ = cdom;
-            Alpha_ = adom;
+            Color_ = cdom.copy();
+            Alpha_ = adom.copy();
         }
 
         /// Specify the user data of particles to be created.
@@ -116,7 +117,7 @@ namespace PAPI {
         /// The default size is 1,1,1.
         PINLINE void Size(const pVec &size)
         {
-            Size_ = PDPoint_(size);
+            Size_ = new PDPoint(size);
         }
 
         /// Specify the domain for the size of particles to be created.
@@ -131,7 +132,7 @@ namespace PAPI {
         /// The default size is 1,1,1.
         PINLINE void Size(const pDomain &dom)
         {
-            Size_ = dom;
+            Size_ = dom.copy();
         }
 
         /// Specify the mass of particles to be created.
@@ -148,7 +149,7 @@ namespace PAPI {
         /// Specify the initial rotational velocity vector of particles to be created.
         PINLINE void RotVelocity(const pVec &v)
         {
-            RotVel_ = PDPoint_(v);
+            RotVel_ = new PDPoint(v);
         }
 
         /// Specify the domain for the initial rotational velocity vector of particles to be created.
@@ -159,7 +160,7 @@ namespace PAPI {
         /// The default rotational velocity is 0,0,0.
         PINLINE void RotVelocity(const pDomain &dom)
         {
-            RotVel_ = dom;
+            RotVel_ = dom.copy();
         }
 
         /// Specify the initial age of particles to be created.
@@ -184,7 +185,7 @@ namespace PAPI {
         /// The default Up vector is 0,1,0.
         PINLINE void UpVec(const pVec &up)
         {
-            Up_ = PDPoint_(up);
+            Up_ = new PDPoint(up);
         }
 
         /// Specify the domain for the initial up vector of particles to be created.
@@ -194,8 +195,7 @@ namespace PAPI {
         ///
         /// The default Up vector is 0,1,0.
         PINLINE void UpVec(const pDomain &dom)
-        {
-            Up_ = dom;
+        { Up_ = dom.copy();
         }
 
         /// Specify the initial velocity vector of particles to be created.
@@ -205,15 +205,14 @@ namespace PAPI {
         /// The default Velocity vector is 0,0,0.
         PINLINE void Velocity(const pVec &vel)
         {
-            Vel_ = PDPoint_(vel);
+            Vel_ = new PDPoint(vel);
         }
 
         /// Specify the domain for the initial velocity vector of particles to be created.
         ///
         /// The default Velocity vector is 0,0,0.
         PINLINE void Velocity(const pDomain &dom)
-        {
-            Vel_ = dom;
+        { Vel_ = dom.copy();
         }
 
         /// Specify the initial secondary position of new particles.
@@ -223,7 +222,7 @@ namespace PAPI {
         /// The default PositionB is 0,0,0.
         PINLINE void VertexB(const pVec &v)
         {
-            VertexB_ = PDPoint_(v);
+            VertexB_ = new PDPoint(v);
         }
 
         /// Specify the domain for the initial secondary position of new particles.
@@ -233,7 +232,7 @@ namespace PAPI {
         /// The default PositionB is 0,0,0.
         PINLINE void VertexB(const pDomain &dom)
         {
-            VertexB_ = dom;
+            VertexB_ = dom.copy();
         }
 
         /// Specify that the initial secondary position of new particles be the same as their position.

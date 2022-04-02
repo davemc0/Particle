@@ -297,7 +297,7 @@ void Draw()
         P.CurrentGroup(CameraSystem);
 
         pSourceState S;
-        S.Velocity(PDSphere_(pVec(0, 0, 0), 0.06, 0.06));
+        S.Velocity(PDSphere(pVec(0, 0, 0), 0.06, 0.06));
         P.Vertex(pVec(0,-19,15), S);
     }
 
@@ -325,7 +325,7 @@ void Draw()
     // Use a particle to model the camera motion
     P.CurrentGroup(CameraSystem);
     if(CameraMotion) {
-        P.Bounce(0, 1, 0.1, PDSphere_(pVec(0, -10, 7), 15));
+        P.Bounce(0, 1, 0.1, PDSphere(pVec(0, -10, 7), 15));
         P.Move();
     }
 
@@ -575,7 +575,7 @@ void menu(int item)
         ParticleCam = !ParticleCam;
         break;
     case 'z':
-        P.SinkVelocity(true, PDSphere_(pVec(0, 0, 0), 0.01));
+        P.SinkVelocity(true, PDSphere(pVec(0, 0, 0), 0.01));
         break;
     case 'x':
         FreezeParticles = !FreezeParticles;
