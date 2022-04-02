@@ -94,7 +94,7 @@ public:
 
     PINLINE float length() const { return sqrtf(vx * vx + vy * vy + vz * vz); }
 
-    PINLINE float length2() const { return (vx * vx + vy * vy + vz * vz); }
+    PINLINE float lenSqr() const { return (vx * vx + vy * vy + vz * vz); }
 
     PINLINE float normalize()
     {

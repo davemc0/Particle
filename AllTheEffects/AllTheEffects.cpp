@@ -225,10 +225,10 @@ void InitProgs()
     // to eye space. The cube root of this estimates the 1D change in scale. Divide this by W
     // per point.
     float params[3] = {0.0f, 0.0f, 0.00003f};
-    glPointParameterfv(GL_POINT_DISTANCE_ATTENUATION_ARB, params);
-    glPointParameterf(GL_POINT_SIZE_MIN_ARB, 0);
-    glPointParameterf(GL_POINT_SIZE_MAX_ARB, 5000);
-    glPointParameterf(GL_POINT_FADE_THRESHOLD_SIZE_ARB, 1);
+    glPointParameterfv(GL_POINT_DISTANCE_ATTENUATION, params);
+    glPointParameterf(GL_POINT_SIZE_MIN, 0);
+    glPointParameterf(GL_POINT_SIZE_MAX, 5000);
+    glPointParameterf(GL_POINT_FADE_THRESHOLD_SIZE, 1);
 
     glEnable(GL_LINE_SMOOTH);
     glEnable(GL_POINT_SMOOTH);
@@ -256,7 +256,7 @@ void InitProgs()
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     float col[4] = {1.f, 1.f, 1.f, 1.f};
     glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, col);
-    glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
+    glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
 
     if (SphereTexture)
         MakeSphereTexture();
@@ -372,9 +372,9 @@ void Draw()
         DrawGroupAsPoints(P, ConstColor);
     } else if (PrimType == 0x102) { // Point sprites
         glEnable(GL_TEXTURE_2D);
-        glEnable(GL_POINT_SPRITE_ARB);
+        glEnable(GL_POINT_SPRITE);
         DrawGroupAsPoints(P, ConstColor);
-        glDisable(GL_POINT_SPRITE_ARB);
+        glDisable(GL_POINT_SPRITE);
         glDisable(GL_TEXTURE_2D);
     } else if (PrimType == 0x100) {
         pVec view = At - Cam;
@@ -626,7 +626,7 @@ void GlutSetup(int argc, char** argv)
 
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_MULTISAMPLE);
     glutInitWindowSize(880, 880);
-    glutInitWindowPosition(20, 0);
+    glutInitWindowPosition(300, 0);
     glutCreateWindow("Particle Spray");
 
     glutDisplayFunc(Draw);

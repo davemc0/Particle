@@ -514,7 +514,7 @@ struct PDDisc : public pDomain {
 
         if (d > P_PLANAR_EPSILON) return false;
 
-        float len = offset.length2();
+        float len = offset.lenSqr();
         return len >= radInSqr && len <= radOutSqr;
     }
 
@@ -703,7 +703,7 @@ struct PDCylinder : public pDomain {
         // Given an arbitrary nonzero vector n, make two orthonormal
         // vectors u and v forming a frame [u,v,n.normalize()].
         pVec n = axis;
-        float axisLenSqr = axis.length2();
+        float axisLenSqr = axis.lenSqr();
         float len = sqrtf(axisLenSqr);
         axisLenInvSqr = axisLenSqr ? (1.0f / axisLenSqr) : 0.0f;
         n *= sqrtf(axisLenInvSqr);
@@ -744,7 +744,7 @@ struct PDCylinder : public pDomain {
 
         // Check radial distance
         pVec xrad = x - axis * dist; // Radial component of x
-        float rSqr = xrad.length2();
+        float rSqr = xrad.lenSqr();
 
         return (rSqr >= radInSqr && rSqr <= radOutSqr);
     }
@@ -824,7 +824,7 @@ struct PDCone : public pDomain {
         // Given an arbitrary nonzero vector n, make two orthonormal
         // vectors u and v forming a frame [u,v,n.normalize()].
         pVec n = axis;
-        float axisLenSqr = axis.length2();
+        float axisLenSqr = axis.lenSqr();
         float len = sqrtf(axisLenSqr);
         axisLenInvSqr = axisLenSqr ? 1.0f / axisLenSqr : 0.0f;
         n *= sqrtf(axisLenInvSqr);
@@ -869,7 +869,7 @@ struct PDCone : public pDomain {
 
         // Check radial distance; scale radius along axis for cones
         pVec xrad = x - axis * dist; // Radial component of x
-        float rSqr = xrad.length2();
+        float rSqr = xrad.lenSqr();
 
         return (rSqr >= fsqr(dist * radIn) && rSqr <= fsqr(dist * radOut));
     }
@@ -957,7 +957,7 @@ struct PDSphere : public pDomain {
     PINLINE bool Within(const pVec& pos) const /// Returns true if the point lies within the thick shell.
     {
         pVec rvec(pos - ctr);
-        float rSqr = rvec.length2();
+        float rSqr = rvec.lenSqr();
         return rSqr <= radOutSqr && rSqr >= radInSqr;
     }
 
@@ -967,7 +967,7 @@ struct PDSphere : public pDomain {
 
         do {
             pos = pRandVec() - pVec(0.5f, 0.5f, 0.5f); // Point on [-0.5,0.5] box
-        } while (pos.length2() > fsqr(0.5));           // Make sure it's also on r=0.5 sphere.
+        } while (pos.lenSqr() > fsqr(0.5));            // Make sure it's also on r=0.5 sphere.
         pos.normalize();                               // Now it's on r=1 spherical shell
 
         // Scale unit sphere pos by [0..r] and translate
@@ -1021,7 +1021,7 @@ struct PDBlob : public pDomain {
     PINLINE bool Within(const pVec& pos) const /// Has a probability of returning true equal to the probability density at the specified point.
     {
         pVec x = pos - ctr;
-        float Gx = expf(x.length2() * Scale1) * Scale2;
+        float Gx = expf(x.lenSqr() * Scale1) * Scale2;
         return (pRandf() < Gx);
     }
 
