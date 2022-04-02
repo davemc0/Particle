@@ -15,7 +15,7 @@
 
 namespace PAPI {
 
-#define COMMON_ITEMS \
+#define ACTION_DECLS \
     static std::string name, abrv; \
     inline std::string GetName() const { return name; } \
     inline std::string GetAbrv() const { return abrv; } \
@@ -64,7 +64,7 @@ struct PAAvoid : public PActionBase
     float magnitude;	// what percent of the way to go each time
     float epsilon;		// add to r^2 for softening
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 
     void Exec(const PDTriangle &dom, ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend);
     void Exec(const PDRectangle &dom, ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend);
@@ -80,7 +80,7 @@ struct PABounce : public PActionBase
     float resilience;	// Resilence perpendicular to surface
     float cutoffSqr;	// cutoff velocity; friction applies iff v > cutoff
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 
     void Exec(const PDTriangle &dom, ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend);
     void Exec(const PDRectangle &dom, ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend);
@@ -95,14 +95,14 @@ struct PACallback : public PActionBase
     std::string callbackStr;
     pdata_t Data; // The action list number to call
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PACallActionList : public PActionBase
 {
     int action_list_num; // The action list number to call
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PACopyVertexB : public PActionBase
@@ -110,7 +110,7 @@ struct PACopyVertexB : public PActionBase
     bool copy_pos;		// True to copy pos to posB.
     bool copy_vel;		// True to copy vel to velB.
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PADamping : public PActionBase
@@ -119,7 +119,7 @@ struct PADamping : public PActionBase
     float vlowSqr;		// Low and high cutoff velocities
     float vhighSqr;
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PARotDamping : public PActionBase
@@ -128,7 +128,7 @@ struct PARotDamping : public PActionBase
     float vlowSqr;		// Low and high cutoff velocities
     float vhighSqr;
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PAExplosion : public PActionBase
@@ -139,7 +139,7 @@ struct PAExplosion : public PActionBase
     float stdev;		// Sharpness or width of shock wave
     float epsilon;		// Softening parameter
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PAFollow : public PActionBase
@@ -148,7 +148,7 @@ struct PAFollow : public PActionBase
     float epsilon;		// Softening parameter
     float max_radius;	// Only influence particles within max_radius
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PAGravitate : public PActionBase
@@ -157,14 +157,14 @@ struct PAGravitate : public PActionBase
     float epsilon;		// Softening parameter
     float max_radius;	// Only influence particles within max_radius
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PAGravity : public PActionBase
 {
     pVec direction;	    // Amount to increment velocity
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PAJet : public PActionBase
@@ -172,7 +172,7 @@ struct PAJet : public PActionBase
     pDomain *dom;		// Accelerate particles that are within this domain
     pDomain *acc;		// Acceleration vector domain
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PAKillOld : public PActionBase
@@ -180,7 +180,7 @@ struct PAKillOld : public PActionBase
     float age_limit;		// Exact age at which to kill particles.
     bool kill_less_than;	// True to kill particles less than limit.
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PAMatchVelocity : public PActionBase
@@ -189,7 +189,7 @@ struct PAMatchVelocity : public PActionBase
     float epsilon;		// Softening parameter
     float max_radius;	// Only influence particles within max_radius
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PAMatchRotVelocity : public PActionBase
@@ -198,7 +198,7 @@ struct PAMatchRotVelocity : public PActionBase
     float epsilon;		// Softening parameter
     float max_radius;	// Only influence particles within max_radius
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PAMove : public PActionBase
@@ -206,7 +206,7 @@ struct PAMove : public PActionBase
     bool move_velocity;
     bool move_rotational_velocity;
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PAOrbitLine : public PActionBase
@@ -216,7 +216,7 @@ struct PAOrbitLine : public PActionBase
     float epsilon;		// Softening parameter
     float max_radius;	// Only influence particles within max_radius
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PAOrbitPoint : public PActionBase
@@ -226,35 +226,35 @@ struct PAOrbitPoint : public PActionBase
     float epsilon;		// Softening parameter
     float max_radius;	// Only influence particles within max_radius
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PARandomAccel : public PActionBase
 {
     pDomain *gen_acc;	// The domain of random accelerations.
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PARandomDisplace : public PActionBase
 {
     pDomain *gen_disp;	// The domain of random displacements.
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PARandomVelocity : public PActionBase
 {
     pDomain *gen_vel;	// The domain of random velocities.
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PARandomRotVelocity : public PActionBase
 {
     pDomain *gen_vel;	// The domain of random velocities.
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PARestore : public PActionBase
@@ -263,7 +263,7 @@ struct PARestore : public PActionBase
     bool restore_velocity;
     bool restore_rvelocity;
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PASink : public PActionBase
@@ -271,7 +271,7 @@ struct PASink : public PActionBase
     bool kill_inside;	// True to dispose of particles *inside* domain
     pDomain *position;	// Disposal region
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PASinkVelocity : public PActionBase
@@ -279,7 +279,7 @@ struct PASinkVelocity : public PActionBase
     bool kill_inside;	// True to dispose of particles with vel *inside* domain
     pDomain *velocity;	// Disposal region
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PASort : public PActionBase
@@ -289,7 +289,7 @@ struct PASort : public PActionBase
     bool front_to_back; // True to sort front_to_back
     bool clamp_negative; // True to clamp negative dot products to zero
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PASource : public PActionBase
@@ -298,7 +298,7 @@ struct PASource : public PActionBase
     float particle_rate;  // Particles to generate per unit time
     pSourceState SrcSt;   // The state needed to create a new particle
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PASpeedLimit : public PActionBase
@@ -306,7 +306,7 @@ struct PASpeedLimit : public PActionBase
     float min_speed;		// Clamp speed to this minimum.
     float max_speed;		// Clamp speed to this maximum.
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PATargetColor : public PActionBase
@@ -315,7 +315,7 @@ struct PATargetColor : public PActionBase
     float alpha;		// Alpha value to shift towards
     float scale;		// Amount to shift by (1 == all the way)
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PATargetSize : public PActionBase
@@ -323,7 +323,7 @@ struct PATargetSize : public PActionBase
     pVec size;		// Size to shift towards
     pVec scale;		// Amount to shift by per frame (1 == all the way)
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PATargetVelocity : public PActionBase
@@ -331,7 +331,7 @@ struct PATargetVelocity : public PActionBase
     pVec velocity;	    // Velocity to shift towards
     float scale;		// Amount to shift by (1 == all the way)
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PATargetRotVelocity : public PActionBase
@@ -339,7 +339,7 @@ struct PATargetRotVelocity : public PActionBase
     pVec velocity;	    // Velocity to shift towards
     float scale;		// Amount to shift by (1 == all the way)
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 struct PAVortex : public PActionBase
@@ -352,9 +352,11 @@ struct PAVortex : public PActionBase
     float upSpeed;           // vertical acceleration of particles inside the vortex
     float aroundSpeed;       // acceleration around vortex of particles inside the vortex
 
-    COMMON_ITEMS
+    ACTION_DECLS;
 };
 
 };
+
+#undef ACTION_DECLS
 
 #endif

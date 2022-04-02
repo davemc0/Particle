@@ -39,8 +39,6 @@ set(SOURCES
 
 source_group("src"  FILES ${SOURCES})
 
-add_subdirectory(${PROJECT_ROOT_DIR}/../../DMcTools ${CMAKE_CURRENT_BINARY_DIR}/DMcTools)
-
 add_executable(${EXE_NAME} ${SOURCES})
 
 set_target_properties(${EXE_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${PROJECT_ROOT_DIR} )
