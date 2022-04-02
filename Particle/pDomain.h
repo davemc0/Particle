@@ -41,7 +41,21 @@ namespace PAPI
         {
             return(v.x() == P_VARYING_FLOAT || v.y() == P_VARYING_FLOAT || v.z() == P_VARYING_FLOAT);
         }
-    };
+
+        // Compute the inverse matrix of the plane basis.
+        PINLINE void NewBasis(const pVec& u, const pVec& v, pVec& s1, pVec& s2)
+        {
+            pVec w = Cross(u, v);
+
+            float det = 1.0f /
+                (w.z() * u.x() * v.y() - w.z() * u.y() * v.x() - u.z() * w.x() * v.y() - u.x() * v.z() * w.y() + v.z() * w.x() * u.y() + u.z() * v.x() * w.y());
+
+            s1 = pVec((v.y() * w.z() - v.z() * w.y()), (v.z() * w.x() - v.x() * w.z()), (v.x() * w.y() - v.y() * w.x()));
+            s1 *= det;
+            s2 = pVec((u.y() * w.z() - u.z() * w.y()), (u.z() * w.x() - u.x() * w.z()), (u.x() * w.y() - u.y() * w.x()));
+            s2 *= -det;
+        }
+    }; // namespace
 
     /// A CSG union of multiple domains.
     ///
@@ -165,26 +179,13 @@ namespace PAPI
         }
     };
 
-    // Compute the inverse matrix of the plane basis.
-    static PINLINE void NewBasis(const pVec &u, const pVec &v, pVec &s1, pVec &s2)
-    {
-        pVec w = Cross(u, v);
-
-        float det = 1.0f / (w.z()*u.x()*v.y() - w.z()*u.y()*v.x() - u.z()*w.x()*v.y() - u.x()*v.z()*w.y() + v.z()*w.x()*u.y() + u.z()*v.x()*w.y());
-
-        s1 = pVec((v.y()*w.z() - v.z()*w.y()), (v.z()*w.x() - v.x()*w.z()), (v.x()*w.y() - v.y()*w.x()));
-        s1 *= det;
-        s2 = pVec((u.y()*w.z() - u.z()*w.y()), (u.z()*w.x() - u.x()*w.z()), (u.x()*w.y() - u.y()*w.x()));
-        s2 *= -det;
-    }
-
     /// A Triangle.
     ///
     /// p0, p1, and p2 are the vertices of the triangle. The triangle can be used to define an arbitrary geometrical model for particles to
-    // bounce off, or generate particles on its surface (and explode them), etc.
+    /// bounce off, or generate particles on its surface (and explode them), etc.
     ///
     /// Generate returns a random point in the triangle. Within returns true for points within epsilon of the triangle. Currently it is not
-    /// possible to sink particles that enter/exit a polygonal model. Suggestions?]
+    /// possible to sink particles that enter/exit a polygonal model. Suggestions?
     struct PDTriangle
     {
         pVec p, u, v, uNrm, vNrm, nrm, s1, s2;
