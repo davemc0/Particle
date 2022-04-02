@@ -3,7 +3,7 @@
 /// Copyright 1997-2007 by David K. McAllister
 /// http://www.ParticleSystems.org
 ///
-/// I used code Copyright 1997 by Jonathan P. Leech as an example in implementing this.
+/// I used code Copyright 1997 by Jonathan P. Leech as an example in implenting this.
 ///
 /// This file implements the dynamics of particle actions.
 
@@ -14,8 +14,45 @@
 #include <typeinfo>
 // For dumping errors
 #include <sstream>
+#include <string>
 
 namespace PAPI {
+
+    std::string PActionBase::name = "PActionBase";                    std::string PActionBase::abrv = "XXX";                                                                                                                   
+
+    std::string PAAvoid::name = "PAAvoid";                            std::string PAAvoid::abrv = "Av";                                                                                                                   
+    std::string PABounce::name = "PABounce";                          std::string PABounce::abrv = "Bo";                                                                                                                  
+    std::string PACallback::name = "PACallback";                      std::string PACallback::abrv = "CB";                                                                                                                
+    std::string PACallActionList::name = "PACallActionList";          std::string PACallActionList::abrv = "CAL";                                                                                                         
+    std::string PACopyVertexB::name = "PACopyVertexB";                std::string PACopyVertexB::abrv = "CVB";                                                                                                            
+    std::string PADamping::name = "PADamping";                        std::string PADamping::abrv = "Da";                                                                                                                 
+    std::string PARotDamping::name = "PARotDamping";                  std::string PARotDamping::abrv = "RT";                                                                                                              
+    std::string PAExplosion::name = "PAExplosion";                    std::string PAExplosion::abrv = "Ex";                                                                                                               
+    std::string PAFollow::name = "PAFollow";                          std::string PAFollow::abrv = "Fo";                                                                                                                  
+    std::string PAGravitate::name = "PAGravitate";                    std::string PAGravitate::abrv = "Gre";                                                                                                              
+    std::string PAGravity::name = "PAGravity";                        std::string PAGravity::abrv = "Gr";                                                                                                                 
+    std::string PAJet::name = "PAJet";                                std::string PAJet::abrv = "Jet";                                                                                                                    
+    std::string PAKillOld::name = "PAKillOld";                        std::string PAKillOld::abrv = "KO";                                                                                                                 
+    std::string PAMatchVelocity::name = "PAMatchVelocity";            std::string PAMatchVelocity::abrv = "MV";                                                                                                           
+    std::string PAMatchRotVelocity::name = "PAMatchRotVelocity";      std::string PAMatchRotVelocity::abrv = "MRV";                                                                                                       
+    std::string PAMove::name = "PAMove";                              std::string PAMove::abrv = "Mo";                                                                                                                    
+    std::string PAOrbitLine::name = "PAOrbitLine";                    std::string PAOrbitLine::abrv = "OL";                                                                                                               
+    std::string PAOrbitPoint::name = "PAOrbitPoint";                  std::string PAOrbitPoint::abrv = "OP";                                                                                                              
+    std::string PARandomAccel::name = "PARandomAccel";                std::string PARandomAccel::abrv = "RA";                                                                                                             
+    std::string PARandomDisplace::name = "PARandomDisplace";          std::string PARandomDisplace::abrv = "RD";                                                                                                          
+    std::string PARandomVelocity::name = "PARandomVelocity";          std::string PARandomVelocity::abrv = "RV";                                                                                                          
+    std::string PARandomRotVelocity::name = "PARandomRotVelocity";    std::string PARandomRotVelocity::abrv = "RRV";                                                                                                      
+    std::string PARestore::name = "PARestore";                        std::string PARestore::abrv = "Re";                                                                                                                 
+    std::string PASink::name = "PASink";                              std::string PASink::abrv = "Si";                                                                                                                    
+    std::string PASinkVelocity::name = "PASinkVelocity";              std::string PASinkVelocity::abrv = "SV";                                                                                                            
+    std::string PASort::name = "PASort";                              std::string PASort::abrv = "Srt";                                                                                                                   
+    std::string PASource::name = "PASource";                          std::string PASource::abrv = "Src";                                                                                                                 
+    std::string PASpeedLimit::name = "PASpeedLimit";                  std::string PASpeedLimit::abrv = "SL";                                                                                                              
+    std::string PATargetColor::name = "PATargetColor";                std::string PATargetColor::abrv = "TC";                                                                                                             
+    std::string PATargetSize::name = "PATargetSize";                  std::string PATargetSize::abrv = "TS";                                                                                                              
+    std::string PATargetVelocity::name = "PATargetVelocity";          std::string PATargetVelocity::abrv = "TV";                                                                                                          
+    std::string PATargetRotVelocity::name = "PATargetRotVelocity";    std::string PATargetRotVelocity::abrv = "TRV";                                                                                                      
+    std::string PAVortex::name = "PAVortex";                          std::string PAVortex::abrv = "Vo";                                                                                                                  
 
     void PAAvoid::Exec(const PDTriangle &dom, ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend)
     {
@@ -270,18 +307,22 @@ namespace PAPI {
 
     void PAAvoid::Execute(ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend)
     {
-        if(typeid(*position) == typeid(PDTriangle)) {
-            Exec(*dynamic_cast<const PDTriangle *>(position), group, ibegin, iend);
-        } else if(typeid(*position) == typeid(PDDisc)) {
-            Exec(*dynamic_cast<const PDDisc *>(position), group, ibegin, iend);
-        } else if(typeid(*position) == typeid(PDPlane)) {
-            Exec(*dynamic_cast<const PDPlane *>(position), group, ibegin, iend);
-        } else if(typeid(*position) == typeid(PDRectangle)) {
-            Exec(*dynamic_cast<const PDRectangle *>(position), group, ibegin, iend);
-        } else if(typeid(*position) == typeid(PDSphere)) {
-            Exec(*dynamic_cast<const PDSphere *>(position), group, ibegin, iend);
-        } else {
-            throw PErrNotImplemented(std::string("Avoid not implemented for domain ") + std::string(typeid(*position).name()));
+        // Can build generic bounce function that works on any domain by using the Within function and a normal.
+
+        switch (position->Which) {
+        // case PDUnion_e: Exec(*dynamic_cast<const PDUnion_e*>(position), group, ibegin, iend); return;
+        // case PDPoint_e: Exec(*dynamic_cast<const PDPoint_e*>(position), group, ibegin, iend); return;
+        // case PDLine_e: Exec(*dynamic_cast<const PDLine_e*>(position), group, ibegin, iend); return;
+        case PDTriangle_e: Exec(*dynamic_cast<const PDTriangle*>(position), group, ibegin, iend); return;
+        case PDRectangle_e: Exec(*dynamic_cast<const PDRectangle*>(position), group, ibegin, iend); return;
+        case PDDisc_e: Exec(*dynamic_cast<const PDDisc*>(position), group, ibegin, iend); return;
+        case PDPlane_e: Exec(*dynamic_cast<const PDPlane*>(position), group, ibegin, iend); return;
+        // case PDBox_e: Exec(*dynamic_cast<const PDBox_e*>(position), group, ibegin, iend); return;
+        // case PDCylinder_e: Exec(*dynamic_cast<const PDCylinder_e*>(position), group, ibegin, iend); return;
+        // case PDCone_e: Exec(*dynamic_cast<const PDCone_e*>(position), group, ibegin, iend); return;
+        case PDSphere_e: Exec(*dynamic_cast<const PDSphere*>(position), group, ibegin, iend); return;
+        // case PDBlob_e: Exec(*dynamic_cast<const PDBlob_e*>(position), group, ibegin, iend); return;
+        default: throw PErrNotImplemented(std::string("Avoid not implemented for domain ") + std::string(typeid(position).name()));
         }
     }
 
@@ -542,18 +583,22 @@ namespace PAPI {
 
     void PABounce::Execute(ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend)
     {
-        if(typeid(*position) == typeid(PDTriangle)) {
-            Exec(*dynamic_cast<const PDTriangle *>(position), group, ibegin, iend);
-        } else if(typeid(*position) == typeid(PDDisc)) {
-            Exec(*dynamic_cast<const PDDisc *>(position), group, ibegin, iend);
-        } else if(typeid(*position) == typeid(PDPlane)) {
-            Exec(*dynamic_cast<const PDPlane *>(position), group, ibegin, iend);
-        } else if(typeid(*position) == typeid(PDRectangle)) {
-            Exec(*dynamic_cast<const PDRectangle *>(position), group, ibegin, iend);
-        } else if(typeid(*position) == typeid(PDSphere)) {
-            Exec(*dynamic_cast<const PDSphere *>(position), group, ibegin, iend);
-        } else {
-            throw PErrNotImplemented(std::string("Bounce not implemented for domain ") + std::string(typeid(*position).name()));
+        // Can build generic bounce function that works on any domain by using the Within function and a normal.
+        switch(position->Which) {
+            // case PDUnion_e: Exec(*dynamic_cast<const PDUnion*>(position), group, ibegin, iend); return;
+            // case PDPoint_e: Exec(*dynamic_cast<const PDPoint*>(position), group, ibegin, iend); return;
+            // case PDLine_e: Exec(*dynamic_cast<const PDLine*>(position), group, ibegin, iend); return;
+        case PDTriangle_e: Exec(*dynamic_cast<const PDTriangle*>(position), group, ibegin, iend); return;
+        case PDRectangle_e: Exec(*dynamic_cast<const PDRectangle*>(position), group, ibegin, iend); return;
+        case PDDisc_e: Exec(*dynamic_cast<const PDDisc*>(position), group, ibegin, iend); return;
+        case PDPlane_e: Exec(*dynamic_cast<const PDPlane*>(position), group, ibegin, iend); return;
+            // case PDBox_e: Exec(*dynamic_cast<const PDBox*>(position), group, ibegin, iend); return;
+            // case PDCylinder_e: Exec(*dynamic_cast<const PDCylinder*>(position), group, ibegin, iend); return;
+            // case PDCone_e: Exec(*dynamic_cast<const PDCone*>(position), group, ibegin, iend); return;
+        case PDSphere_e: Exec(*dynamic_cast<const PDSphere*>(position), group, ibegin, iend); return;
+            // case PDBlob_e: Exec(*dynamic_cast<const PDBlob*>(position), group, ibegin, iend); return;
+            default:
+                throw PErrNotImplemented(std::string("Bounce not implemented for domain ") + std::string(typeid(position).name()));
         }
     }
 
@@ -568,11 +613,12 @@ namespace PAPI {
 
     void PACallback::Execute(ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend)
     {
-        PASSERT(callback != NULL, "callback pointer was NULL");
+        if(callbackFunc == NULL)
+            return;
 
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
             Particle_t &m = (*it);
-            (*callback)(m, Data);
+            (*callbackFunc)(m, Data, dt);
         }
     }
 
@@ -604,7 +650,7 @@ namespace PAPI {
     void PADamping::Execute(ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend)
     {
         // This is important if dt is != 1.
-        pVec one(1,1,1);
+        pVec one=pVec(1,1,1);
         pVec scale(one - ((one - damping) * dt));
 
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
@@ -621,7 +667,7 @@ namespace PAPI {
     void PARotDamping::Execute(ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend)
     {
         // This is important if dt is != 1.
-        pVec one(1,1,1);
+        pVec one=pVec(1,1,1);
         pVec scale(one - ((one - damping) * dt));
 
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
@@ -939,27 +985,6 @@ namespace PAPI {
                 m.up += m.rvel * dt;
             }
         } else {
-#if 0
-            // Uses SSE. This is really fast, but doesn't work half the time because I'm unable to enforce the needed alignment restrictions.
-            int n = int(iend - ibegin);
-            if(n<1) return;
-            __m128 dtg = _mm_set_ps1(dt);
-            __m128 *p = (__m128 *)&(ibegin->pos);
-            __m128 *v = (__m128 *)&(ibegin->vel);
-            float *a = &(ibegin->age);
-            int step = sizeof(Particle_t) / sizeof(__m128);
-            int stepf = sizeof(Particle_t) / sizeof(float);
-
-            for(int i=0; i<n; i++) {
-                __m128 sv = _mm_mul_ps(*v, dtg);
-                *p = _mm_add_ps(sv, *p);
-                *a += dt;
-
-                p += step;
-                v += step;
-                a += stepf;
-            }
-#else
             // STL slowness and no SSE.
             // Not very much slower at all, though. Stick with this until we get a more elegant way to use SSE.
             for (ParticleList::iterator it = ibegin; it != iend; it++) {
@@ -968,7 +993,6 @@ namespace PAPI {
                 m.age += dt;
                 m.pos += m.vel * dt;
             }
-#endif
         }
     }
 
@@ -1253,16 +1277,16 @@ namespace PAPI {
             Particle_t P;
 
             P.pos = position->Generate();
-            P.posB = SrcSt.vertexB_tracks ? P.pos : SrcSt.VertexB->Generate();
-            P.up = SrcSt.Up->Generate();
-            P.vel = SrcSt.Vel->Generate();
-            P.rvel = SrcSt.RotVel->Generate();
-            P.size = SrcSt.Size->Generate();
-            P.color = SrcSt.Color->Generate();
-            P.alpha = SrcSt.Alpha->Generate().x();
-            P.age = SrcSt.Age + pNRandf(SrcSt.AgeSigma);
-            P.mass = SrcSt.Mass;
-            P.data = SrcSt.Data;
+            P.posB = SrcSt.vertexB_tracks_ ? P.pos : SrcSt.VertexB_->Generate();
+            P.up = SrcSt.Up_->Generate();
+            P.vel = SrcSt.Vel_->Generate();
+            P.rvel = SrcSt.RotVel_->Generate();
+            P.size = SrcSt.Size_->Generate();
+            P.color = SrcSt.Color_->Generate();
+            P.alpha = SrcSt.Alpha_->Generate().x();
+            P.age = SrcSt.Age_ + pNRandf(SrcSt.AgeSigma_);
+            P.mass = SrcSt.Mass_;
+            P.data = SrcSt.Data_;
 
             group.Add(P);
         }

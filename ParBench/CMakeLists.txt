@@ -1,8 +1,8 @@
-# PSpray executable using Particle System API
+# ParBench executable using Particle System API
 
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
-set(EXE_NAME PSpray)
+set(EXE_NAME ParBench)
 
 project(${EXE_NAME})
 
@@ -27,14 +27,10 @@ add_definitions(-DFREEGLUT_STATIC)
 include_directories(${GLUT_INCLUDE_DIR})
 link_libraries(${GLUT_LIBRARIES})
 
-set(SOURCES
-    DrawGroups.cpp
-    DrawGroups.h
+set(SOURCES	
     ../Effects/Effects.cpp
     ../Effects/Effects.h
-    Monarch.cpp
-    Monarch.h
-    PSpray.cpp
+    ParBench.cpp
 )
 
 source_group("src"  FILES ${SOURCES})

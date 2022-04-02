@@ -5,7 +5,11 @@
 #include "Particle/pAPI.h"
 using namespace PAPI;
 
-#include "GL/glut.h"
+// OpenGL
+#include "GL/glew.h"
+
+// This needs to come after GLEW
+#include "GL/freeglut.h"
 
 ParticleContext_t P;
 
@@ -13,11 +17,12 @@ ParticleContext_t P;
 void ComputeParticles()
 {
     // Set up the state.
-    P.Velocity(PDCylinder(pVec(0.0f, -0.01f, 0.25f), pVec(0.0f, -0.01f, 0.27f), 0.021f, 0.019f));
-    P.Color(PDLine(pVec(0.8f, 0.9f, 1.0f), pVec(1.0f, 1.0f, 1.0f)));
+    pSourceState S;
+    S.Velocity(PDCylinder(pVec(0.0f, -0.01f, 0.25f), pVec(0.0f, -0.01f, 0.27f), 0.021f, 0.019f));
+    S.Color(PDLine(pVec(0.8f, 0.9f, 1.0f), pVec(1.0f, 1.0f, 1.0f)));
 
     // Generate particles along a very small line in the nozzle.
-    P.Source(100, PDLine(pVec(0, 0, 0), pVec(0, 0, 0.4f)));
+    P.Source(100, PDLine(pVec(0, 0, 0), pVec(0, 0, 0.4f)), S);
 
     // Gravity.
     P.Gravity(pVec(0, 0, -0.01f));

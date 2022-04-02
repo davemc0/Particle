@@ -12,6 +12,13 @@
     <h2>
         API</h2>
     <ul>
+        <li>Fix memory leaks. See Sphere demo. But not Atom.</li>
+        <li>RNG for CUDA</li>
+        <li>Proper dependent building of generated files</li>
+        <li>All demos in CUDA</li>
+        <li>ParBench update</li>
+        <li>The actions that don't work in CUDA yet</li>
+        <li>Back port _Impl functions to original actions</li>
         <li>Use Nvidia's CUDA library to do the particle computation on the GPU</li>
         <li>Use SSE better and use multiple CPU cores. I believe I will do this using CUDA for multicore.</li>
         <li>Optimize compiled action lists by combining calls. I believe the CUDA implementation will handle this.</li>
@@ -19,6 +26,10 @@
         <li>Bouncing and avoiding of PDUnion domains. This may be the answer for obstacle avoidance.</li>
         <li>Bounce off inside PDBox domain</li>
         <li>Bounce off cylinders</li>
+        <li>Way points - like OrbitPoint, but once a particle is close enough, it is attracted to the next way point</li>
+        <li>Bitmapped vector fields</li>
+        <li>Particle-particle collisions</li>
+        <li>Smoothed Particle Hydrodynamics</li>
         <li>Make actions conditional on domains.</li>
         <li>Make the API more generic so many API calls can apply to any different attribute. Make attributes generic.</li>
         <li>Have a secondary color for each particle.</li>

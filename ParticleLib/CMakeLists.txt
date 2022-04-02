@@ -20,6 +20,7 @@ set(API_SOURCES
     ../Particle/pAPI.h
     ../Particle/pDomain.h
     ../Particle/pError.h
+    ../Particle/pSourceState.h
     ../Particle/pVec.h
 )
 
