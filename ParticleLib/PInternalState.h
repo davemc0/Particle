@@ -8,61 +8,61 @@
 #ifndef PInternalState_h
 #define PInternalState_h
 
-#include "pAPI.h"
 #include "Actions.h"
 #include "ParticleGroup.h"
+#include "pAPI.h"
 
-#include <vector>
 #include <string>
+#include <vector>
 
-#define PASSERT(x,msg) {if(!(x)) { throw PErrInternalError(msg); }}
+#define PASSERT(x, msg)                             \
+    {                                               \
+        if (!(x)) { throw PErrInternalError(msg); } \
+    }
 
 namespace PAPI {
 
-    class ActionList : public std::vector<PActionBase *>
+class ActionList : public std::vector<PActionBase*> {
+public:
+    P_PARTICLE_EMITTED_ACTION_LIST ALFunc;
+    EmitCodeParams_e Params;
+
+    ActionList()
     {
-    public:
-         P_PARTICLE_EMITTED_ACTION_LIST ALFunc;
-         EmitCodeParams_e Params;
-
-         ActionList()
-         {
-             ALFunc = NULL;
-             Params = P_INTERNAL_CODE;
-         }
-    };
-
-    // This is the per-thread state of the API.
-    // All API calls get their data from here.
-    // In the non-multithreaded case there is one global instance of this class.
-    class PInternalState_t
-    {
-    public:
-        float dt;
-        bool in_call_list;
-        bool in_new_list;
-
-        std::vector<ParticleGroup> PGroups;
-        int pgroup_id;
-
-        std::vector<ActionList> ALists;
-        int alist_id;
-
-        // How many particles will fit in cache? You can set this if you don't like the default value.
-        int PWorkingSetSize;
-
-        PInternalState_t();
-
-        int GeneratePGroups(int pgroups_requested);
-        int GenerateALists(int alists_requested);
-
-        // Action API entry points call this to either store the action in a list or execute and delete it.
-        void SendAction(PActionBase *S);
-
-        // Execute an action list
-        void ExecuteActionList(ActionList &AList);
-    };
-
+        ALFunc = NULL;
+        Params = P_INTERNAL_CODE;
+    }
 };
+
+// This is the per-thread state of the API.
+// All API calls get their data from here.
+// In the non-multithreaded case there is one global instance of this class.
+class PInternalState_t {
+public:
+    float dt;
+    bool in_call_list;
+    bool in_new_list;
+
+    std::vector<ParticleGroup> PGroups;
+    int pgroup_id;
+
+    std::vector<ActionList> ALists;
+    int alist_id;
+
+    // How many particles will fit in cache? You can set this if you don't like the default value.
+    int PWorkingSetSize;
+
+    PInternalState_t();
+
+    int GeneratePGroups(int pgroups_requested);
+    int GenerateALists(int alists_requested);
+
+    // Action API entry points call this to either store the action in a list or execute and delete it.
+    void SendAction(PActionBase* S);
+
+    // Execute an action list
+    void ExecuteActionList(ActionList& AList);
+};
+}; // namespace PAPI
 
 #endif

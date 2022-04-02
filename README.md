@@ -36,9 +36,9 @@ How to build
 In the main directory, do something like:
 
     mkdir build
-	cd build
-	cmake .. -G "Visual Studio 16 2019" -A x64
-	cd ..
+    cd build
+    cmake .. -G "Visual Studio 16 2019" -A x64
+    cd ..
 
 Then you can build from the command line:
 
@@ -55,14 +55,14 @@ An OpenGL and GLUT-based example of particle systems used to render a fountain
 
 AllTheEffects
 -------------
-Double-click to start the program. 
+Double-click to start the program.
 
 Press 'f' to make it full screen.
 
-Right-click in the window to pop up the menu. 
+Right-click in the window to pop up the menu.
 The keyboard shortcuts are listed on the menu.
 
-If you don't touch it, it will randomly go through the demos. This should provide hours of family fun. 
+If you don't touch it, it will randomly go through the demos. This should provide hours of family fun.
 If you get bored, press 'space' to cause an explosion.
 Press 'm' to make cool motion blur.
 Press 's' to sort the particles back-to-front for more correct but slower rendering.

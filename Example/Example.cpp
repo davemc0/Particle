@@ -31,7 +31,7 @@ void ComputeParticles()
     P.Bounce(-0.05f, 0.35f, 0, PDDisc(pVec(0, 0, 0), pVec(0, 0, 1), 5));
 
     // Kill particles below Z=-3.
-    P.Sink(false, PDPlane(pVec(0,0,-3), pVec(0,0,1)));
+    P.Sink(false, PDPlane(pVec(0, 0, -3), pVec(0, 0, 1)));
 
     // Move particles to their new positions.
     P.Move(true, false);
@@ -43,15 +43,14 @@ void ComputeParticles()
 void DrawGroupAsPoints()
 {
     size_t cnt = P.GetGroupCount();
-    if(cnt < 1) return;
+    if (cnt < 1) return;
 
-    float *ptr;
+    float* ptr;
     size_t flstride, pos3Ofs, posB3Ofs, size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs, up3Ofs, rvel3Ofs, upB3Ofs, mass1Ofs, data1Ofs;
 
-    cnt = P.GetParticlePointer(ptr, flstride, pos3Ofs, posB3Ofs,
-        size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs,
-        up3Ofs, rvel3Ofs, upB3Ofs, mass1Ofs, data1Ofs);
-    if(cnt < 1) return;
+    cnt = P.GetParticlePointer(ptr, flstride, pos3Ofs, posB3Ofs, size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs, up3Ofs, rvel3Ofs, upB3Ofs,
+                               mass1Ofs, data1Ofs);
+    if (cnt < 1) return;
 
     glEnableClientState(GL_COLOR_ARRAY);
     glColorPointer(4, GL_FLOAT, int(flstride) * sizeof(float), ptr + color3Ofs);
@@ -75,13 +74,13 @@ void Draw()
     // Draw the ground.
     glBegin(GL_QUADS);
     glColor3ub(0, 115, 0);
-    glVertex3f(-3.5,-3.5,0);
+    glVertex3f(-3.5, -3.5, 0);
     glColor3ub(0, 5, 140);
-    glVertex3f(-3.5,3.5,0);
+    glVertex3f(-3.5, 3.5, 0);
     glColor3ub(0, 5, 140);
-    glVertex3f(3.5,3.5,0);
+    glVertex3f(3.5, 3.5, 0);
     glColor3ub(0, 115, 0);
-    glVertex3f(3.5,-3.5,0);
+    glVertex3f(3.5, -3.5, 0);
     glEnd();
 
     // Do what the particles do.
@@ -103,7 +102,7 @@ void Reshape(int w, int h)
     glMatrixMode(GL_MODELVIEW);
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     // Initialize GLUT.
     glutInit(&argc, argv);
@@ -129,7 +128,7 @@ int main(int argc, char **argv)
     try {
         glutMainLoop();
     }
-    catch (PError_t &Er) {
+    catch (PError_t& Er) {
         std::cerr << "Particle API exception: " << Er.ErrMsg << std::endl;
         throw Er;
     }

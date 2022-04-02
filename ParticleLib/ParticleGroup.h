@@ -17,25 +17,24 @@
 
 namespace PAPI {
 
-    // Also defined in pAPI.h.
-    // This is the type of the particle birth and death callback functions that you can register.
-    typedef void (*P_PARTICLE_CALLBACK)(struct Particle_t &particle, pdata_t data);
+// Also defined in pAPI.h.
+/// This is the type of the particle birth and death callback functions that you can register.
+typedef void (*P_PARTICLE_CALLBACK)(struct Particle_t& particle, pdata_t data);
 
-    // This is the type of the callback functions that you can register for the Callback() action.
-    typedef void (*P_PARTICLE_CALLBACK_ACTION)(struct Particle_t &particle, pdata_t data, float dt);
+/// This is the type of the callback functions that you can register for the Callback() action.
+typedef void (*P_PARTICLE_CALLBACK_ACTION)(struct Particle_t& particle, pdata_t data, float dt);
 
-    typedef std::vector<Particle_t> ParticleList;
+typedef std::vector<Particle_t> ParticleList;
 
-class ParticleGroup
-{
+class ParticleGroup {
     ParticleList list;
 
 private:
-    size_t max_particles;	// Max particles allowed in group
+    size_t max_particles;         // Max particles allowed in group
     P_PARTICLE_CALLBACK cb_birth; // Call this function for each created particle
     P_PARTICLE_CALLBACK cb_death; // Call this function for each destroyed particle
-    pdata_t group_birth_data; // Pass this to the birth callback
-    pdata_t group_death_data; // Pass this to the death callback
+    pdata_t group_birth_data;     // Pass this to the birth callback
+    pdata_t group_death_data;     // Pass this to the death callback
 
 public:
     ParticleGroup()
@@ -56,7 +55,7 @@ public:
         group_death_data = NULL;
     }
 
-    ParticleGroup(const ParticleGroup &rhs) : list(rhs.list)
+    ParticleGroup(const ParticleGroup& rhs) : list(rhs.list)
     {
         max_particles = rhs.max_particles;
         cb_birth = rhs.cb_birth;
@@ -69,18 +68,16 @@ public:
     {
         if (cb_death) {
             ParticleList::iterator it;
-            for (it = list.begin(); it != list.end(); ++it)
-                (*cb_death)((*it), group_death_data);
+            for (it = list.begin(); it != list.end(); ++it) (*cb_death)((*it), group_death_data);
         }
     }
 
-    ParticleGroup &operator=(const ParticleGroup &rhs)
+    ParticleGroup& operator=(const ParticleGroup& rhs)
     {
         if (this != &rhs) {
             if (cb_death) {
                 ParticleList::iterator it;
-                for (it = list.begin(); it != list.end(); ++it)
-                    (*cb_death)((*it), group_death_data);
+                for (it = list.begin(); it != list.end(); ++it) (*cb_death)((*it), group_death_data);
             }
             list = rhs.list;
             cb_birth = rhs.cb_birth;
@@ -93,7 +90,7 @@ public:
     }
 
     inline size_t GetMaxParticles() { return max_particles; }
-    inline ParticleList &GetList() { return list; }
+    inline ParticleList& GetList() { return list; }
 
     inline void SetBirthCallback(P_PARTICLE_CALLBACK callback, pdata_t group_data)
     {
@@ -110,10 +107,9 @@ public:
     inline void SetMaxParticles(size_t maxp)
     {
         max_particles = maxp;
-        if(list.size() > max_particles) {
+        if (list.size() > max_particles) {
             if (cb_death) {
-                for (ParticleList::iterator it = list.begin() + max_particles; it != list.end(); ++it)
-                    (*cb_death)((*it), group_death_data);
+                for (ParticleList::iterator it = list.begin() + max_particles; it != list.end(); ++it) (*cb_death)((*it), group_death_data);
             }
             list.resize(max_particles);
         }
@@ -127,11 +123,10 @@ public:
     // Returns a valid iterator. If we deleted the end, it points to one past last.
     inline ParticleList::iterator Remove(ParticleList::iterator it)
     {
-        if (cb_death)
-            (*cb_death)((*it), group_death_data);
+        if (cb_death) (*cb_death)((*it), group_death_data);
 
         // Copy the one from the end to here.
-        if(it != list.end() - 1) {
+        if (it != list.end() - 1) {
             *it = *(list.end() - 1);
             list.pop_back(); // Delete the one at the end
         } else {
@@ -142,22 +137,20 @@ public:
         return it;
     }
 
-    inline bool Add(const Particle_t &P)
+    inline bool Add(const Particle_t& P)
     {
         if (list.size() >= max_particles)
             return false;
         else {
             list.push_back(P);
-            Particle_t &p = list.back();
-            if (cb_birth)
-                (*cb_birth)(p, group_birth_data);
+            Particle_t& p = list.back();
+            if (cb_birth) (*cb_birth)(p, group_birth_data);
             return true;
         }
     }
-    
+
     void FreeDeviceMemory() {}
 };
-
-};
+}; // namespace PAPI
 
 #endif
