@@ -10,8 +10,6 @@
 
 #include <string>
 
-using namespace std;
-
 namespace PAPI {
 
     ////////////////////////////////////////////////////////
@@ -77,7 +75,7 @@ namespace PAPI {
         }
     }
 
-    void PContextActionList_t::EmitActionList(const int action_list_num, string &Kernel, const string &KernelName, const EmitCodeParams_e Params)
+    void PContextActionList_t::EmitActionList(const int action_list_num, std::string& Kernel, const std::string& KernelName, const EmitCodeParams_e Params)
     {
         if(PS->in_new_list) throw PErrInNewActionList("Can't call EmitActionList while in NewActionList.");
 

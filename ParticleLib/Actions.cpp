@@ -16,45 +16,43 @@
 #include <sstream>
 #include <string>
 
-using namespace std;
-
 namespace PAPI {
 
-    string PActionBase::name = "PActionBase";                    string PActionBase::abrv = "XXX";                                                                                                                   
+    std::string PActionBase::name = "PActionBase";                    std::string PActionBase::abrv = "XXX";                                                                                                                   
 
-    string PAAvoid::name = "PAAvoid";                            string PAAvoid::abrv = "Av";                                                                                                                   
-    string PABounce::name = "PABounce";                          string PABounce::abrv = "Bo";                                                                                                                  
-    string PACallback::name = "PACallback";                      string PACallback::abrv = "CB";                                                                                                                
-    string PACallActionList::name = "PACallActionList";          string PACallActionList::abrv = "CAL";                                                                                                         
-    string PACopyVertexB::name = "PACopyVertexB";                string PACopyVertexB::abrv = "CVB";                                                                                                            
-    string PADamping::name = "PADamping";                        string PADamping::abrv = "Da";                                                                                                                 
-    string PARotDamping::name = "PARotDamping";                  string PARotDamping::abrv = "RT";                                                                                                              
-    string PAExplosion::name = "PAExplosion";                    string PAExplosion::abrv = "Ex";                                                                                                               
-    string PAFollow::name = "PAFollow";                          string PAFollow::abrv = "Fo";                                                                                                                  
-    string PAGravitate::name = "PAGravitate";                    string PAGravitate::abrv = "Gre";                                                                                                              
-    string PAGravity::name = "PAGravity";                        string PAGravity::abrv = "Gr";                                                                                                                 
-    string PAJet::name = "PAJet";                                string PAJet::abrv = "Jet";                                                                                                                    
-    string PAKillOld::name = "PAKillOld";                        string PAKillOld::abrv = "KO";                                                                                                                 
-    string PAMatchVelocity::name = "PAMatchVelocity";            string PAMatchVelocity::abrv = "MV";                                                                                                           
-    string PAMatchRotVelocity::name = "PAMatchRotVelocity";      string PAMatchRotVelocity::abrv = "MRV";                                                                                                       
-    string PAMove::name = "PAMove";                              string PAMove::abrv = "Mo";                                                                                                                    
-    string PAOrbitLine::name = "PAOrbitLine";                    string PAOrbitLine::abrv = "OL";                                                                                                               
-    string PAOrbitPoint::name = "PAOrbitPoint";                  string PAOrbitPoint::abrv = "OP";                                                                                                              
-    string PARandomAccel::name = "PARandomAccel";                string PARandomAccel::abrv = "RA";                                                                                                             
-    string PARandomDisplace::name = "PARandomDisplace";          string PARandomDisplace::abrv = "RD";                                                                                                          
-    string PARandomVelocity::name = "PARandomVelocity";          string PARandomVelocity::abrv = "RV";                                                                                                          
-    string PARandomRotVelocity::name = "PARandomRotVelocity";    string PARandomRotVelocity::abrv = "RRV";                                                                                                      
-    string PARestore::name = "PARestore";                        string PARestore::abrv = "Re";                                                                                                                 
-    string PASink::name = "PASink";                              string PASink::abrv = "Si";                                                                                                                    
-    string PASinkVelocity::name = "PASinkVelocity";              string PASinkVelocity::abrv = "SV";                                                                                                            
-    string PASort::name = "PASort";                              string PASort::abrv = "Srt";                                                                                                                   
-    string PASource::name = "PASource";                          string PASource::abrv = "Src";                                                                                                                 
-    string PASpeedLimit::name = "PASpeedLimit";                  string PASpeedLimit::abrv = "SL";                                                                                                              
-    string PATargetColor::name = "PATargetColor";                string PATargetColor::abrv = "TC";                                                                                                             
-    string PATargetSize::name = "PATargetSize";                  string PATargetSize::abrv = "TS";                                                                                                              
-    string PATargetVelocity::name = "PATargetVelocity";          string PATargetVelocity::abrv = "TV";                                                                                                          
-    string PATargetRotVelocity::name = "PATargetRotVelocity";    string PATargetRotVelocity::abrv = "TRV";                                                                                                      
-    string PAVortex::name = "PAVortex";                          string PAVortex::abrv = "Vo";                                                                                                                  
+    std::string PAAvoid::name = "PAAvoid";                            std::string PAAvoid::abrv = "Av";                                                                                                                   
+    std::string PABounce::name = "PABounce";                          std::string PABounce::abrv = "Bo";                                                                                                                  
+    std::string PACallback::name = "PACallback";                      std::string PACallback::abrv = "CB";                                                                                                                
+    std::string PACallActionList::name = "PACallActionList";          std::string PACallActionList::abrv = "CAL";                                                                                                         
+    std::string PACopyVertexB::name = "PACopyVertexB";                std::string PACopyVertexB::abrv = "CVB";                                                                                                            
+    std::string PADamping::name = "PADamping";                        std::string PADamping::abrv = "Da";                                                                                                                 
+    std::string PARotDamping::name = "PARotDamping";                  std::string PARotDamping::abrv = "RT";                                                                                                              
+    std::string PAExplosion::name = "PAExplosion";                    std::string PAExplosion::abrv = "Ex";                                                                                                               
+    std::string PAFollow::name = "PAFollow";                          std::string PAFollow::abrv = "Fo";                                                                                                                  
+    std::string PAGravitate::name = "PAGravitate";                    std::string PAGravitate::abrv = "Gre";                                                                                                              
+    std::string PAGravity::name = "PAGravity";                        std::string PAGravity::abrv = "Gr";                                                                                                                 
+    std::string PAJet::name = "PAJet";                                std::string PAJet::abrv = "Jet";                                                                                                                    
+    std::string PAKillOld::name = "PAKillOld";                        std::string PAKillOld::abrv = "KO";                                                                                                                 
+    std::string PAMatchVelocity::name = "PAMatchVelocity";            std::string PAMatchVelocity::abrv = "MV";                                                                                                           
+    std::string PAMatchRotVelocity::name = "PAMatchRotVelocity";      std::string PAMatchRotVelocity::abrv = "MRV";                                                                                                       
+    std::string PAMove::name = "PAMove";                              std::string PAMove::abrv = "Mo";                                                                                                                    
+    std::string PAOrbitLine::name = "PAOrbitLine";                    std::string PAOrbitLine::abrv = "OL";                                                                                                               
+    std::string PAOrbitPoint::name = "PAOrbitPoint";                  std::string PAOrbitPoint::abrv = "OP";                                                                                                              
+    std::string PARandomAccel::name = "PARandomAccel";                std::string PARandomAccel::abrv = "RA";                                                                                                             
+    std::string PARandomDisplace::name = "PARandomDisplace";          std::string PARandomDisplace::abrv = "RD";                                                                                                          
+    std::string PARandomVelocity::name = "PARandomVelocity";          std::string PARandomVelocity::abrv = "RV";                                                                                                          
+    std::string PARandomRotVelocity::name = "PARandomRotVelocity";    std::string PARandomRotVelocity::abrv = "RRV";                                                                                                      
+    std::string PARestore::name = "PARestore";                        std::string PARestore::abrv = "Re";                                                                                                                 
+    std::string PASink::name = "PASink";                              std::string PASink::abrv = "Si";                                                                                                                    
+    std::string PASinkVelocity::name = "PASinkVelocity";              std::string PASinkVelocity::abrv = "SV";                                                                                                            
+    std::string PASort::name = "PASort";                              std::string PASort::abrv = "Srt";                                                                                                                   
+    std::string PASource::name = "PASource";                          std::string PASource::abrv = "Src";                                                                                                                 
+    std::string PASpeedLimit::name = "PASpeedLimit";                  std::string PASpeedLimit::abrv = "SL";                                                                                                              
+    std::string PATargetColor::name = "PATargetColor";                std::string PATargetColor::abrv = "TC";                                                                                                             
+    std::string PATargetSize::name = "PATargetSize";                  std::string PATargetSize::abrv = "TS";                                                                                                              
+    std::string PATargetVelocity::name = "PATargetVelocity";          std::string PATargetVelocity::abrv = "TV";                                                                                                          
+    std::string PATargetRotVelocity::name = "PATargetRotVelocity";    std::string PATargetRotVelocity::abrv = "TRV";                                                                                                      
+    std::string PAVortex::name = "PAVortex";                          std::string PAVortex::abrv = "Vo";                                                                                                                  
 
     void PAAvoid::Exec(const PDTriangle &dom, ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend)
     {
