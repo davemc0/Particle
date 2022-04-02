@@ -72,7 +72,7 @@ int ParticleEffects::CallDemo(int DemoNum, ExecMode_e EM)
     Demo->PerFrame(EM, *this);
 
     if(EM == Internal_Mode && Demo->CompiledFunc != NULL) {
-        // We switched the AL is to internal mode. Now switch it back.
+        // We switched the AL to internal mode. Now switch it back.
         P.BindEmittedActionList(Demo->AList, Demo->CompiledFunc, Demo->BIND_KIND);
     }
 

@@ -10,15 +10,11 @@
 #include "Particle/pAPI.h"
 
 // The following header files are part of DMcTools.
-// DMcTools is part of the same source distribution as the Particle API.
 #include "Util/Timer.h"
-#include "Util/Utils.h"
-#include "Util/Assert.h"
+#include "Math/Random.h"
 
 #include <iostream>
-//#include <string>
-
-using namespace std;
+#include <string>
 
 static ExecMode_e ExecMode = Internal_Mode;
 static bool SortParticles = false, ShowText = true;
@@ -42,7 +38,7 @@ void Report()
         printf("%c%c n=%5d fps=%02.2f %s\n",
             ExecMode == Immediate_Mode ? 'I':(ExecMode == Internal_Mode ? 'L':'C'),
             SortParticles ? 'S':' ',
-            cnt, fps, Efx.GetCurEffectName());
+            cnt, fps, Efx.GetCurEffectName().c_str());
         Clock.Start();
         FrameCountForClock = 0;
     }
@@ -56,6 +52,8 @@ void RunBenchmarkCache()
 
     P.CurrentGroup(Efx.particle_handle);
 
+    Efx.MakeActionLists(ExecMode);
+
     Efx.CallDemo(DemoNum, ExecMode); // Prime it
 
     Clock.Start();
@@ -65,7 +63,7 @@ void RunBenchmarkCache()
         for(int i=0; i<100; i++) {
             Efx.CallDemo(DemoNum, ExecMode);
             if(SortParticles)
-                P.Sort(pVec_(0,-19,15), pVec_(0,0,3));
+                P.Sort(pVec(0,-19,15), pVec(0,0,3));
             if(ShowText)
                 Report();
         }
@@ -80,7 +78,7 @@ void RunBenchmark()
 
     P.CurrentGroup(Efx.particle_handle);
 
-    BindEffects(Efx);
+    Efx.MakeActionLists(ExecMode);
 
     Efx.CallDemo(DemoNum, ExecMode);
 
@@ -88,7 +86,7 @@ void RunBenchmark()
     for(int i=0; i<1000; i++) {
         Efx.CallDemo(DemoNum, ExecMode);
         if(SortParticles)
-            P.Sort(pVec_(0,-19,15), pVec_(0,0,3));
+            P.Sort(pVec(0,-19,15), pVec(0,0,3));
         Report();
     }
 #else
@@ -110,65 +108,64 @@ void RunBenchmark()
 // Generate a particle and ensure that it is within the domain.
 void TestOneDomain(pDomain &Dom)
 {
-    cerr << "TestOneDomain()\n";
+    std::cerr << "TestOneDomain()\n";
     const int Loops = 1000000;
     const float EP = 0.0000001;
     int Bad = 0;
 
     for(int i=0; i<Loops; i++) {
         pVec pt = Dom.Generate();
-        //cerr << pt << endl;
+        //std::cerr << pt << std::endl;
         bool isin = Dom.Within(pt);
-        // ASSERT_R(isin);
         if(!isin) {
 #if 0
-            cerr << "Bad: (" << i << ") " << pt << ": ";
-            cerr << Dom.Within(pt + pVec_(EP,0,0));
-            cerr << Dom.Within(pt + pVec_(-EP,0,0));
-            cerr << Dom.Within(pt + pVec_(0,EP,0));
-            cerr << Dom.Within(pt + pVec_(0,-EP,0));
-            cerr << Dom.Within(pt + pVec_(0,0,EP));
-            cerr << Dom.Within(pt + pVec_(0,0,-EP));
-            cerr << endl;
+            std::cerr << "Bad: (" << i << ") " << pt << ": ";
+            std::cerr << Dom.Within(pt + pVec(EP,0,0));
+            std::cerr << Dom.Within(pt + pVec(-EP,0,0));
+            std::cerr << Dom.Within(pt + pVec(0,EP,0));
+            std::cerr << Dom.Within(pt + pVec(0,-EP,0));
+            std::cerr << Dom.Within(pt + pVec(0,0,EP));
+            std::cerr << Dom.Within(pt + pVec(0,0,-EP));
+            std::cerr << std::endl;
 #endif
             Bad++;
         }
     }
-    cerr << Bad << " / " << Loops << " are bad.\n";
+    std::cerr << Bad << " / " << Loops << " are bad.\n";
 }
 
 inline float RN()
 {
-    return DRand(-100, 100);
+    return frand(-100, 100);
 }
 
 void TestDomains()
 {
-    cerr << "Testing domains\n";
+    std::cerr << "Testing domains\n";
 
     const int OuterLoops = 1000;
 
-    cerr << "PDPoint\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDPoint_(pVec_(RN(),RN(),RN())));
-    cerr << "PDLine\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDLine_(pVec_(RN(),RN(),RN()), pVec_(RN(),RN(),RN())));
-    cerr << "PDTriangle\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDTriangle_(pVec_(RN(),RN(),RN()), pVec_(RN(),RN(),RN()), pVec_(RN(),RN(),RN())));
-    cerr << "PDRectangle\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDRectangle_(pVec_(RN(),RN(),RN()), pVec_(RN(),RN(),RN()), pVec_(RN(),RN(),RN())));
-    cerr << "PDPlane\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDPlane_(pVec_(RN(),RN(),RN()), pVec_(RN(),RN(),RN())));
-    cerr << "PDBox\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDBox_(pVec_(RN(),RN(),RN()), pVec_(RN(),RN(),RN())));
-    cerr << "PDCylinder\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDCylinder_(pVec_(RN(),RN(),RN()), pVec_(RN(),RN(),RN()), fabs(RN()), fabs(RN())));
-    cerr << "PDCone\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDCone_(pVec_(RN(),RN(),RN()), pVec_(RN(),RN(),RN()), fabs(RN()), fabs(RN())));
-    cerr << "PDSphere\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDSphere_(pVec_(RN(),RN(),RN()), fabs(RN()), fabs(RN())));
-    cerr << "PDBlob\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDBlob_(pVec_(RN(),RN(),RN()), fabs(RN())));
-    cerr << "PDDisc\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDDisc_(pVec_(RN(),RN(),RN()), pVec_(RN(),RN(),RN()), fabs(RN()), fabs(RN())));
+    std::cerr << "PDPoint\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDPoint(pVec(RN(),RN(),RN())));
+    std::cerr << "PDLine\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDLine(pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN())));
+    std::cerr << "PDTriangle\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDTriangle(pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN())));
+    std::cerr << "PDRectangle\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDRectangle(pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN())));
+    std::cerr << "PDPlane\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDPlane(pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN())));
+    std::cerr << "PDBox\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDBox(pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN())));
+    std::cerr << "PDCylinder\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDCylinder(pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN()), fabs(RN()), fabs(RN())));
+    std::cerr << "PDCone\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDCone(pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN()), fabs(RN()), fabs(RN())));
+    std::cerr << "PDSphere\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDSphere(pVec(RN(),RN(),RN()), fabs(RN()), fabs(RN())));
+    std::cerr << "PDBlob\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDBlob(pVec(RN(),RN(),RN()), fabs(RN())));
+    std::cerr << "PDDisc\n"; for(int i=0; i<OuterLoops; i++) TestOneDomain(PDDisc(pVec(RN(),RN(),RN()), pVec(RN(),RN(),RN()), fabs(RN()), fabs(RN())));
 
-    cerr << "Done testing domains.\n";
+    std::cerr << "Done testing domains.\n";
 }
 
 static void Usage(char *program_name, char *message)
 {
     if (message)
-        cerr << message << endl;
+        std::cerr << message << std::endl;
 
-    cerr << "Usage: " << program_name << endl;
+    std::cerr << "Usage: " << program_name << std::endl;
     exit(1);
 }
 
@@ -176,26 +173,28 @@ static void Args(int argc, char **argv)
 {
     char *program = argv[0];
 
-    for(int i=1; i<argc; i++) {
-        if(string(argv[i]) == "-h" || string(argv[i]) == "-help") {
+    for (int i = 1; i < argc; i++) {
+        std::string starg(argv[i]);
+
+        if(starg == "-h" || starg == "-help") {
             Usage(program, "Help:");
-        } else if(string(argv[i]) == "-cache") {
+        } else if(starg == "-cache") {
             RunBenchmarkCache();
             RemoveArgs(argc, argv, i);
-        } else if(string(argv[i]) == "-test") {
+        } else if(starg == "-test") {
             TestDomains();
             RemoveArgs(argc, argv, i);
 
-        } else if(string(argv[i]) == "-immed") {
+        } else if(starg == "-immed") {
             ExecMode = Immediate_Mode;
             RemoveArgs(argc, argv, i);
-        } else if(string(argv[i]) == "-compiled") {
+        } else if(starg == "-compiled") {
             ExecMode = Compiled_Mode;
             RemoveArgs(argc, argv, i);
-        } else if(string(argv[i]) == "-sort") {
+        } else if(starg == "-sort") {
             SortParticles = true;
             RemoveArgs(argc, argv, i);
-        } else if(string(argv[i]) == "-print") {
+        } else if(starg == "-print") {
             ShowText = true;
             RemoveArgs(argc, argv, i);
         } else {

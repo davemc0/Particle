@@ -19,5 +19,6 @@ add_subdirectory(${PROJECT_ROOT_DIR}/ParticleLib ${CMAKE_CURRENT_BINARY_DIR}/Par
 
 add_subdirectory(${PROJECT_ROOT_DIR}/Example ${CMAKE_CURRENT_BINARY_DIR}/Example)
 add_subdirectory(${PROJECT_ROOT_DIR}/PSpray ${CMAKE_CURRENT_BINARY_DIR}/PSpray)
+add_subdirectory(${PROJECT_ROOT_DIR}/ParBench ${CMAKE_CURRENT_BINARY_DIR}/ParBench)
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT PSpray)
