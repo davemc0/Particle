@@ -652,7 +652,7 @@ namespace PAPI {
     void PADamping::Execute(ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend)
     {
         // This is important if dt is != 1.
-        pVec one=pVec_(1,1,1);
+        pVec one=pVec(1,1,1);
         pVec scale(one - ((one - damping) * dt));
 
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
@@ -669,7 +669,7 @@ namespace PAPI {
     void PARotDamping::Execute(ParticleGroup &group, ParticleList::iterator ibegin, ParticleList::iterator iend)
     {
         // This is important if dt is != 1.
-        pVec one=pVec_(1,1,1);
+        pVec one=pVec(1,1,1);
         pVec scale(one - ((one - damping) * dt));
 
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
@@ -1204,11 +1204,11 @@ namespace PAPI {
                 // Already constrained; keep it there.
                 if (restore_velocity) {
                     m.pos = m.posB;
-                    m.vel = pVec_(0.0f,0.0f,0.0f);
+                    m.vel = pVec(0.0f,0.0f,0.0f);
                 }
                 if (restore_rvelocity) {
                     m.up = m.upB;
-                    m.rvel = pVec_(0.0f,0.0f,0.0f);
+                    m.rvel = pVec(0.0f,0.0f,0.0f);
                 }
             }
         } else {
@@ -1412,7 +1412,7 @@ namespace PAPI {
             float rSqr = parToAxis.length2();
 
             if(rSqr >= max_radiusSqr || axisScale < 0.0f || alongAxis > 1.0f) {
-                //m.color = pVec_(0,0,1);
+                //m.color = pVec(0,0,1);
                 continue;
             }
 
@@ -1424,11 +1424,11 @@ namespace PAPI {
                 // Accelerate toward axis. Force is NOT affected by 1/r^2.
                 pVec AccelIn = parToAxis * (inSpeed * dtOverMass);
                 m.vel += AccelIn;
-                //m.color = pVec_(0,1,0);
+                //m.color = pVec(0,1,0);
                 continue;
             }
 
-            //m.color = pVec_(1,0,0);
+            //m.color = pVec(1,0,0);
             // Accelerate up or down to simulate gravity or something
             pVec AccelUp = axisN * (upSpeed * dtOverMass);
 

@@ -37,7 +37,7 @@ ParticleEffects::ParticleEffects(ParticleContext_t &P_, int mp, E_RENDER_GEOMETR
     maxParticles = mp;
     numSteps = 1;
     particle_handle = -1;
-    GravityVec = pVec_(0.0f, 0.0f, -0.01f);
+    GravityVec = pVec(0.0f, 0.0f, -0.01f);
     MakeEffects();
 }
 
@@ -195,19 +195,19 @@ void Atom::DoActions(ParticleEffects &Efx) const
 {
     ParticleContext_t &P = Efx.P;
     pSourceState S;
-    S.Velocity(PDSphere_(pVec_(0, 0, 0), 0.2));
-    S.Color(PDBox_(pVec_(1, 0, 0), pVec_(1, 0, 1)));
-    S.Size(pVec_(1.5));
+    S.Velocity(PDSphere_(pVec(0, 0, 0), 0.2));
+    S.Color(PDBox_(pVec(1, 0, 0), pVec(1, 0, 1)));
+    S.Size(pVec(1.5));
     S.StartingAge(0);
 
-    P.Source(particle_rate, PDSphere_(pVec_(0, 0, 0), 6), S);
-    P.OrbitPoint(pVec_(0, 0, 0), 0.05, 1.5);
-    P.TargetColor(pVec_(0, 1, 0), 1, 0.001);
+    P.Source(particle_rate, PDSphere_(pVec(0, 0, 0), 6), S);
+    P.OrbitPoint(pVec(0, 0, 0), 0.05, 1.5);
+    P.TargetColor(pVec(0, 1, 0), 1, 0.001);
     P.Move(true, false);
 
     // Keep orbits from being too eccentric.
-    P.Sink(true, PDSphere_(pVec_(0.0, 0.0, 0.0), 1.0));
-    P.Sink(false, PDSphere_(pVec_(0.0, 0.0, 0.0), 8.0));
+    P.Sink(true, PDSphere_(pVec(0.0, 0.0, 0.0), 1.0));
+    P.Sink(false, PDSphere_(pVec(0.0, 0.0, 0.0), 8.0));
 }
 
 void Atom::EmitList(ParticleEffects &Efx)
@@ -234,26 +234,26 @@ void Balloons::DoActions(ParticleEffects &Efx) const
 
 #if 0
     PDUnion DomList;
-    DomList.insert(PDPoint_(pVec_(1,0,0)));
-    DomList.insert(PDPoint_(pVec_(0,1,0)));
-    DomList.insert(PDPoint_(pVec_(0,0,1)));
-    DomList.insert(PDPoint_(pVec_(0,1,1)));
-    DomList.insert(PDPoint_(pVec_(1,0,1)));
-    DomList.insert(PDPoint_(pVec_(1,1,0)));
+    DomList.insert(PDPoint_(pVec(1,0,0)));
+    DomList.insert(PDPoint_(pVec(0,1,0)));
+    DomList.insert(PDPoint_(pVec(0,0,1)));
+    DomList.insert(PDPoint_(pVec(0,1,1)));
+    DomList.insert(PDPoint_(pVec(1,0,1)));
+    DomList.insert(PDPoint_(pVec(1,1,0)));
 
     pSourceState S;
     S.Color(DomList);
     S.StartingAge(0, 5);
-    S.Velocity(pVec_(0));
+    S.Velocity(pVec(0));
     float BBOX = 1.7;
     float x=0, y=0, z=-1;
-    P.Source(particle_rate, PDBox_(pVec_(x-BBOX, y-BBOX, z-BBOX), pVec_(x+BBOX, y+BBOX, z+BBOX)), S);
+    P.Source(particle_rate, PDBox_(pVec(x-BBOX, y-BBOX, z-BBOX), pVec(x+BBOX, y+BBOX, z+BBOX)), S);
 #endif
 
-    P.Gravity(pVec_(.0005, .005, .0005));
-    P.Damping(pVec_(0.9, 0.67, 0.9));
+    P.Gravity(pVec(.0005, .005, .0005));
+    P.Damping(pVec(0.9, 0.67, 0.9));
     float BOX = .005;
-    P.RandomAccel(PDBox_(pVec_(-BOX, -BOX, -BOX), pVec_(BOX, BOX, BOX)));
+    P.RandomAccel(PDBox_(pVec(-BOX, -BOX, -BOX), pVec(BOX, BOX, BOX)));
     P.Move(true, false);
     P.KillOld(700);
 }
@@ -285,39 +285,39 @@ void BounceToy::DoActions(ParticleEffects &Efx) const
     const float Fric = 0.5f, Res = 0.50f, Cutoff = 0.07f;
 
     pSourceState S;
-    S.Color(PDLine_(pVec_(1,1,0), pVec_(0,1,0)));
-    S.Velocity(PDDisc_(pVec_(0,0,0), pVec_(0,1,0.1), 0.01f));
-    P.Source(10, PDLine_(pVec_(-5,0,10), pVec_(5,0,10)), S);
+    S.Color(PDLine_(pVec(1,1,0), pVec(0,1,0)));
+    S.Velocity(PDDisc_(pVec(0,0,0), pVec(0,1,0.1), 0.01f));
+    P.Source(10, PDLine_(pVec(-5,0,10), pVec(5,0,10)), S);
 
     P.Gravity(Efx.GravityVec);
 
-    P.Bounce(Fric, Res, Cutoff, PDRectangle_(pVec_(-4,-2,6), pVec_(4,0,1), pVec_(0,4,0)));
-    P.Bounce(Fric, Res, Cutoff, PDRectangle_(pVec_(4,-2,8), pVec_(4,0,-3), pVec_(0,4,0)));
-    P.Bounce(Fric, Res, Cutoff, PDRectangle_(pVec_(-1,-2,6), pVec_(2,0,-2), pVec_(0,4,0)));
-    P.Bounce(Fric, Res, Cutoff, PDRectangle_(pVec_(1,-2,2), pVec_(4,0,2), pVec_(0,4,0)));
-    P.Bounce(Fric, Res, Cutoff, PDRectangle_(pVec_(-6,-2,6), pVec_(3,0,-5), pVec_(0,4,0)));
-    P.Bounce(Fric, Res, Cutoff, PDRectangle_(pVec_(6,-2,2), pVec_(5,0,3), pVec_(0,4,0)));
-    P.Bounce(Fric, Res, Cutoff, PDRectangle_(pVec_(4,-2,-1), pVec_(5,0,1.5), pVec_(0,4,0)));
-    P.Bounce(Fric, Res, Cutoff, PDRectangle_(pVec_(-3,-2,-1), pVec_(5,0,-1), pVec_(0,4,0)));
-    P.Bounce(Fric, Res, Cutoff, PDRectangle_(pVec_(-8,-2,-4.1), pVec_(14,0,2), pVec_(0,4,0)));
-    P.Bounce(Fric, Res, Cutoff, PDRectangle_(pVec_(-10,-2,5), pVec_(4,0,5), pVec_(0,4,0)));
+    P.Bounce(Fric, Res, Cutoff, PDRectangle_(pVec(-4,-2,6), pVec(4,0,1), pVec(0,4,0)));
+    P.Bounce(Fric, Res, Cutoff, PDRectangle_(pVec(4,-2,8), pVec(4,0,-3), pVec(0,4,0)));
+    P.Bounce(Fric, Res, Cutoff, PDRectangle_(pVec(-1,-2,6), pVec(2,0,-2), pVec(0,4,0)));
+    P.Bounce(Fric, Res, Cutoff, PDRectangle_(pVec(1,-2,2), pVec(4,0,2), pVec(0,4,0)));
+    P.Bounce(Fric, Res, Cutoff, PDRectangle_(pVec(-6,-2,6), pVec(3,0,-5), pVec(0,4,0)));
+    P.Bounce(Fric, Res, Cutoff, PDRectangle_(pVec(6,-2,2), pVec(5,0,3), pVec(0,4,0)));
+    P.Bounce(Fric, Res, Cutoff, PDRectangle_(pVec(4,-2,-1), pVec(5,0,1.5), pVec(0,4,0)));
+    P.Bounce(Fric, Res, Cutoff, PDRectangle_(pVec(-3,-2,-1), pVec(5,0,-1), pVec(0,4,0)));
+    P.Bounce(Fric, Res, Cutoff, PDRectangle_(pVec(-8,-2,-4.1), pVec(14,0,2), pVec(0,4,0)));
+    P.Bounce(Fric, Res, Cutoff, PDRectangle_(pVec(-10,-2,5), pVec(4,0,5), pVec(0,4,0)));
 
-    P.Jet(PDBox_(pVec_(-10,-2,-6), pVec_(-7,0,-1)), PDPoint_(pVec_(0.0,0,.15)));
-    P.TargetColor(pVec_(0,0,1), 1, 0.004);
+    P.Jet(PDBox_(pVec(-10,-2,-6), pVec(-7,0,-1)), PDPoint_(pVec(0.0,0,.15)));
+    P.TargetColor(pVec(0,0,1), 1, 0.004);
     P.Move(true, false);
 
-    P.Sink(false, PDPlane_(pVec_(0,0,-7), pVec_(0,0,1)));
+    P.Sink(false, PDPlane_(pVec(0,0,-7), pVec(0,0,1)));
 }
 
 // An explosion from the center of the universe, followed by gravity toward a point
 void Explosion::DoActions(ParticleEffects &Efx) const
 {
     ParticleContext_t &P = Efx.P;
-    P.Damping(pVec_(0.999));
-    P.OrbitPoint(pVec_(0, 0, 0), .02, 1.5);
-    P.Explosion(pVec_(0, 0, 0), time_since_start, 2, 3, 0.1);
+    P.Damping(pVec(0.999));
+    P.OrbitPoint(pVec(0, 0, 0), .02, 1.5);
+    P.Explosion(pVec(0, 0, 0), time_since_start, 2, 3, 0.1);
     P.Move(true, false);
-    P.Sink(false, PDSphere_(pVec_(0, 0, 0), 30));
+    P.Sink(false, PDSphere_(pVec(0, 0, 0), 30));
 }
 
 void Explosion::EmitList(ParticleEffects &Efx)
@@ -342,13 +342,13 @@ void Fireflies::DoActions(ParticleEffects &Efx) const
 {
     ParticleContext_t &P = Efx.P;
     pSourceState S;
-    S.Size(pVec_(1.0));
-    S.Velocity(PDPoint_(pVec_(0,0,0)));
-    S.Color(PDLine_(pVec_(.1, .5, 0), pVec_(.9, .9, .1)));
+    S.Size(pVec(1.0));
+    S.Velocity(PDPoint_(pVec(0,0,0)));
+    S.Color(PDLine_(pVec(.1, .5, 0), pVec(.9, .9, .1)));
     S.StartingAge(0);
-    P.Source(1, PDBlob_(pVec_(0, 0, 2), 2), S);
+    P.Source(1, PDBlob_(pVec(0, 0, 2), 2), S);
 
-    P.RandomAccel(PDSphere_(pVec_(0, 0, 0.00001), 0.002));
+    P.RandomAccel(PDSphere_(pVec(0, 0, 0.00001), 0.002));
     P.Move(true, false);
 
     P.KillOld(600);
@@ -363,20 +363,20 @@ void Fireworks::DoActions(ParticleEffects &Efx) const
     // The action list for moving the sparks
     pSourceState S;
     S.StartingAge(0, 6);
-    S.Velocity(PDBlob_(pVec_(0), 0.006));
+    S.Velocity(PDBlob_(pVec(0), 0.006));
 
     // For emitting we should have a constant max number of rockets and vary their params.
     for(int i=0; i<MaxRockets; i++) {
         //cerr << i << " " <<rocketp[i][0]<<" "<<rocketp[i][1]<<" "<<rocketp[i][2]<<"\n";
         //cerr << "c " <<rocketc[i][0]<<" "<<rocketc[i][1]<<" "<<rocketc[i][2]<<"\n";
 
-        S.Color(PDLine_(rocketc[i], pVec_(1,.5,.5)));
+        S.Color(PDLine_(rocketc[i], pVec(1,.5,.5)));
         P.Source((i<NumRockets) ? particle_rate : 0, PDPoint_(rocketp[i]), S);
     }
 
     P.Gravity(Efx.GravityVec);
-    //P.Damping(pVec_(0.999));
-    P.TargetColor(pVec_(0,0,0), 0, 0.01);
+    //P.Damping(pVec(0.999));
+    P.TargetColor(pVec(0,0,0), 0, 0.01);
     P.Move(true, false);
     P.KillOld(Lifetime);
 }
@@ -390,11 +390,11 @@ void Fireworks::PerFrame(ExecMode_e EM, ParticleEffects &Efx)
     P.CurrentGroup(RocketGroup);
 
     pSourceState S;
-    S.Velocity(PDCylinder_(pVec_(0,0,0.3), pVec_(0,0,0.5), 0.11, 0.07));
-    S.Color(PDBox_(pVec_(0,0.5,0), pVec_(1,1,1)));
-    P.Source(1, PDDisc_(pVec_(0,0,0), pVec_(0,0,1), 6), S);
+    S.Velocity(PDCylinder_(pVec(0,0,0.3), pVec(0,0,0.5), 0.11, 0.07));
+    S.Color(PDBox_(pVec(0,0.5,0), pVec(1,1,1)));
+    P.Source(1, PDDisc_(pVec(0,0,0), pVec(0,0,1), 6), S);
 
-    P.Sink(false, PDPlane_(pVec_(0,0,-1), pVec_(0,0,1)));
+    P.Sink(false, PDPlane_(pVec(0,0,-1), pVec(0,0,1)));
     P.Gravity(Efx.GravityVec);
     P.Move(true, false);
 
@@ -412,8 +412,8 @@ void Fireworks::EmitList(ParticleEffects &Efx)
 {
     NumRockets = MaxRockets;
     for(int i=0; i<NumRockets; i++) {
-        rocketp[i] = pVec_(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
-        rocketc[i] = pVec_(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
+        rocketp[i] = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
+        rocketc[i] = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
     }
     particle_rate = P_VARYING_FLOAT;
     Effect::EmitList(Efx);
@@ -436,17 +436,17 @@ void FlameThrower::DoActions(ParticleEffects &Efx) const
 {
     ParticleContext_t &P = Efx.P;
     pSourceState S;
-    S.Color(PDLine_(pVec_(0.8,0,0), pVec_(1,1,0.3)));
-    S.Velocity(PDBlob_(pVec_(dirAng == P_VARYING_FLOAT ? P_VARYING_FLOAT : sin(dirAng)*.8, dirAng == P_VARYING_FLOAT ? P_VARYING_FLOAT : cos(dirAng)*.8, 0), 0.03));
+    S.Color(PDLine_(pVec(0.8,0,0), pVec(1,1,0.3)));
+    S.Velocity(PDBlob_(pVec(dirAng == P_VARYING_FLOAT ? P_VARYING_FLOAT : sin(dirAng)*.8, dirAng == P_VARYING_FLOAT ? P_VARYING_FLOAT : cos(dirAng)*.8, 0), 0.03));
     S.StartingAge(0);
-    S.Size(pVec_(1));
-    P.Source(particle_rate, PDDisc_(pVec_(0, 0, 2), pVec_(0, 0, 1), 0.5), S);
+    S.Size(pVec(1));
+    P.Source(particle_rate, PDDisc_(pVec(0, 0, 2), pVec(0, 0, 1), 0.5), S);
 
-    P.Gravity(pVec_(0, 0, .01));
-    P.Damping(pVec_(0.9, 0.97, 0.9));
+    P.Gravity(pVec(0, 0, .01));
+    P.Damping(pVec(0.9, 0.97, 0.9));
 
     const float BOX = .017;
-    P.RandomAccel(PDBox_(pVec_(-BOX, -BOX, -BOX), pVec_(BOX, BOX, BOX)));
+    P.RandomAccel(PDBox_(pVec(-BOX, -BOX, -BOX), pVec(BOX, BOX, BOX)));
 
     P.Move(true, false);
     P.KillOld(Lifetime);
@@ -476,16 +476,16 @@ void Fountain::DoActions(ParticleEffects &Efx) const
 {
     ParticleContext_t &P = Efx.P;
     pSourceState S;
-    S.Velocity(PDCylinder_(pVec_(0.0, -0.01, 0.35), pVec_(0.0, -0.01, 0.37), 0.021, 0.019));
-    S.Color(PDLine_(pVec_(0.8, 0.9, 1.0), pVec_(1.0, 1.0, 1.0)));
-    P.Source(particle_rate, PDLine_(pVec_(0.0, 0.0, 0.0), pVec_(0.0, 0.0, 0.405)), S);
+    S.Velocity(PDCylinder_(pVec(0.0, -0.01, 0.35), pVec(0.0, -0.01, 0.37), 0.021, 0.019));
+    S.Color(PDLine_(pVec(0.8, 0.9, 1.0), pVec(1.0, 1.0, 1.0)));
+    P.Source(particle_rate, PDLine_(pVec(0.0, 0.0, 0.0), pVec(0.0, 0.0, 0.405)), S);
 
     P.Gravity(Efx.GravityVec);
-    P.Bounce(-0.05, 0.35, 0, PDDisc_(pVec_(0, 0, 0), pVec_(0, 0, 1), 5));
+    P.Bounce(-0.05, 0.35, 0, PDDisc_(pVec(0, 0, 0), pVec(0, 0, 1), 5));
     P.Move(true, false);
 
-    P.Sink(false, PDPlane_(pVec_(0,0,-3), pVec_(0,0,1)));
-    P.SinkVelocity(true, PDSphere_(pVec_(0, 0, 0), 0.01));
+    P.Sink(false, PDPlane_(pVec(0,0,-3), pVec(0,0,1)));
+    P.SinkVelocity(true, PDSphere_(pVec(0, 0, 0), 0.01));
 }
 
 void Fountain::EmitList(ParticleEffects &Efx)
@@ -516,7 +516,7 @@ void GridShape::StartEffect(ParticleEffects &Efx)
     ParticleContext_t &P = Efx.P;
 
     pSourceState S;
-    S.Velocity(PDBlob_(pVec_(0, 0, 0), 0.001));
+    S.Velocity(PDBlob_(pVec(0, 0, 0), 0.001));
     P.KillOld(-100000);
     int dim = int(powf(float(Efx.maxParticles), 0.33333333f));
 
@@ -537,7 +537,7 @@ void GridShape::StartEffect(ParticleEffects &Efx)
                 // Make the particles.
                 S.Color(j / float(dim), k / float(dim), l / float(dim));
                 S.StartingAge(0);
-                P.Vertex(pVec_(x, y, z), S);
+                P.Vertex(pVec(x, y, z), S);
             }
         }
     }
@@ -549,25 +549,25 @@ void JetSpray::DoActions(ParticleEffects &Efx) const
 {
     ParticleContext_t &P = Efx.P;
     pSourceState S;
-    S.Velocity(PDBlob_(pVec_(0, 0, 0), 0.01));
-    S.Size(pVec_(1.5));
-    S.Color(PDSphere_(pVec_(.8, .4, .1), .1));
-    P.Source(1, PDRectangle_(pVec_(-1, -1, 0.1), pVec_(2, 0, 0), pVec_(0, 2, 0)), S);
+    S.Velocity(PDBlob_(pVec(0, 0, 0), 0.01));
+    S.Size(pVec(1.5));
+    S.Color(PDSphere_(pVec(.8, .4, .1), .1));
+    P.Source(1, PDRectangle_(pVec(-1, -1, 0.1), pVec(2, 0, 0), pVec(0, 2, 0)), S);
 
-    S.Color(PDSphere_(pVec_(.5, .4, .1), .1));
-    P.Source(300, PDRectangle_(pVec_(-10, -10, 0.1), pVec_(20, 0, 0), pVec_(0, 20, 0)), S);
+    S.Color(PDSphere_(pVec(.5, .4, .1), .1));
+    P.Source(300, PDRectangle_(pVec(-10, -10, 0.1), pVec(20, 0, 0), pVec(0, 20, 0)), S);
 
     P.Gravity(Efx.GravityVec);
 
-    P.Jet(PDSphere_(jet, 1.5), PDBlob_(pVec_(0,0,.05), 0.01));
-    P.Bounce(0.1, 0.3, 0.1, PDRectangle_(pVec_(-10, -10, 0.0), pVec_(20, 0, 0), pVec_(0, 20, 0)));
-    P.Sink(false, PDPlane_(pVec_(0,0,-20), pVec_(0,0,1)));
+    P.Jet(PDSphere_(jet, 1.5), PDBlob_(pVec(0,0,.05), 0.01));
+    P.Bounce(0.1, 0.3, 0.1, PDRectangle_(pVec(-10, -10, 0.0), pVec(20, 0, 0), pVec(0, 20, 0)));
+    P.Sink(false, PDPlane_(pVec(0,0,-20), pVec(0,0,1)));
     P.Move(true, false);
 }
 
 void JetSpray::EmitList(ParticleEffects &Efx)
 {
-    jet = pVec_(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
+    jet = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
     Effect::EmitList(Efx);
 }
 
@@ -580,7 +580,7 @@ void JetSpray::PerFrame(ExecMode_e EM, ParticleEffects &Efx)
 
 void JetSpray::StartEffect(ParticleEffects &Efx)
 {
-    jet = pVec_(0);
+    jet = pVec(0);
     djet = pRandVec() * 0.5f;
     djet.z() = 0.0f;
 }
@@ -590,15 +590,15 @@ void Orbit2::DoActions(ParticleEffects &Efx) const
 {
     ParticleContext_t &P = Efx.P;
     pSourceState S;
-    S.Velocity(PDBlob_(pVec_(0.02, -0.2, 0), 0.015));
-    S.Size(pVec_(1.0));
-    const pVec tjet = Abs(jet) * 0.1 + pVec_(0.4, 0.4, 0.4);
+    S.Velocity(PDBlob_(pVec(0.02, -0.2, 0), 0.015));
+    S.Size(pVec(1.0));
+    const pVec tjet = Abs(jet) * 0.1 + pVec(0.4, 0.4, 0.4);
     S.Color(PDSphere_(tjet, 0.1));
     P.Source(particle_rate, PDPoint_(jet), S);
 
-    P.OrbitPoint(pVec_(2, 0, 3), 0.1, 1.5);
-    P.OrbitPoint(pVec_(-2, 0, -3), 0.1, 1.5);
-    P.Damping(pVec_(0.994));
+    P.OrbitPoint(pVec(2, 0, 3), 0.1, 1.5);
+    P.OrbitPoint(pVec(-2, 0, -3), 0.1, 1.5);
+    P.Damping(pVec(0.994));
     P.Move(true, false);
 
     P.KillOld(Lifetime);
@@ -608,7 +608,7 @@ void Orbit2::EmitList(ParticleEffects &Efx)
 {
     particle_rate = Efx.maxParticles / (float)Lifetime;
     particle_rate = P_VARYING_FLOAT;
-    jet = pVec_(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
+    jet = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
     Effect::EmitList(Efx);
 }
 
@@ -621,7 +621,7 @@ void Orbit2::PerFrame(ExecMode_e EM, ParticleEffects &Efx)
 void Orbit2::StartEffect(ParticleEffects &Efx)
 {
     particle_rate = Efx.maxParticles / (float)Lifetime;
-    jet = pVec_(-4,0,-2.4);
+    jet = pVec(-4,0,-2.4);
     djet = pRandVec() * 0.5f;
 }
 
@@ -637,7 +637,7 @@ void PhotoShape::StartEffect(ParticleEffects &Efx)
 
     // Load the particles from the photo
     pSourceState S;
-    S.Velocity(PDBlob_(pVec_(0, 0, 0), 0.001));
+    S.Velocity(PDBlob_(pVec(0, 0, 0), 0.001));
     S.StartingAge(0);
     P.KillOld(0);
     P.KillOld(1, true);
@@ -653,10 +653,10 @@ void PhotoShape::StartEffect(ParticleEffects &Efx)
             sample2(puc, *Efx.Img, fx, fy);
             f3Pixel p(puc);
             S.Color(p.r(), p.g(), p.b());
-            pVec v=pVec_(fx, 0, fy);
+            pVec v=pVec(fx, 0, fy);
             v /= float(Efx.Img->w());
 
-            P.Vertex(v*6.0f - pVec_(3.0f), S);
+            P.Vertex(v*6.0f - pVec(3.0f), S);
         }
     }
 }
@@ -666,14 +666,14 @@ void Rain::DoActions(ParticleEffects &Efx) const
 {
     ParticleContext_t &P = Efx.P;
     pSourceState S;
-    S.Velocity(pVec_(0));
-    S.Color(PDSphere_(pVec_(0.4, 0.4, 0.9), .1));
-    S.Size(pVec_(1.5));
+    S.Velocity(pVec(0));
+    S.Color(PDSphere_(pVec(0.4, 0.4, 0.9), .1));
+    S.Size(pVec(1.5));
     S.StartingAge(0);
-    P.Source(particle_rate, PDRectangle_(pVec_(-11, -10, 12), pVec_(20, 0, 0), pVec_(0, 20, 0)), S);
+    P.Source(particle_rate, PDRectangle_(pVec(-11, -10, 12), pVec(20, 0, 0), pVec(0, 20, 0)), S);
 
-    P.RandomAccel(PDBlob_(pVec_(0.002, 0, -0.01), 0.003));
-    P.Bounce(0.3, 0.3, 0, PDPlane_(pVec_(0,0,0), pVec_(0,0,1)));
+    P.RandomAccel(PDBlob_(pVec(0.002, 0, -0.01), 0.003));
+    P.Bounce(0.3, 0.3, 0, PDPlane_(pVec(0,0,0), pVec(0,0,1)));
     P.Move(true, false);
 
     P.KillOld(Lifetime);
@@ -726,10 +726,10 @@ void Shower::DoActions(ParticleEffects &Efx) const
 {
     ParticleContext_t &P = Efx.P;
     pSourceState S;
-    S.Velocity(PDBlob_(pVec_(0), 0.001f));
-    S.Size(pVec_(1.5));
+    S.Velocity(PDBlob_(pVec(0), 0.001f));
+    S.Size(pVec(1.5));
     S.StartingAge(0);
-    S.Color(PDBlob_(pVec_(.7,.7,.2), .2));
+    S.Color(PDBlob_(pVec(.7,.7,.2), .2));
     P.Source(1, PDPoint_(jet), S);
 
     P.Gravity(Efx.GravityVec * .1);
@@ -737,13 +737,13 @@ void Shower::DoActions(ParticleEffects &Efx) const
     const float LA = 50.0f;
 
     if(SteerShape == 0) {
-        P.Avoid(0.2, 1.0, LA, PDSphere_(pVec_(0,0,0), 1.1));
+        P.Avoid(0.2, 1.0, LA, PDSphere_(pVec(0,0,0), 1.1));
     } else if(SteerShape == 1) {
-        P.Avoid(2, 1.0, LA, PDTriangle_(pVec_(0,-1,0), pVec_(2,0,0), pVec_(0,2,0)));
+        P.Avoid(2, 1.0, LA, PDTriangle_(pVec(0,-1,0), pVec(2,0,0), pVec(0,2,0)));
     } else if(SteerShape == 2) {
-        P.Avoid(2, 1.0, LA, PDRectangle_(pVec_(0,-1,0), pVec_(2,1,0), pVec_(0,2,0)));
+        P.Avoid(2, 1.0, LA, PDRectangle_(pVec(0,-1,0), pVec(2,1,0), pVec(0,2,0)));
     } else if(SteerShape == 3) {
-        P.Avoid(2, 1.0, LA, PDPlane_(pVec_(0,0,0), pVec_(0,0,1)));
+        P.Avoid(2, 1.0, LA, PDPlane_(pVec(0,0,0), pVec(0,0,1)));
     } else if(SteerShape == P_VARYING_INT) {
         P.Avoid(2, 1.0, LA, PDVarying_());
     }
@@ -756,7 +756,7 @@ void Shower::DoActions(ParticleEffects &Efx) const
 void Shower::EmitList(ParticleEffects &Efx)
 {
     SteerShape = P_VARYING_INT;
-    jet = pVec_(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
+    jet = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
     Effect::EmitList(Efx);
 }
 
@@ -775,7 +775,7 @@ void Shower::PerFrame(ExecMode_e EM, ParticleEffects &Efx)
 void Shower::StartEffect(ParticleEffects &Efx)
 {
     SteerShape = lrand48() % 4;
-    jet = pVec_(0,0,5);
+    jet = pVec(0,0,5);
     djet = pRandVec() * 0.01f;
     djet.z() = 0.0f;
 }
@@ -786,14 +786,14 @@ void Snake::DoActions(ParticleEffects &Efx) const
     ParticleContext_t &P = Efx.P;
     pSourceState S;
     S.Color(1, 0, 0);
-    S.Velocity(pVec_(0.001, 0, 0)); // This makes it able to compute a binormal.
+    S.Velocity(pVec(0.001, 0, 0)); // This makes it able to compute a binormal.
     float BOX = .005;
-    P.Source(0.1, PDBox_(pVec_(-BOX, -BOX, -BOX), pVec_(BOX, BOX, BOX)), S);
+    P.Source(0.1, PDBox_(pVec(-BOX, -BOX, -BOX), pVec(BOX, BOX, BOX)), S);
 
     // Either of these gives an interesting effect.
     P.Follow(0.01, 1.0);
     // P.Gravitate(0.01, 1.0);
-    P.Damping(pVec_(0.9));
+    P.Damping(pVec(0.9));
     P.Move(true, false);
     P.KillOld(2000);
 }
@@ -803,12 +803,12 @@ void Snake::StartEffect(ParticleEffects &Efx)
     ParticleContext_t &P = Efx.P;
 
     pSourceState S;
-    S.Velocity(pVec_(0));
-    S.Size(pVec_(1.0));
-    S.Color(PDSphere_(pVec_(0.93, 0.93, 0), 0.05));
+    S.Velocity(pVec(0));
+    S.Size(pVec(1.0));
+    S.Color(PDSphere_(pVec(0.93, 0.93, 0), 0.05));
 
     for(float x=-10.0; x<2.0; x+=0.05)
-        P.Vertex(pVec_(x, 0, 0), S);
+        P.Vertex(pVec(x, 0, 0), S);
 }
 
 // A bunch of particles inside a sphere
@@ -816,14 +816,14 @@ void Sphere::DoActions(ParticleEffects &Efx) const
 {
     ParticleContext_t &P = Efx.P;
     pSourceState S;
-    S.Color(PDLine_(pVec_(0,1,0), pVec_(0,0,1)));
-    S.Velocity(PDBlob_(pVec_(dirAng == P_VARYING_FLOAT ? P_VARYING_FLOAT : sin(dirAng)*.1, dirAng == P_VARYING_FLOAT ? P_VARYING_FLOAT : cos(dirAng)*.1, 0.1), 0.01));
+    S.Color(PDLine_(pVec(0,1,0), pVec(0,0,1)));
+    S.Velocity(PDBlob_(pVec(dirAng == P_VARYING_FLOAT ? P_VARYING_FLOAT : sin(dirAng)*.1, dirAng == P_VARYING_FLOAT ? P_VARYING_FLOAT : cos(dirAng)*.1, 0.1), 0.01));
     S.StartingAge(0);
-    S.Size(pVec_(1));
-    P.Source(0.8, PDPoint_(pVec_(1, 1, 6)), S);
+    S.Size(pVec(1));
+    P.Source(0.8, PDPoint_(pVec(1, 1, 6)), S);
 
     P.Gravity(Efx.GravityVec);
-    P.Bounce(0, 0.55, 0, PDSphere_(pVec_(0, 0, 4), 6));
+    P.Bounce(0, 0.55, 0, PDSphere_(pVec(0, 0, 4), 6));
     P.Move(true, false);
 
     P.KillOld(600);
@@ -851,18 +851,18 @@ void Swirl::DoActions(ParticleEffects &Efx) const
 {
     ParticleContext_t &P = Efx.P;
     pSourceState S;
-    const pVec tjet = Abs(jet) * 0.1 + pVec_(0.4, 0.4, 0.4);
+    const pVec tjet = Abs(jet) * 0.1 + pVec(0.4, 0.4, 0.4);
     S.Color(PDSphere_(tjet, 0.1));
-    S.Velocity(PDBlob_(pVec_(0.02, -0.2, 0), 0.015));
-    S.Size(pVec_(1.0));
+    S.Velocity(PDBlob_(pVec(0.02, -0.2, 0), 0.015));
+    S.Size(pVec(1.0));
     S.StartingAge(0);
     P.Source(particle_rate, PDPoint_(jet), S);
 
-    P.OrbitLine(pVec_(0, 0, 1), pVec_(1, 0.1, 0), 0.1, 1.5);
-    P.Damping(pVec_(1, 0.994, 0.994));
+    P.OrbitLine(pVec(0, 0, 1), pVec(1, 0.1, 0), 0.1, 1.5);
+    P.Damping(pVec(1, 0.994, 0.994));
     P.Move(true, false);
 
-    P.Sink(false, PDSphere_(pVec_(0, 0, 0), 15));
+    P.Sink(false, PDSphere_(pVec(0, 0, 0), 15));
     P.KillOld(Lifetime);
 }
 
@@ -881,7 +881,7 @@ void Swirl::PerFrame(ExecMode_e EM, ParticleEffects &Efx)
 
 void Swirl::StartEffect(ParticleEffects &Efx)
 {
-    jet = pVec_(-4, 0, -2.4);
+    jet = pVec(-4, 0, -2.4);
     djet = pRandVec() * 0.05;
     particle_rate = Efx.maxParticles / Lifetime;
 }
@@ -900,29 +900,29 @@ void Tornado::DoActions(ParticleEffects &Efx) const
     // float tanscale = (vt.length2() <= cutoffSqr) ? 1.0f : oneMinusFriction;
     // m.vel = vt * tanscale + vn * resilience;
 
-    P.Bounce(Fric, Res, Cutoff, PDPlane_(pVec_(4,0,0), pVec_(1,0,0)));
-    P.Bounce(Fric, Res, Cutoff, PDPlane_(pVec_(-4,0,0), pVec_(1,0,0)));
-    P.Bounce(Fric, Res, Cutoff, PDPlane_(pVec_(0,1,0), pVec_(0,1,0)));
-    P.Bounce(Fric, Res, Cutoff, PDPlane_(pVec_(0,-4,0), pVec_(0,1,0)));
-    P.Bounce(Fric, Res, Cutoff, PDPlane_(pVec_(0,0,4), pVec_(0,0,1)));
-    P.Bounce(Fric, Res, Cutoff, PDPlane_(pVec_(0,0,0), pVec_(0,0,1)));
+    P.Bounce(Fric, Res, Cutoff, PDPlane_(pVec(4,0,0), pVec(1,0,0)));
+    P.Bounce(Fric, Res, Cutoff, PDPlane_(pVec(-4,0,0), pVec(1,0,0)));
+    P.Bounce(Fric, Res, Cutoff, PDPlane_(pVec(0,1,0), pVec(0,1,0)));
+    P.Bounce(Fric, Res, Cutoff, PDPlane_(pVec(0,-4,0), pVec(0,1,0)));
+    P.Bounce(Fric, Res, Cutoff, PDPlane_(pVec(0,0,4), pVec(0,0,1)));
+    P.Bounce(Fric, Res, Cutoff, PDPlane_(pVec(0,0,0), pVec(0,0,1)));
 
     P.Move(true, false);
 #endif
     pSourceState S;
-    S.Size(pVec_(1.0));
-    S.Velocity(PDPoint_(pVec_(0,0,0)));
-    S.Color(PDLine_(pVec_(.0,.8,.8), pVec_(1, 1, 1)));
+    S.Size(pVec(1.0));
+    S.Velocity(PDPoint_(pVec(0,0,0)));
+    S.Color(PDLine_(pVec(.0,.8,.8), pVec(1, 1, 1)));
     S.StartingAge(0);
-    P.Source(10, PDLine_(pVec_(-10,0,15), pVec_(10,0,15)), S);
+    P.Source(10, PDLine_(pVec(-10,0,15), pVec(10,0,15)), S);
 
-    P.Damping(pVec_(.95));
+    P.Damping(pVec(.95));
     P.Gravity(Efx.GravityVec);
-    P.Vortex(pVec_(0,0,-2), pVec_(0,0,11), 1.8, 7, 0.05, -Efx.GravityVec.length(), 0.1);
+    P.Vortex(pVec(0,0,-2), pVec(0,0,11), 1.8, 7, 0.05, -Efx.GravityVec.length(), 0.1);
     P.Move(true, false);
 
     P.KillOld(1000);
-    P.Sink(false, PDPlane_(pVec_(0,0,-2), pVec_(0,0,1)));
+    P.Sink(false, PDPlane_(pVec(0,0,-2), pVec(0,0,1)));
 }
 
 // A waterfall bouncing off invisible rocks
@@ -930,21 +930,21 @@ void WaterfallA::DoActions(ParticleEffects &Efx) const
 {
     ParticleContext_t &P = Efx.P;
     pSourceState S;
-    S.Velocity(PDBlob_(pVec_(0.03, -0.001, 0.01), 0.002));
-    S.Color(PDLine_(pVec_(0.8, 0.9, 1.0), pVec_(1.0, 1.0, 1.0)));
-    S.Size(pVec_(1.5));
-    P.Source(100, PDLine_(pVec_(-5, -1, 8), pVec_(-5, -3, 8)), S);
+    S.Velocity(PDBlob_(pVec(0.03, -0.001, 0.01), 0.002));
+    S.Color(PDLine_(pVec(0.8, 0.9, 1.0), pVec(1.0, 1.0, 1.0)));
+    S.Size(pVec(1.5));
+    P.Source(100, PDLine_(pVec(-5, -1, 8), pVec(-5, -3, 8)), S);
 
     P.Gravity(Efx.GravityVec);
-    P.Bounce(0, 0.35, 0, PDRectangle_(pVec_(-7, -4, 7), pVec_(3, 0, 0), pVec_(0, 3, 0)));
-    P.Bounce(0, 0.5, 0, PDSphere_(pVec_(-4, -2, 4), 0.2));
-    P.Bounce(0, 0.5, 0, PDSphere_(pVec_(-3.5, 0, 2), 2));
-    P.Bounce(0, 0.5, 0, PDSphere_(pVec_(3.8, 0, 0), 2));
-    P.Bounce(-0.01, 0.35, 0, PDPlane_(pVec_(0,0,0), pVec_(0,0,1)));
+    P.Bounce(0, 0.35, 0, PDRectangle_(pVec(-7, -4, 7), pVec(3, 0, 0), pVec(0, 3, 0)));
+    P.Bounce(0, 0.5, 0, PDSphere_(pVec(-4, -2, 4), 0.2));
+    P.Bounce(0, 0.5, 0, PDSphere_(pVec(-3.5, 0, 2), 2));
+    P.Bounce(0, 0.5, 0, PDSphere_(pVec(3.8, 0, 0), 2));
+    P.Bounce(-0.01, 0.35, 0, PDPlane_(pVec(0,0,0), pVec(0,0,1)));
     P.Move(true, false);
 
     P.KillOld(300);
-    P.Sink(false, PDSphere_(pVec_(0,0,0), 20));
+    P.Sink(false, PDSphere_(pVec(0,0,0), 20));
 }
 
 // A waterfall bouncing off invisible rocks
@@ -952,16 +952,16 @@ void WaterfallB::DoActions(ParticleEffects &Efx) const
 {
     ParticleContext_t &P = Efx.P;
     pSourceState S;
-    S.Velocity(PDBlob_(pVec_(0.1, 0, 0.1), 0.004));
-    S.Color(PDLine_(pVec_(0.8, 0.9, 1.0), pVec_(1.0, 1.0, 1.0)));
-    S.Size(pVec_(1.5));
-    P.Source(100, PDPoint_(pVec_(-4, 0, 6)), S);
+    S.Velocity(PDBlob_(pVec(0.1, 0, 0.1), 0.004));
+    S.Color(PDLine_(pVec(0.8, 0.9, 1.0), pVec(1.0, 1.0, 1.0)));
+    S.Size(pVec(1.5));
+    P.Source(100, PDPoint_(pVec(-4, 0, 6)), S);
 
     P.Gravity(Efx.GravityVec);
-    P.Bounce(0, 0.01, 0, PDSphere_(pVec_(-1, 0, 4), 1));
-    P.Bounce(0, 0.01, 0, PDSphere_(pVec_(-2.5, 0, 2), 1));
-    P.Bounce(0, 0.01, 0, PDSphere_(pVec_(0.7, -0.5, 2), 1));
-    P.Bounce(-0.01, 0.35, 0, PDPlane_(pVec_(0,0,0), pVec_(0,0,1)));
+    P.Bounce(0, 0.01, 0, PDSphere_(pVec(-1, 0, 4), 1));
+    P.Bounce(0, 0.01, 0, PDSphere_(pVec(-2.5, 0, 2), 1));
+    P.Bounce(0, 0.01, 0, PDSphere_(pVec(0.7, -0.5, 2), 1));
+    P.Bounce(-0.01, 0.35, 0, PDPlane_(pVec(0,0,0), pVec(0,0,1)));
     P.Move(true, false);
 
     P.KillOld(250);

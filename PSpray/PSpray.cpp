@@ -154,7 +154,7 @@ void MakeSphereTexture()
 
     float *img = new float[DIM*DIM];
 
-    pVec light=pVec_(1,1,3);
+    pVec light=pVec(1,1,3);
     light.normalize();
 
     for(int y=0; y<DIM; y++) {
@@ -163,8 +163,8 @@ void MakeSphereTexture()
             if(x==0 || x==DIM-1 || y==0 || y==DIM-1)
                 img[y*DIM+x] = 0;
             else {
-                pVec p=pVec_(x, y, 0);
-                p -= pVec_(DIM2, DIM2, 0);
+                pVec p=pVec(x, y, 0);
+                p -= pVec(DIM2, DIM2, 0);
                 float len = p.length();
                 float z = sqrt(DIM2*DIM2 - len*len);
                 p.z() = z;
@@ -297,8 +297,8 @@ void Draw()
         P.CurrentGroup(CameraSystem);
 
         pSourceState S;
-        S.Velocity(PDSphere_(pVec_(0, 0, 0), 0.06, 0.06));
-        P.Vertex(pVec_(0,-19,15), S);
+        S.Velocity(PDSphere_(pVec(0, 0, 0), 0.06, 0.06));
+        P.Vertex(pVec(0,-19,15), S);
     }
 
     glLoadIdentity();
@@ -325,7 +325,7 @@ void Draw()
     // Use a particle to model the camera motion
     P.CurrentGroup(CameraSystem);
     if(CameraMotion) {
-        P.Bounce(0, 1, 0.1, PDSphere_(pVec_(0, -10, 7), 15));
+        P.Bounce(0, 1, 0.1, PDSphere_(pVec(0, -10, 7), 15));
         P.Move();
     }
 
@@ -339,7 +339,7 @@ void Draw()
 #if 0
     pVec At=Cam+Vel;
 #else
-    pVec At=pVec_(0,0,3);
+    pVec At=pVec(0,0,3);
 #endif
 
     gluLookAt(Cam.x(), Cam.y(), Cam.z(), At.x(), At.y(), At.z(), 0, 0, 1);
@@ -386,14 +386,14 @@ void Draw()
     } else if(PrimType == 0x100) {
         pVec view = At - Cam;
         view.normalize();
-        pVec up=pVec_(0, 0, 1);
+        pVec up=pVec(0, 0, 1);
         glEnable(GL_TEXTURE_2D);
         DrawGroupAsTriSprites(P, view, up, 0.16, true, true, ConstColor);
         glDisable(GL_TEXTURE_2D);
     } else if(PrimType == 0x101) {
         pVec view = At - Cam;
         view.normalize();
-        pVec up=pVec_(0, 0, 1);
+        pVec up=pVec(0, 0, 1);
         glEnable(GL_TEXTURE_2D);
         DrawGroupAsQuadSprites(P, view, up, 0.16, true, true, ConstColor);
         glDisable(GL_TEXTURE_2D);
@@ -575,7 +575,7 @@ void menu(int item)
         ParticleCam = !ParticleCam;
         break;
     case 'z':
-        P.SinkVelocity(true, PDSphere_(pVec_(0, 0, 0), 0.01));
+        P.SinkVelocity(true, PDSphere_(pVec(0, 0, 0), 0.01));
         break;
     case 'x':
         FreezeParticles = !FreezeParticles;

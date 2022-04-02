@@ -89,7 +89,7 @@ namespace PAPI
 
             throw PErrInternalError("Sizes didn't add up to TotalSize in PDUnion::Generate().");
 #endif
-            return pVec_(0,0,0);
+            return pVec(0,0,0);
         }
 
         PINLINE float Size() const
@@ -172,9 +172,9 @@ namespace PAPI
 
         float det = 1.0f / (w.z()*u.x()*v.y() - w.z()*u.y()*v.x() - u.z()*w.x()*v.y() - u.x()*v.z()*w.y() + v.z()*w.x()*u.y() + u.z()*v.x()*w.y());
 
-        s1 = pVec_((v.y()*w.z() - v.z()*w.y()), (v.z()*w.x() - v.x()*w.z()), (v.x()*w.y() - v.y()*w.x()));
+        s1 = pVec((v.y()*w.z() - v.z()*w.y()), (v.z()*w.x() - v.x()*w.z()), (v.x()*w.y() - v.y()*w.x()));
         s1 *= det;
-        s2 = pVec_((u.y()*w.z() - u.z()*w.y()), (u.z()*w.x() - u.x()*w.z()), (u.x()*w.y() - u.y()*w.x()));
+        s2 = pVec((u.y()*w.z() - u.z()*w.y()), (u.z()*w.x() - u.x()*w.z()), (u.x()*w.y() - u.y()*w.x()));
         s2 *= -det;
     }
 
@@ -343,9 +343,9 @@ namespace PAPI
             dif = radOut - radIn;
 
             // Find a vector orthogonal to n.
-            pVec basis = pVec_(1.0f, 0.0f, 0.0f);
+            pVec basis = pVec(1.0f, 0.0f, 0.0f);
             if (fabsf(dot(basis, nrm)) > 0.999f)
-                basis = pVec_(0.0f, 1.0f, 0.0f);
+                basis = pVec(0.0f, 1.0f, 0.0f);
 
             // Project away N component, normalize and cross to get
             // second orthonormal vector.
@@ -452,7 +452,7 @@ namespace PAPI
             if(e1.z() < e0.z()) { p0.z() = e1.z(); p1.z() = e0.z(); }
 
             dif = p1 - p0;
-            vol = dot(dif, pVec_(1,1,1));
+            vol = dot(dif, pVec(1,1,1));
         }
 
         PINLINE bool Within(const pVec &pos) const /// Returns true if the point is in the box.
@@ -512,9 +512,9 @@ namespace PAPI
             n *= sqrtf(axisLenInvSqr);
 
             // Find a vector orthogonal to n.
-            pVec basis = pVec_(1.0f, 0.0f, 0.0f);
+            pVec basis = pVec(1.0f, 0.0f, 0.0f);
             if (fabsf(dot(basis, n)) > 0.999f)
-                basis = pVec_(0.0f, 1.0f, 0.0f);
+                basis = pVec(0.0f, 1.0f, 0.0f);
 
             // Project away N component, normalize and cross to get
             // second orthonormal vector.
@@ -616,9 +616,9 @@ namespace PAPI
             n *= sqrtf(axisLenInvSqr);
 
             // Find a vector orthogonal to n.
-            pVec basis = pVec_(1.0f, 0.0f, 0.0f);
+            pVec basis = pVec(1.0f, 0.0f, 0.0f);
             if (fabsf(dot(basis, n)) > 0.999f)
-                basis = pVec_(0.0f, 1.0f, 0.0f);
+                basis = pVec(0.0f, 1.0f, 0.0f);
 
             // Project away N component, normalize and cross to get
             // second orthonormal vector.
@@ -736,7 +736,7 @@ namespace PAPI
             pVec pos;
 
             do {
-                pos = pRandVec() - pVec_(0.5f, 0.5f, 0.5f); // Point on [-0.5,0.5] box
+                pos = pRandVec() - pVec(0.5f, 0.5f, 0.5f); // Point on [-0.5,0.5] box
             } while (pos.length2() > fsqr(0.5)); // Make sure it's also on r=0.5 sphere.
             pos.normalize(); // Now it's on r=1 spherical shell
 
@@ -897,7 +897,7 @@ namespace PAPI
             case PDCone_e: return PDCone_V.Generate();
             case PDSphere_e: return PDSphere_V.Generate();
             case PDBlob_e: return PDBlob_V.Generate();
-            default: return pVec_(0,0,0);
+            default: return pVec(0,0,0);
             };
         }
 
@@ -930,9 +930,9 @@ namespace PAPI
         pDomain D;
         D.Which = PDVarying_e;
         D.Varying = true;
-        D.PDRaw_V.v0 = pVec_(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
-        D.PDRaw_V.v1 = pVec_(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
-        D.PDRaw_V.v2 = pVec_(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
+        D.PDRaw_V.v0 = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
+        D.PDRaw_V.v1 = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
+        D.PDRaw_V.v2 = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
         D.PDRaw_V.f0 = P_VARYING_FLOAT;
         D.PDRaw_V.f1 = P_VARYING_FLOAT;
         return D;

@@ -93,7 +93,7 @@ void DrawGroupAsDisplayLists(ParticleContext_t &P, int dlist, bool const_color, 
 
             pVec biN;
             if(voN.x() == vN.x() && voN.y() == vN.y() && voN.z() == vN.z())
-                biN = pVec_(0, 1, 0);
+                biN = pVec(0, 1, 0);
             else
                 biN = Cross(vN, voN);
             biN.normalize();

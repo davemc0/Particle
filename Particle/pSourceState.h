@@ -35,8 +35,8 @@ namespace PAPI {
         float Mass_;
         bool vertexB_tracks_;
 
-        PINLINE pSourceState() : Up_(PDPoint_(pVec_(0,1,0))), Vel_(PDPoint_(pVec_(0,0,0))), RotVel_(PDPoint_(pVec_(0,0,0))),
-            VertexB_(PDPoint_(pVec_(0,0,0))), Size_(PDPoint_(pVec_(1,1,1))), Color_(PDPoint_(pVec_(1,1,1))), Alpha_(PDPoint_(pVec_(1,1,1)))
+        PINLINE pSourceState() : Up_(PDPoint_(pVec(0,1,0))), Vel_(PDPoint_(pVec(0,0,0))), RotVel_(PDPoint_(pVec(0,0,0))),
+            VertexB_(PDPoint_(pVec(0,0,0))), Size_(PDPoint_(pVec(1,1,1))), Color_(PDPoint_(pVec(1,1,1))), Alpha_(PDPoint_(pVec(1,1,1)))
         {
             Data_ = 0;
             Age_ = 0.0f;
@@ -47,28 +47,28 @@ namespace PAPI {
 
         /// Specify the color of particles to be created.
         ///
-        /// This call is short-hand for Color(PDPoint(color), PDPoint(pVec_(alpha)).
+        /// This call is short-hand for Color(PDPoint(color), PDPoint(pVec(alpha)).
         ///
         /// The default color is 1,1,1,1 (opaque white if you interpret it as RGBA).
         PINLINE void Color(const pVec &color, const float alpha = 1.0f)
         {
-            Color(PDPoint_(color), PDPoint_(pVec_(alpha)));
+            Color(PDPoint_(color), PDPoint_(pVec(alpha)));
         }
 
         /// Specify the color of particles to be created.
         ///
-        /// This call is short-hand for Color(PDPoint(color), PDPoint(pVec_(alpha)).
+        /// This call is short-hand for Color(PDPoint(color), PDPoint(pVec(alpha)).
         ///
         /// The default color is 1,1,1,1 (opaque white if you interpret it as RGBA).
         PINLINE void Color(const float red, const float green, const float blue, const float alpha = 1.0f)
         {
-            Color(pVec_(red, green, blue), alpha);
+            Color(pVec(red, green, blue), alpha);
         }
 
         /// Specify the domain for colors and alpha value of new particles.
         ///
         /// Your application can interpret the color triple in any color space you choose. RGB is the most common, with colors ranging on 0.0 -> 1.0.
-        /// For example, the PDLine(pVec_(1, 0, 0), pVec_(1, 1, 0)) will choose points on a line between red and yellow. Points outside the 0.0 -> 1.0
+        /// For example, the PDLine(pVec(1, 0, 0), pVec(1, 1, 0)) will choose points on a line between red and yellow. Points outside the 0.0 -> 1.0
         /// range will not be clamped by the Particle System API. Some renderers may use colors on the range 0 -> 255, so the domain used to choose
         /// the colors can be on that range. The alpha value is usually used for transparency.
         ///
@@ -78,13 +78,13 @@ namespace PAPI {
         PINLINE void Color(const pDomain &cdom) ///< The color domain.
         {
             Color_ = cdom;
-            Alpha_ = PDPoint_(pVec_(1));
+            Alpha_ = PDPoint_(pVec(1));
         }
 
         /// Specify the domain for colors and alpha value of new particles.
         ///
         /// Your application can interpret the color triple in any color space you choose. RGB is the most common, with colors ranging on 0.0 -> 1.0.
-        /// For example, the PDLine(pVec_(1, 0, 0), pVec_(1, 1, 0)) will choose points on a line between red and yellow. Points outside the 0.0 -> 1.0
+        /// For example, the PDLine(pVec(1, 0, 0), pVec(1, 1, 0)) will choose points on a line between red and yellow. Points outside the 0.0 -> 1.0
         /// range will not be clamped by the Particle System API. Some renderers may use colors on the range 0 -> 255, so the domain used to choose
         /// the colors can be on that range. The alpha value is usually used for transparency.
         ///
