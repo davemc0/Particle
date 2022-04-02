@@ -3,8 +3,8 @@
 *Since 1999, using C++, OpenGL, GLUT, and CMake*
 
 by David McAllister
-version 2.21
-December 30, 2008
+version 2.3 alpha
+April 2, 2022
 
 Was previously hosted at: http://www.particlesystems.org.
 Now here on https://github.com/davemc0/Particle.git.

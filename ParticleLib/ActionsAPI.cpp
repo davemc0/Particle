@@ -38,13 +38,18 @@ void PContextActions_t::Bounce(const float friction, const float resilience, con
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
+    if (dom.Which == PDSphere_e) {
+        PASSERT(dynamic_cast<const PDSphere*>(&dom)->radIn == 0.0f, "Bouncing doesn't work on thick shells. radIn must be 0.");
+    }
+
     PS->SendAction(A);
 }
 
-void PContextActions_t::Callback(P_PARTICLE_CALLBACK callback, puint64 data)
+void PContextActions_t::Callback(P_PARTICLE_CALLBACK_ACTION callbackFunc, const std::string &callbackStr, const pdata_t data)
 {
     PACallback *A = new PACallback;
-    A->callback = callback;
+    A->callbackFunc = callbackFunc;
+    A->callbackStr = callbackStr;
     A->Data = data;
 
     A->SetKillsParticles(false);
@@ -125,7 +130,7 @@ void PContextActions_t::Follow(const float magnitude, const float epsilon, const
     A->max_radius = max_radius;
 
     A->SetKillsParticles(false);
-    A->SetDoNotSegment(true);
+    A->SetDoNotSegment(true); // Depends on other particles' state being in sync with this one's.
 
     PS->SendAction(A);
 }
@@ -139,7 +144,7 @@ void PContextActions_t::Gravitate(const float magnitude, const float epsilon, co
     A->max_radius = max_radius;
 
     A->SetKillsParticles(false);
-    A->SetDoNotSegment(true);
+    A->SetDoNotSegment(true); // N^2
 
     PS->SendAction(A);
 }
@@ -191,7 +196,7 @@ void PContextActions_t::MatchVelocity(const float magnitude, const float epsilon
     A->max_radius = max_radius;
 
     A->SetKillsParticles(false);
-    A->SetDoNotSegment(true);
+    A->SetDoNotSegment(true); // N^2
 
     PS->SendAction(A);
 }
@@ -205,7 +210,7 @@ void PContextActions_t::MatchRotVelocity(const float magnitude, const float epsi
     A->max_radius = max_radius;
 
     A->SetKillsParticles(false);
-    A->SetDoNotSegment(true);
+    A->SetDoNotSegment(true); // N^2
 
     PS->SendAction(A);
 }
@@ -321,7 +326,7 @@ void PContextActions_t::Sink(const bool kill_inside, const pDomain &dom)
     A->position = dom.copy();
     A->kill_inside = kill_inside;
 
-    A->SetKillsParticles(true);
+    A->SetKillsParticles(true); // Kills.
     A->SetDoNotSegment(false);
 
     PS->SendAction(A);
@@ -334,7 +339,7 @@ void PContextActions_t::SinkVelocity(const bool kill_inside, const pDomain &dom)
     A->velocity = dom.copy();
     A->kill_inside = kill_inside;
 
-    A->SetKillsParticles(true);
+    A->SetKillsParticles(true); // Kills.
     A->SetDoNotSegment(false);
 
     PS->SendAction(A);
@@ -350,21 +355,21 @@ void PContextActions_t::Sort(const pVec &eye, const pVec &look, const bool front
     A->clamp_negative = clamp_negative;
 
     A->SetKillsParticles(false);
-    A->SetDoNotSegment(true); // WARNING: Particles aren't a function of other particles, but since it can screw up the working set thing, I'm setting it true.
+    A->SetDoNotSegment(true); // Particles aren't a function of other particles, but since it can screw up the working set thing, I'm setting it true.
 
     PS->SendAction(A);
 }
 
-void PContextActions_t::Source(const float particle_rate, const pDomain &dom)
+void PContextActions_t::Source(const float particle_rate, const pDomain &dom, const pSourceState &SrcSt)
 {
     PASource *A = new PASource;
 
     A->position = dom.copy();
     A->particle_rate = particle_rate;
-    A->SrcSt.set(PS->SrcSt);
+    A->SrcSt = SrcSt;
 
     A->SetKillsParticles(false);
-    A->SetDoNotSegment(true); // WARNING: Particles aren't a function of other particles, but does affect the working sets optimizations
+    A->SetDoNotSegment(true); // Particles aren't a function of other particles, but does affect the working sets optimizations
 
     PS->SendAction(A);
 }
@@ -437,10 +442,12 @@ void PContextActions_t::TargetRotVelocity(const pVec &vel, const float scale)
 
 // If in immediate mode, quickly add a vertex.
 // If building an action list, call Source().
-void PContextActions_t::Vertex(const pVec &pos, const puint64 data)
+void PContextActions_t::Vertex(const pVec &pos, const pSourceState &SrcSt, const pdata_t data)
 {
     if(PS->in_new_list) {
-        Source(1, PDPoint(pos));
+        pSourceState TmpSrcSt(SrcSt);
+        TmpSrcSt.Data_ = data;
+        Source(1, PDPoint(pos), TmpSrcSt);
         return;
     }
 
@@ -448,18 +455,18 @@ void PContextActions_t::Vertex(const pVec &pos, const puint64 data)
     Particle_t P;
 
     P.pos = pos;
-    P.posB = PS->SrcSt.vertexB_tracks ? pos : PS->SrcSt.VertexB->Generate();
-    P.size = PS->SrcSt.Size->Generate();
-    P.up = PS->SrcSt.Up->Generate();
-    P.vel = PS->SrcSt.Vel->Generate();
-    P.rvel = PS->SrcSt.RotVel->Generate();
-    P.color = PS->SrcSt.Color->Generate();
-    P.alpha = PS->SrcSt.Alpha->Generate().x();
-    P.age = PS->SrcSt.Age + pNRandf(PS->SrcSt.AgeSigma);
-    P.mass = PS->SrcSt.Mass;
+    P.posB = SrcSt.vertexB_tracks_ ? pos : SrcSt.VertexB_->Generate();
+    P.size = SrcSt.Size_->Generate();
+    P.up = SrcSt.Up_->Generate();
+    P.vel = SrcSt.Vel_->Generate();
+    P.rvel = SrcSt.RotVel_->Generate();
+    P.color = SrcSt.Color_->Generate();
+    P.alpha = SrcSt.Alpha_->Generate().x();
+    P.age = SrcSt.Age_ + pNRandf(SrcSt.AgeSigma_);
+    P.mass = SrcSt.Mass_;
     P.data = data;
     // Note that we pass in the particle user data of the Vertex call, even if it's the default value.
-    // We don't pass the PS->SrcSt data. Note that this creates an inconsistency if building an action list.
+    // We don't pass the SrcSt data. Note that this creates an inconsistency if building an action list.
 
     PS->PGroups[PS->pgroup_id].Add(P);
 }

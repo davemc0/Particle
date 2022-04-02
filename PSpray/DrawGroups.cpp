@@ -4,12 +4,11 @@
 //
 // This file draws particle groups in OpenGL.
 
-#ifdef WIN32
-// This is for something in gl.h.
-#include "windows.h"
-#endif
+// OpenGL
+#include "GL/glew.h"
 
-#include "GL/gl.h"
+// This needs to come after GLEW
+#include "GL/freeglut.h"
 
 #include "Particle/pAPI.h"
 
@@ -101,10 +100,12 @@ void DrawGroupAsDisplayLists(ParticleContext_t &P, int dlist, bool const_color, 
             pVec N = Cross(vN, biN);
 
             float M[16];
+            // clang-format off
             M[0] = vN.x();  M[4] = biN.x();  M[ 8] = N.x();  M[12] = 0;
             M[1] = vN.y();  M[5] = biN.y();  M[ 9] = N.y();  M[13] = 0;
             M[2] = vN.z();  M[6] = biN.z();  M[10] = N.z();  M[14] = 0;
-            M[3] = 0;     M[7] = 0;      M[11] = 0;    M[15] = 1;
+            M[3] = 0;       M[7] = 0;        M[11] = 0;      M[15] = 1;
+            // clang-format on
             glMultMatrixf(M);
         }
 

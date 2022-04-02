@@ -23,14 +23,22 @@
 #ifdef WIN32
 // This is because their stupid compiler thinks it's smart.
 #define PINLINE __forceinline
+#else
+#define PINLINE inline
 #endif
 
 namespace PAPI
 {
-    typedef unsigned long long puint64;
+    // typedef unsigned long long pdata_t;
+    typedef unsigned int pdata_t; // Making it 32 bit so Particle_t is 128B.
 
     const float P_SQRT2PI = 2.506628274631000502415765284811045253006f;
     const float P_ONEOVERSQRT2PI = (1.f / P_SQRT2PI);
+
+    ///< These are magic numbers that tell the action list compiler to get the value at runtime instead of action list compilation time.
+#define P_VARYING_FLOAT -340282326356119256160033759537265639424.0f
+#define P_VARYING_INT   0x7fffffce
+#define P_VARYING_BOOL  (bool)0xce
 
     PINLINE float fsqr(float f) { return f * f; }
 
@@ -76,7 +84,8 @@ namespace PAPI
     public:
         PINLINE pVec(float ax, float ay, float az) : vx(ax), vy(ay), vz(az) {}
         PINLINE pVec(float a) : vx(a), vy(a), vz(a) {}
-        PINLINE pVec() {}
+        PINLINE pVec() = default;
+        PINLINE pVec(float* v) : vx(v[0]), vy(v[1]), vz(v[2]) {}
 
         const float& x() const { return vx; }
         const float& y() const { return vy; }
@@ -177,14 +186,6 @@ namespace PAPI
             vx *= b;
             vy *= b;
             vz *= b;
-            return *this;
-        }
-
-        PINLINE pVec& operator=(const pVec& a)
-        {
-            vx = a.x();
-            vy = a.y();
-            vz = a.z();
             return *this;
         }
 
