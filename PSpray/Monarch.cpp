@@ -1,10 +1,9 @@
 
-#ifdef WIN32
-// This is for something in gl.h.
-#include "windows.h"
-#endif
+// OpenGL
+#include "GL/glew.h"
 
-#include "GL/gl.h"
+// This needs to come after GLEW
+#include "GL/freeglut.h"
 
 // Make a Monarch Butterfly by hand.
 // In about 1993 I drew this butterfly on graph paper and typed in the coords.

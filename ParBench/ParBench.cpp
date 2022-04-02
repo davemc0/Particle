@@ -82,26 +82,25 @@ void RunBenchmark()
 
     Efx.CallDemo(DemoNum, ExecMode);
 
-#if 1
-    for(int i=0; i<1000; i++) {
-        Efx.CallDemo(DemoNum, ExecMode);
-        if(SortParticles)
-            P.Sort(pVec(0,-19,15), pVec(0,0,3));
-        Report();
-    }
-#else
-    Clock.Reset();
-    while(1) {
-        float t = 0.0f;
-        Clock.Start();
-        for(int i=0; i<10000000; i++) {
-            float v = pNRandf();
-            t += v;
+    if (1) {
+        for (int i = 0; i < 1000; i++) {
+            Efx.CallDemo(DemoNum, ExecMode);
+            if (SortParticles) P.Sort(pVec(0, -19, 15), pVec(0, 0, 3));
+            Report();
         }
-        printf("%f\n", Clock.Read());
+    } else {
         Clock.Reset();
+        while (1) {
+            float t = 0.0f;
+            Clock.Start();
+            for (int i = 0; i < 10000000; i++) {
+                float v = pNRandf();
+                t += v;
+            }
+            printf("%f\n", Clock.Read());
+            Clock.Reset();
+        }
     }
-#endif
 }
 
 // Test implementation of domains.
@@ -118,16 +117,16 @@ void TestOneDomain(pDomain &Dom)
         //std::cerr << pt << std::endl;
         bool isin = Dom.Within(pt);
         if(!isin) {
-#if 0
-            std::cerr << "Bad: (" << i << ") " << pt << ": ";
-            std::cerr << Dom.Within(pt + pVec(EP,0,0));
-            std::cerr << Dom.Within(pt + pVec(-EP,0,0));
-            std::cerr << Dom.Within(pt + pVec(0,EP,0));
-            std::cerr << Dom.Within(pt + pVec(0,-EP,0));
-            std::cerr << Dom.Within(pt + pVec(0,0,EP));
-            std::cerr << Dom.Within(pt + pVec(0,0,-EP));
-            std::cerr << std::endl;
-#endif
+            if (0) {
+                std::cerr << "Bad: (" << i << ") " << pt << ": ";
+                std::cerr << Dom.Within(pt + pVec(EP, 0, 0));
+                std::cerr << Dom.Within(pt + pVec(-EP, 0, 0));
+                std::cerr << Dom.Within(pt + pVec(0, EP, 0));
+                std::cerr << Dom.Within(pt + pVec(0, -EP, 0));
+                std::cerr << Dom.Within(pt + pVec(0, 0, EP));
+                std::cerr << Dom.Within(pt + pVec(0, 0, -EP));
+                std::cerr << std::endl;
+            }
             Bad++;
         }
     }

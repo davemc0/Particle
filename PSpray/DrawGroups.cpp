@@ -4,12 +4,11 @@
 //
 // This file draws particle groups in OpenGL.
 
-#ifdef WIN32
-// This is for something in gl.h.
-#include "windows.h"
-#endif
+// OpenGL
+#include "GL/glew.h"
 
-#include "GL/gl.h"
+// This needs to come after GLEW
+#include "GL/freeglut.h"
 
 #include "Particle/pAPI.h"
 

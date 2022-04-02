@@ -985,27 +985,6 @@ namespace PAPI {
                 m.up += m.rvel * dt;
             }
         } else {
-#if 0
-            // Uses SSE. This is really fast, but doesn't work half the time because I'm unable to enforce the needed alignment restrictions.
-            int n = int(iend - ibegin);
-            if(n<1) return;
-            __m128 dtg = _mm_set_ps1(dt);
-            __m128 *p = (__m128 *)&(ibegin->pos);
-            __m128 *v = (__m128 *)&(ibegin->vel);
-            float *a = &(ibegin->age);
-            int step = sizeof(Particle_t) / sizeof(__m128);
-            int stepf = sizeof(Particle_t) / sizeof(float);
-
-            for(int i=0; i<n; i++) {
-                __m128 sv = _mm_mul_ps(*v, dtg);
-                *p = _mm_add_ps(sv, *p);
-                *a += dt;
-
-                p += step;
-                v += step;
-                a += stepf;
-            }
-#else
             // STL slowness and no SSE.
             // Not very much slower at all, though. Stick with this until we get a more elegant way to use SSE.
             for (ParticleList::iterator it = ibegin; it != iend; it++) {
@@ -1014,7 +993,6 @@ namespace PAPI {
                 m.age += dt;
                 m.pos += m.vel * dt;
             }
-#endif
         }
     }
 

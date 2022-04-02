@@ -232,7 +232,6 @@ void Balloons::DoActions(ParticleEffects &Efx) const
 {
     ParticleContext_t &P = Efx.P;
 
-#if 0
     PDUnion DomList;
     DomList.insert(PDPoint(pVec(1,0,0)));
     DomList.insert(PDPoint(pVec(0,1,0)));
@@ -244,11 +243,10 @@ void Balloons::DoActions(ParticleEffects &Efx) const
     pSourceState S;
     S.Color(DomList);
     S.StartingAge(0, 5);
-    S.Velocity(pVec(0));
+    S.Velocity(pVec(0.f));
     float BBOX = 1.7;
     float x=0, y=0, z=-1;
     P.Source(particle_rate, PDBox(pVec(x-BBOX, y-BBOX, z-BBOX), pVec(x+BBOX, y+BBOX, z+BBOX)), S);
-#endif
 
     P.Gravity(pVec(.0005, .005, .0005));
     P.Damping(pVec(0.9, 0.67, 0.9));
@@ -890,25 +888,6 @@ void Swirl::StartEffect(ParticleEffects &Efx)
 void Tornado::DoActions(ParticleEffects &Efx) const
 {
     ParticleContext_t &P = Efx.P;
-#if 0
-    // Friction: 0 means don't slow its tangential velocity. Bigger than 0 means do.
-    // Cutoff: If less than cutoff, don't apply friction.
-    // Resilience: Scale normal velocity by this. Bigger is bouncier.
-    const float Fric = 1.0f, Res = 0.95f, Cutoff = 0.0f;
-
-    // Don't apply friction if tangential velocity < cutoff
-    // float tanscale = (vt.length2() <= cutoffSqr) ? 1.0f : oneMinusFriction;
-    // m.vel = vt * tanscale + vn * resilience;
-
-    P.Bounce(Fric, Res, Cutoff, PDPlane(pVec(4,0,0), pVec(1,0,0)));
-    P.Bounce(Fric, Res, Cutoff, PDPlane(pVec(-4,0,0), pVec(1,0,0)));
-    P.Bounce(Fric, Res, Cutoff, PDPlane(pVec(0,1,0), pVec(0,1,0)));
-    P.Bounce(Fric, Res, Cutoff, PDPlane(pVec(0,-4,0), pVec(0,1,0)));
-    P.Bounce(Fric, Res, Cutoff, PDPlane(pVec(0,0,4), pVec(0,0,1)));
-    P.Bounce(Fric, Res, Cutoff, PDPlane(pVec(0,0,0), pVec(0,0,1)));
-
-    P.Move(true, false);
-#endif
     pSourceState S;
     S.Size(pVec(1.0));
     S.Velocity(PDPoint(pVec(0,0,0)));
@@ -966,3 +945,23 @@ void WaterfallB::DoActions(ParticleEffects &Efx) const
 
     P.KillOld(250);
 }
+
+#if 0
+    // Friction: 0 means don't slow its tangential velocity. Bigger than 0 means do.
+    // Cutoff: If less than cutoff, don't apply friction.
+    // Resilience: Scales velocity in normal direction. Bigger is bouncier.
+    const float Fric = 1.0f, Res = 0.95f, Cutoff = 0.0f;
+
+    // Don't apply friction if tangential velocity < cutoff
+    // float tanscale = (vt.length2() <= cutoffSqr) ? 1.0f : oneMinusFriction;
+    // m.vel = vt * tanscale + vn * resilience;
+
+    P.Bounce(Fric, Res, Cutoff, PDPlane(pVec(4,0,0), pVec(1,0,0)));
+    P.Bounce(Fric, Res, Cutoff, PDPlane(pVec(-4,0,0), pVec(1,0,0)));
+    P.Bounce(Fric, Res, Cutoff, PDPlane(pVec(0,1,0), pVec(0,1,0)));
+    P.Bounce(Fric, Res, Cutoff, PDPlane(pVec(0,-4,0), pVec(0,1,0)));
+    P.Bounce(Fric, Res, Cutoff, PDPlane(pVec(0,0,4), pVec(0,0,1)));
+    P.Bounce(Fric, Res, Cutoff, PDPlane(pVec(0,0,0), pVec(0,0,1)));
+
+    P.Move(true, false);
+#endif

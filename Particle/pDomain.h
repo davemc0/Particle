@@ -123,101 +123,97 @@ public:
     /// Generate returns a point from any subdomain.
     /// Within returns true if pos is within any subdomain.
     ///
-    /// All domains have a Size() that is used to apportion probability between the domains in the union. Sizes of domains of the same dimensionality
-    /// are commensurate but sizes of differing dimensionality are not.
+    /// All domains have a Size() that is used to apportion probability between the domains in the union.
+    /// Sizes of domains of the same dimensionality are commensurate but sizes of differing dimensionality are not.
     /// Thus, to properly distribute probability of Generate() choosing each domain, it is wise to only combine domains that have the same
     /// dimensionality. Note that thin shelled cylinders, cones, and spheres, where InnerRadius==OuterRadius, are considered 2D, not 3D.
     /// Thin shelled discs (circles) are considered 1D. Points are 0D.
-    class PDUnion : public pDomain {
+    struct PDUnion : public pDomain {
+        std::vector<pDomain*> Doms;
         float TotalSize;
 
-    
-    /// Use this one to create an empty PDUnion then call .insert() to add each item to it.
-        PINLINE  PDUnion()
+        PDUnion() /// Use this one to create an empty PDUnion then call .insert() to add each item to it.
         {
             Which = PDUnion_e;
             Varying = false;
             TotalSize = 0.0f;
         }
 
-#if 0
-    PINLINE  PDUnion_(const pDomain &A, const pDomain &B)
-    {
-        TotalSize = A.Size() + B.Size();
-        Doms.push_back(A);
-        Doms.push_back(B);
-    }
-
-    PINLINE  PDUnion_(const pDomain &A, const pDomain &B, const pDomain &C)
-    {
-        TotalSize = A.Size() + B.Size() + C.Size();
-        Doms.push_back(A);
-        Doms.push_back(B);
-        Doms.push_back(C);
-    }
-
-    /// Makes a copy of all the subdomains and point to the copies.
-    ///
-    /// Note that the Generate() function gets a performance boost if you supply DomList with the largest domains first.
-    PINLINE  PDUnion_(const std::vector<pDomain> &DomList)
-    {
-        TotalSize = 0.0f;
-        for(std::vector<pDomain>::const_iterator it = DomList.begin(); it != DomList.end(); it++) {
-            Doms.push_back(*it);
-            TotalSize += it->Size();
+        PDUnion(const pDomain& A, const pDomain& B)
+        {
+            Which = PDUnion_e;
+            Varying = false;
+            TotalSize = A.Size() + B.Size();
+            Doms.push_back(A.copy());
+            Doms.push_back(B.copy());
         }
-    }
 
-    // Makes a copy of all the subdomains and point to the copies.
-    PINLINE  PDUnion_(const PDUnion &P)
-    {
-        TotalSize = 0.0f;
-        for(std::vector<pDomain>::const_iterator it = P.Doms.begin(); it != P.Doms.end(); it++) {
-            Doms.push_back(*it);
-            TotalSize += it->Size();
+        PDUnion(const pDomain& A, const pDomain& B, const pDomain& C)
+        {
+            Which = PDUnion_e;
+            Varying = false;
+            TotalSize = A.Size() + B.Size() + C.Size();
+            Doms.push_back(A.copy());
+            Doms.push_back(B.copy());
+            Doms.push_back(C.copy());
         }
-    }
-#endif
 
-    #if 0
-        std::vector<pDomain> Doms;
+        /// Makes a copy of all the subdomains and point to the copies.
+        ///
+        /// Note that the Generate() function goes faster if you supply DomList with the largest domains first.
+        PDUnion(const std::vector<pDomain*>& DomList)
+        {
+            Which = PDUnion_e;
+            Varying = false;
+            TotalSize = 0.0f;
+            for (std::vector<pDomain*>::const_iterator it = DomList.begin(); it != DomList.end(); it++) {
+                Doms.push_back((*it)->copy());
+                TotalSize += (*it)->Size();
+            }
+        }
+
+        /// Makes a copy of all the subdomains and point to the copies.
+        PDUnion(const PDUnion& P)
+        {
+            Which = PDUnion_e;
+            Varying = false;
+            TotalSize = 0.0f;
+            for (std::vector<pDomain*>::const_iterator it = P.Doms.begin(); it != P.Doms.end(); it++) {
+                Doms.push_back((*it)->copy());
+                TotalSize += (*it)->Size();
+            }
+        }
+
+        ~PDUnion()
+        {
+            for (std::vector<pDomain*>::const_iterator it = Doms.begin(); it != Doms.end(); it++) { delete (*it); }
+        }
 
         /// Insert another domain into this PDUnion.
-        PINLINE void insert(const pDomain &A)
+        void insert(const pDomain& A)
         {
             TotalSize += A.Size();
-            Doms.push_back(A);
+            Doms.push_back(A.copy());
         }
-#endif
 
-        PINLINE bool Within(const pVec &pos) const /// Returns true if pos is within any of the domains.
+        bool Within(const pVec& pos) const /// Returns true if pos is within any of the domains.
         {
-#if 0
-            for(std::vector<pDomain>::const_iterator it = Doms.begin(); it != Doms.end(); it++)
-                if(it->Within(pos)) return true;
-#endif
+            for (std::vector<pDomain*>::const_iterator it = Doms.begin(); it != Doms.end(); it++)
+                if ((*it)->Within(pos)) return true;
             return false;
         }
 
-        PINLINE pVec Generate() const /// Generate a point in any subdomain, chosen by the ratio of their sizes.
+        pVec Generate() const /// Generate a point in any subdomain, chosen by the ratio of their sizes.
         {
-#if 0
             float Choose = pRandf() * TotalSize, PastProb = 0.0f;
-            for(std::vector<pDomain>::const_iterator it = Doms.begin(); it != Doms.end(); it++) {
-                PastProb += it->Size();
-                if(Choose <= PastProb)
-                    return it->Generate();
+            for (std::vector<pDomain*>::const_iterator it = Doms.begin(); it != Doms.end(); it++) {
+                PastProb += (*it)->Size();
+                if (Choose <= PastProb) return (*it)->Generate();
             }
-
             throw PErrInternalError("Sizes didn't add up to TotalSize in PDUnion::Generate().");
-#endif
-            return pVec(0,0,0);
         }
 
-        PINLINE float Size() const
-        {
-            return TotalSize;
-        }
+        float Size() const { return TotalSize; }
 
         pDomain* copy() const
         {
@@ -231,7 +227,7 @@ public:
     struct PDPoint : public pDomain {
         pVec p;
 
-        PINLINE  PDPoint(const pVec& p0)
+        PINLINE PDPoint(const pVec& p0)
         {
             Which = PDPoint_e;
             Varying = Varies(p0);

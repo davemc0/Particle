@@ -198,6 +198,7 @@ static void showBitmapMessage(GLfloat x, GLfloat y, GLfloat z, char *message)
 
     glPushAttrib(GL_ENABLE_BIT);
     glDisable(GL_TEXTURE_2D);
+    glDisable(GL_LIGHTING);
     glDisable(GL_DEPTH_TEST);
 
     glMatrixMode(GL_PROJECTION);
@@ -268,20 +269,20 @@ void InitProgs()
         MakeGaussianSpotTexture();
 
     DisplayListID = glGenLists(1);
-#if 1
-    Monarch(DisplayListID);
-#else
-    glNewList(DisplayListID, GL_COMPILE);
-    glBegin(GL_LINES);
-    glVertex3f(0, 0, 0);
-    glVertex3f(1, 0, 0);
-    glVertex3f(0, 0, 0);
-    glVertex3f(0, 1, 0);
-    glVertex3f(0, 0, 0);
-    glVertex3f(0, 0, 1);
-    glEnd();
-    glEndList();
-#endif
+    if (1)
+        Monarch(DisplayListID);
+    else {
+        glNewList(DisplayListID, GL_COMPILE);
+        glBegin(GL_LINES);
+        glVertex3f(0, 0, 0);
+        glVertex3f(1, 0, 0);
+        glVertex3f(0, 0, 0);
+        glVertex3f(0, 1, 0);
+        glVertex3f(0, 0, 0);
+        glVertex3f(0, 0, 1);
+        glEnd();
+        glEndList();
+    }
 }
 
 void Draw()
@@ -337,9 +338,9 @@ void Draw()
     P.GetParticles(0, 1, (float *)&Cam, NULL, (float *)&Vel);
 
 #if 0
-    pVec At=Cam+Vel;
+    pVec At=Cam+Vel; // Look in the direction the camera is flying
 #else
-    pVec At=pVec(0,0,3);
+    pVec At=pVec(0,0,3); // Look at the center of action
 #endif
 
     gluLookAt(Cam.x(), Cam.y(), Cam.z(), At.x(), At.y(), At.z(), 0, 0, 1);

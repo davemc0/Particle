@@ -145,12 +145,10 @@ static void showBitmapMessage(GLfloat x, GLfloat y, GLfloat z, char *message)
 	if(message == NULL)
 		return;
 	
-#ifndef SCI_MACHINE_hp
 	glPushAttrib(GL_ENABLE_BIT);
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_LIGHTING);
 	glDisable(GL_DEPTH_TEST);
-#endif
 	
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -165,9 +163,7 @@ static void showBitmapMessage(GLfloat x, GLfloat y, GLfloat z, char *message)
 	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);
 	
-#ifndef SCI_MACHINE_hp
 	glPopAttrib();
-#endif
 }
 
 // Make a Monarch Butterfly by hand. I can't believe I ever did this.
