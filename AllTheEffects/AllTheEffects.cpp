@@ -664,7 +664,7 @@ void GlutSetup(int argc, char **argv)
     glutInit(&argc, argv);
 
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_MULTISAMPLE);
-    glutInitWindowSize(1024, 1024);
+    glutInitWindowSize(880, 880);
     glutInitWindowPosition(20, 0);
     glutCreateWindow("Particle Spray");
 
