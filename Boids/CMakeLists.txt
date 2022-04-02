@@ -30,6 +30,8 @@ link_libraries(${GLUT_LIBRARIES})
 set(SOURCES
     ../DemoShared/DrawGroups.cpp
     ../DemoShared/DrawGroups.h
+    ../DemoShared/Monarch.cpp
+    ../DemoShared/Monarch.h
     Boids.cpp
     RenderModel.cpp
 )
