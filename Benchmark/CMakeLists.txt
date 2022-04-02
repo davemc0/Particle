@@ -1,8 +1,8 @@
-# PSpray executable using Particle System API
+# Benchmark executable using Particle System API
 
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
-set(EXE_NAME PSpray)
+set(EXE_NAME Benchmark)
 
 project(${EXE_NAME})
 
@@ -27,14 +27,10 @@ add_definitions(-DFREEGLUT_STATIC)
 include_directories(${GLUT_INCLUDE_DIR})
 link_libraries(${GLUT_LIBRARIES})
 
-set(SOURCES
-    DrawGroups.cpp
-    DrawGroups.h
-    ../Effects/Effects.cpp
-    ../Effects/Effects.h
-    Monarch.cpp
-    Monarch.h
-    PSpray.cpp
+set(SOURCES	
+    ../DemoShared/Effects.cpp
+    ../DemoShared/Effects.h
+    Benchmark.cpp
 )
 
 source_group("src"  FILES ${SOURCES})

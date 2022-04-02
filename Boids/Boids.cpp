@@ -10,7 +10,7 @@
 #include "Particle/pAPI.h"
 using namespace PAPI;
 
-#include "../PSpray/DrawGroups.h"
+#include "../DemoShared/DrawGroups.h"
 
 #include "Util/Timer.h"
 #include "Util/Utils.h"

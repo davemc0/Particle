@@ -1,8 +1,8 @@
-# ParBench executable using Particle System API
+# AllTheEffects executable using Particle System API
 
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
-set(EXE_NAME ParBench)
+set(EXE_NAME AllTheEffects)
 
 project(${EXE_NAME})
 
@@ -27,10 +27,14 @@ add_definitions(-DFREEGLUT_STATIC)
 include_directories(${GLUT_INCLUDE_DIR})
 link_libraries(${GLUT_LIBRARIES})
 
-set(SOURCES	
-    ../Effects/Effects.cpp
-    ../Effects/Effects.h
-    ParBench.cpp
+set(SOURCES
+    ../DemoShared/DrawGroups.cpp
+    ../DemoShared/DrawGroups.h
+    ../DemoShared/Effects.cpp
+    ../DemoShared/Effects.h
+    ../DemoShared/Monarch.cpp
+    ../DemoShared/Monarch.h
+    AllTheEffects.cpp
 )
 
 source_group("src"  FILES ${SOURCES})

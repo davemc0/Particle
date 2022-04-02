@@ -28,10 +28,10 @@ include_directories(${GLUT_INCLUDE_DIR})
 link_libraries(${GLUT_LIBRARIES})
 
 set(SOURCES
-    RenderModel.cpp
-    ../PSpray/DrawGroups.cpp
-    ../PSpray/DrawGroups.h
+    ../DemoShared/DrawGroups.cpp
+    ../DemoShared/DrawGroups.h
     Boids.cpp
+    RenderModel.cpp
 )
 
 source_group("src"  FILES ${SOURCES})

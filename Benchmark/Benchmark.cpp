@@ -1,11 +1,11 @@
-/// ParBench.cpp
+/// Benchmark.cpp
 ///
 /// Copyright 2006-2007 by David K. McAllister
 /// http://www.ParticleSystems.org
 ///
 /// This application benchmarks particle system effects without doing graphics.
 
-#include "../Effects/Effects.h"
+#include "../DemoShared/Effects.h"
 
 #include "Particle/pAPI.h"
 

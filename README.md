@@ -46,6 +46,43 @@ Then you can build from the command line:
 
 or launch build/ParticleSolution.sln in Visual Studio.
 
+Example Code
+============
+
+Example
+-------
+An OpenGL and GLUT-based example of particle systems used to render a fountain
+
+AllTheEffects
+-------------
+Double-click to start the program. 
+
+Press 'f' to make it full screen.
+
+Right-click in the window to pop up the menu. 
+The keyboard shortcuts are listed on the menu.
+
+If you don't touch it, it will randomly go through the demos. This should provide hours of family fun. 
+If you get bored, press 'space' to cause an explosion.
+Press 'm' to make cool motion blur.
+Press 's' to sort the particles back-to-front for more correct but slower rendering.
+Press 'p' to change what each particle is rendered as.
+
+Boids
+-----
+An attempt to implement Craig Reynolds' Boids algorithm in the Particle System API
+
+This one has a flock of birds flying around.
+
+It can read in a 3D model file of polygons to steer to avoid.
+
+This code never worked well and has not been maintained, as you can see.
+
+Benchmark
+---------
+This one runs all the same demo effects as AllTheEffects does,
+but it doesn't do any graphics. It doesn't use OpenGL or GLUT.
+
 Final Notes
 ===========
 
