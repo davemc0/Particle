@@ -28,18 +28,19 @@ void ComputeParticles()
     P.Gravity(pVec(0, 0, -0.01f));
 
     // Bounce particles off a disc of radius 5.
-    P.Bounce(-0.05f, 0.35f, 0, PDDisc(pVec(0, 0, 0), pVec(0, 0, 1), 5));
+    P.Bounce(0.0f, 0.5f, 0, PDDisc(pVec(0, 0, 0), pVec(0, 0, 1), 5));
 
     // Kill particles below Z=-3.
     P.Sink(false, PDPlane(pVec(0, 0, -3), pVec(0, 0, 1)));
 
     // Move particles to their new positions.
     P.Move(true, false);
+
+    // Sleep(10);
 }
 
-// Draw as points using vertex arrays
-// To draw as textured point sprites just call
-// glEnable(GL_POINT_SPRITE_ARB) before calling this function.
+// Draw each particle as a point using vertex arrays
+// To draw as textured point sprites just call glEnable(GL_POINT_SPRITE) before calling this function.
 void DrawGroupAsPoints()
 {
     size_t cnt = P.GetGroupCount();
@@ -52,6 +53,8 @@ void DrawGroupAsPoints()
                                mass1Ofs, data1Ofs);
     if (cnt < 1) return;
 
+    glEnable(GL_POINT_SMOOTH);
+    glPointSize(4);
     glEnableClientState(GL_COLOR_ARRAY);
     glColorPointer(4, GL_FLOAT, int(flstride) * sizeof(float), ptr + color3Ofs);
 
@@ -67,26 +70,21 @@ void Draw()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Set up the view.
+    // Set up the view
     glLoadIdentity();
-    gluLookAt(0, -8, 3, 0, 0, 0, 0, 0, 1);
+    gluLookAt(0, -12, 3, 0, 0, 0, 0, 0, 1);
 
-    // Draw the ground.
-    glBegin(GL_QUADS);
+    // Draw the ground
     glColor3ub(0, 115, 0);
-    glVertex3f(-3.5, -3.5, 0);
-    glColor3ub(0, 5, 140);
-    glVertex3f(-3.5, 3.5, 0);
-    glColor3ub(0, 5, 140);
-    glVertex3f(3.5, 3.5, 0);
-    glColor3ub(0, 115, 0);
-    glVertex3f(3.5, -3.5, 0);
-    glEnd();
+    glPushMatrix();
+    glTranslatef(0, 0, -1);
+    glutSolidCylinder(5, 1, 20, 20);
+    glPopMatrix();
 
-    // Do what the particles do.
+    // Do what the particles do
     ComputeParticles();
 
-    // Draw the particles.
+    // Draw the particles
     DrawGroupAsPoints();
 
     glutSwapBuffers();
@@ -104,12 +102,11 @@ void Reshape(int w, int h)
 
 int main(int argc, char** argv)
 {
-    // Initialize GLUT.
     glutInit(&argc, argv);
 
-    // Make a normal 3D window.
+    // Make a standard 3D window
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
-    glutInitWindowSize(512, 512);
+    glutInitWindowSize(800, 800);
     glutCreateWindow("Particle Example");
 
     glutDisplayFunc(Draw);
@@ -121,9 +118,10 @@ int main(int argc, char** argv)
     glDepthFunc(GL_LESS);
 
     // Make a particle group
-    int particle_handle = P.GenParticleGroups(1, 10000);
+    int particle_handle = P.GenParticleGroups(1, 80000);
 
     P.CurrentGroup(particle_handle);
+    P.TimeStep(0.1f);
 
     try {
         glutMainLoop();

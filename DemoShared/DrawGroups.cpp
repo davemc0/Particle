@@ -287,7 +287,7 @@ void DrawGroupAsQuadSprites(ParticleContext_t& P, const pVec& view, const pVec& 
 
 // Draw as points using vertex arrays
 // To draw as textured point sprites just call
-// glEnable(GL_POINT_SPRITE_ARB) before calling this function.
+// glEnable(GL_POINT_SPRITE) before calling this function.
 void DrawGroupAsPoints(ParticleContext_t& P, const bool const_color)
 {
     int cnt = (int)P.GetGroupCount();

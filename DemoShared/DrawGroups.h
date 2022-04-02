@@ -23,7 +23,7 @@ extern void DrawGroupAsQuadSprites(PAPI::ParticleContext_t& P, const PAPI::pVec&
 
 // Draw as points using vertex arrays
 // To draw as textured point sprites just call
-// glEnable(GL_POINT_SPRITE_ARB) before calling this function.
+// glEnable(GL_POINT_SPRITE) before calling this function.
 extern void DrawGroupAsPoints(PAPI::ParticleContext_t& P, const bool const_color);
 
 #endif

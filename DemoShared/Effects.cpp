@@ -932,7 +932,7 @@ void WaterfallB::DoActions(ParticleEffects& Efx) const
     const float Fric = 1.0f, Res = 0.95f, Cutoff = 0.0f;
 
     // Don't apply friction if tangential velocity < cutoff
-    // float tanscale = (vt.length2() <= cutoffSqr) ? 1.0f : oneMinusFriction;
+    // float tanscale = (vt.lenSqr() <= cutoffSqr) ? 1.0f : oneMinusFriction;
     // m.vel = vt * tanscale + vn * resilience;
 
     P.Bounce(Fric, Res, Cutoff, PDPlane(pVec(4,0,0), pVec(1,0,0)));

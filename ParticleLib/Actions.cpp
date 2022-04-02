@@ -116,7 +116,7 @@ void PAAvoid::Exec(const PDTriangle& dom, ParticleGroup& group, ParticleList::it
         if (pSameSign(distold, distnew)) continue;
 
         float nv = dot(dom.nrm, m.vel);
-        float t = -distold / nv; // Time steps before hit
+        float t = -distold / nv; // Time until hit
 
         pVec phit = m.pos + m.vel * t; // Actual intersection point
         pVec offset = phit - dom.p;    // Offset from origin in plane
@@ -132,13 +132,13 @@ void PAAvoid::Exec(const PDTriangle& dom, ParticleGroup& group, ParticleList::it
         // A hit! A most palpable hit!
         // Compute distance to the three edges.
         pVec uofs = (dom.uNrm * dot(dom.uNrm, offset)) - offset;
-        float udistSqr = uofs.length2();
+        float udistSqr = uofs.lenSqr();
         pVec vofs = (dom.vNrm * dot(dom.vNrm, offset)) - offset;
-        float vdistSqr = vofs.length2();
+        float vdistSqr = vofs.lenSqr();
 
         pVec foffset = offset - u;
         pVec fofs = (fn * dot(fn, foffset)) - foffset;
-        float fdistSqr = fofs.length2();
+        float fdistSqr = fofs.lenSqr();
 
         // S is the safety vector toward the closest point on boundary.
         pVec S;
@@ -195,15 +195,15 @@ void PAAvoid::Exec(const PDRectangle& dom, ParticleGroup& group, ParticleList::i
         // A hit! A most palpable hit!
         // Compute distance to the four edges.
         pVec uofs = (dom.uNrm * dot(dom.uNrm, offset)) - offset;
-        float udistSqr = uofs.length2();
+        float udistSqr = uofs.lenSqr();
         pVec vofs = (dom.vNrm * dot(dom.vNrm, offset)) - offset;
-        float vdistSqr = vofs.length2();
+        float vdistSqr = vofs.lenSqr();
 
         pVec foffset = (dom.u + dom.v) - offset;
         pVec fofs = foffset - (dom.uNrm * dot(dom.uNrm, foffset));
-        float fdistSqr = fofs.length2();
+        float fdistSqr = fofs.lenSqr();
         pVec gofs = foffset - (dom.vNrm * dot(dom.vNrm, foffset));
-        float gdistSqr = gofs.length2();
+        float gdistSqr = gofs.lenSqr();
 
         pVec S; // Vector from point of impact to safety
         if (udistSqr <= vdistSqr && udistSqr <= fdistSqr && udistSqr <= gdistSqr)
@@ -247,7 +247,7 @@ void PAAvoid::Exec(const PDPlane& dom, ParticleGroup& group, ParticleList::itera
         float t = -distold / dot(dom.nrm, m.vel); // Time to collision
         pVec S = m.vel * t + dom.nrm * distold;   // Vector from projection point to point of impact
 
-        float slen = S.length2();
+        float slen = S.lenSqr();
         if (slen == 0.0f)
             S = dom.nrm;
         else
@@ -319,7 +319,7 @@ void PAAvoid::Exec(const PDDisc& dom, ParticleGroup& group, ParticleList::iterat
         pVec phit = m.pos + m.vel * t; // Actual intersection point
         pVec offset = phit - dom.p;    // Offset from origin in plane
 
-        float radSqr = offset.length2();
+        float radSqr = offset.lenSqr();
 
         // Are we going to hit the disc ring? If so, always turn to the OUTSIDE of the ring.
         // Could do inside of ring, too, if we took sqrts, found the closer direction, and flipped offset if needed.
@@ -358,6 +358,14 @@ void PAAvoid::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Parti
     }
 }
 
+// Bounce() doesn't work correctly with small time step sizes for particles sliding along a surface.
+// The friction and resilience parameters should not be scaled by dt, since a bounce happens instantaneously.
+// On the other hand, they should be scaled by dt because particles sliding along a surface will hit more
+// often if dt is smaller. If you have any suggestions, let me know.
+//
+// This approach uses the actual hit location and hit time to determine whether we actually hit.
+// But it doesn't bounce from the actual location or time. It reverses the velocity immediately, applying
+// the whole velocity in the outward direction for the whole time step.
 void PABounce::Exec(const PDTriangle& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
     for (ParticleList::iterator it = ibegin; it != iend; it++) {
@@ -375,7 +383,7 @@ void PABounce::Exec(const PDTriangle& dom, ParticleGroup& group, ParticleList::i
         if (pSameSign(distold, distnew)) continue;
 
         float nv = dot(dom.nrm, m.vel);
-        float t = -distold / nv; // Time steps before hit
+        float t = -distold / nv; // Time until hit
 
         pVec phit = m.pos + m.vel * t; // Actual intersection point
         pVec offset = phit - dom.p;    // Offset from origin in plane
@@ -393,9 +401,8 @@ void PABounce::Exec(const PDTriangle& dom, ParticleGroup& group, ParticleList::i
         pVec vn = dom.nrm * nv; // Normal Vn = (V.N)N
         pVec vt = m.vel - vn;   // Tangent Vt = V - Vn
 
-        // Compute new velocity heading out:
-        // Don't apply friction if tangential velocity < cutoff
-        if (vt.length2() <= cutoffSqr)
+        // Compute new velocity heading out; don't apply friction if tangential velocity < cutoff
+        if (vt.lenSqr() <= cutoffSqr)
             m.vel = vt - vn * resilience;
         else
             m.vel = vt * oneMinusFriction - vn * resilience;
@@ -419,7 +426,7 @@ void PABounce::Exec(const PDRectangle& dom, ParticleGroup& group, ParticleList::
         if (pSameSign(distold, distnew)) continue;
 
         float nv = dot(dom.nrm, m.vel);
-        float t = -distold / nv; // Time steps before hit
+        float t = -distold / nv; // Time until hit
 
         pVec phit = m.pos + m.vel * t; // Actual intersection point
         pVec offset = phit - dom.p;    // Offset from origin in plane
@@ -437,9 +444,8 @@ void PABounce::Exec(const PDRectangle& dom, ParticleGroup& group, ParticleList::
         pVec vn = dom.nrm * nv; // Normal Vn = (V.N)N
         pVec vt = m.vel - vn;   // Tangent Vt = V - Vn
 
-        // Compute new velocity heading out:
-        // Don't apply friction if tangential velocity < cutoff
-        if (vt.length2() <= cutoffSqr)
+        // Compute new velocity heading out; don't apply friction if tangential velocity < cutoff
+        if (vt.lenSqr() <= cutoffSqr)
             m.vel = vt - vn * resilience;
         else
             m.vel = vt * oneMinusFriction - vn * resilience;
@@ -463,16 +469,15 @@ void PABounce::Exec(const PDPlane& dom, ParticleGroup& group, ParticleList::iter
         if (pSameSign(distold, distnew)) continue;
 
         float nv = dot(dom.nrm, m.vel);
-        float t = -distold / nv; // Time steps before hit
+        float t = -distold / nv; // Time until hit
 
         // A hit! A most palpable hit!
         // Compute tangential and normal components of velocity
         pVec vn = dom.nrm * nv; // Normal Vn = (V.N)N
         pVec vt = m.vel - vn;   // Tangent Vt = V - Vn
 
-        // Compute new velocity heading out:
-        // Don't apply friction if tangential velocity < cutoff
-        if (vt.length2() <= cutoffSqr)
+        // Compute new velocity heading out; don't apply friction if tangential velocity < cutoff
+        if (vt.lenSqr() <= cutoffSqr)
             m.vel = vt - vn * resilience;
         else
             m.vel = vt * oneMinusFriction - vn * resilience;
@@ -516,7 +521,7 @@ void PABounce::Exec(const PDSphere& dom, ParticleGroup& group, ParticleList::ite
 
             // Compute new velocity heading out:
             // Don't apply friction if tangential velocity < cutoff
-            float tanscale = (vt.length2() <= cutoffSqr) ? 1.0f : oneMinusFriction;
+            float tanscale = (vt.lenSqr() <= cutoffSqr) ? 1.0f : oneMinusFriction;
             m.vel = vt * tanscale + vn * resilience;
 
             // Now see where the point will end up. Make sure we fixed it to stay inside.
@@ -551,9 +556,8 @@ void PABounce::Exec(const PDSphere& dom, ParticleGroup& group, ParticleList::ite
             // Reverse normal component of velocity if it points in
             if (nmag < 0) vn = -vn;
 
-            // Compute new velocity heading out:
-            // Don't apply friction if tangential velocity < cutoff
-            float tanscale = (vt.length2() <= cutoffSqr) ? 1.0f : oneMinusFriction;
+            // Compute new velocity heading out; don't apply friction if tangential velocity < cutoff
+            float tanscale = (vt.lenSqr() <= cutoffSqr) ? 1.0f : oneMinusFriction;
             m.vel = vt * tanscale + vn * resilience;
         }
     }
@@ -570,7 +574,7 @@ void PABounce::Exec(const PDDisc& dom, ParticleGroup& group, ParticleList::itera
 
         // Nrm stores the plane normal (the a,b,c of the plane eqn).
         // Old and new distances: dist(p,plane) = n * p + d
-        float distold = dot(m.pos, dom.nrm) + dom.D; // XXX May be able to speed this up by removing the add and simplifying the dot product.
+        float distold = dot(m.pos, dom.nrm) + dom.D;
         float distnew = dot(pnext, dom.nrm) + dom.D;
 
         if (pSameSign(distold, distnew)) continue;
@@ -581,7 +585,7 @@ void PABounce::Exec(const PDDisc& dom, ParticleGroup& group, ParticleList::itera
         pVec phit = m.pos + m.vel * t; // Actual intersection point
         pVec offset = phit - dom.p;    // Offset from origin in plane
 
-        float radSqr = offset.length2();
+        float radSqr = offset.lenSqr();
 
         // Are we going to hit the disc ring?
         if (radSqr < dom.radInSqr || radSqr > dom.radOutSqr) continue;
@@ -591,13 +595,8 @@ void PABounce::Exec(const PDDisc& dom, ParticleGroup& group, ParticleList::itera
         pVec vn = dom.nrm * NdotV; // Normal Vn = (V.N)N
         pVec vt = m.vel - vn;      // Tangent Vt = V - Vn
 
-        // Compute new velocity heading out:
-        // Don't apply friction if tangential velocity < cutoff
-        // Bounce() doesn't work correctly with small time step sizes for particles sliding along a surface.
-        // The friction and resilience parameters should not be scaled by dt, since a bounce happens instantaneously.
-        // On the other hand, they should be scaled by dt because particles sliding along a surface will hit more
-        // often if dt is smaller. If you have any suggestions, let me know.
-        if (vt.length2() <= cutoffSqr)
+        // Compute new velocity heading out; don't apply friction if tangential velocity < cutoff
+        if (vt.lenSqr() <= cutoffSqr)
             m.vel = vt - vn * resilience;
         else
             m.vel = vt * oneMinusFriction - vn * resilience;
@@ -678,7 +677,7 @@ void PADamping::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Par
 
     for (ParticleList::iterator it = ibegin; it != iend; it++) {
         Particle_t& m = (*it);
-        float vSqr = m.vel.length2();
+        float vSqr = m.vel.lenSqr();
 
         if (vSqr >= vlowSqr && vSqr <= vhighSqr) { m.vel = CompMult(m.vel, scale); }
     }
@@ -693,7 +692,7 @@ void PARotDamping::Execute(ParticleGroup& group, ParticleList::iterator ibegin, 
 
     for (ParticleList::iterator it = ibegin; it != iend; it++) {
         Particle_t& m = (*it);
-        float vSqr = m.rvel.length2();
+        float vSqr = m.rvel.lenSqr();
 
         if (vSqr >= vlowSqr && vSqr <= vhighSqr) { m.rvel = CompMult(m.rvel, scale); }
     }
@@ -712,7 +711,7 @@ void PAExplosion::Execute(ParticleGroup& group, ParticleList::iterator ibegin, P
 
         // Figure direction to particle.
         pVec dir(m.pos - center);
-        float distSqr = dir.length2();
+        float distSqr = dir.lenSqr();
         float dist = sqrtf(distSqr);
         float DistFromWaveSqr = fsqr(radius - dist);
 
@@ -744,7 +743,7 @@ void PAFollow::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Part
 
             // Accelerate toward the particle after me in the list.
             pVec tohim((*next).pos - m.pos); // tohim = p1 - p0
-            float tohimlenSqr = tohim.length2();
+            float tohimlenSqr = tohim.lenSqr();
 
             if (tohimlenSqr < max_radiusSqr) {
                 // Compute force exerted between the two bodies
@@ -760,7 +759,7 @@ void PAFollow::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Part
 
             // Accelerate toward the particle after me in the list.
             pVec tohim((*next).pos - m.pos); // tohim = p1 - p0
-            float tohimlenSqr = tohim.length2();
+            float tohimlenSqr = tohim.lenSqr();
 
             // Compute force exerted between the two bodies
             m.vel += tohim * (magdt / (sqrtf(tohimlenSqr) * (tohimlenSqr + epsilon)));
@@ -788,7 +787,7 @@ void PAGravitate::Execute(ParticleGroup& group, ParticleList::iterator ibegin, P
                 Particle_t& mj = (*j);
 
                 pVec tohim(mj.pos - m.pos); // tohim = p1 - p0
-                float tohimlenSqr = tohim.length2();
+                float tohimlenSqr = tohim.lenSqr();
 
                 if (tohimlenSqr < max_radiusSqr) {
                     // Compute force exerted between the two bodies
@@ -812,7 +811,7 @@ void PAGravitate::Execute(ParticleGroup& group, ParticleList::iterator ibegin, P
                 Particle_t& mj = (*j);
 
                 pVec tohim(mj.pos - m.pos); // tohim = p1 - p0
-                float tohimlenSqr = tohim.length2();
+                float tohimlenSqr = tohim.lenSqr();
 
                 // Compute force exerted between the two bodies
                 pVec acc(tohim * (magdt / (sqrtf(tohimlenSqr) * (tohimlenSqr + epsilon))));
@@ -889,7 +888,7 @@ void PAMatchVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegi
                 Particle_t& mj = (*j);
 
                 pVec tohim(mj.pos - m.pos); // tohim = p1 - p0
-                float tohimlenSqr = tohim.length2();
+                float tohimlenSqr = tohim.lenSqr();
 
                 if (tohimlenSqr < max_radiusSqr) {
                     // Compute force exerted between the two bodies
@@ -914,7 +913,7 @@ void PAMatchVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegi
                 Particle_t& mj = (*j);
 
                 pVec tohim(mj.pos - m.pos); // tohim = p1 - p0
-                float tohimlenSqr = tohim.length2();
+                float tohimlenSqr = tohim.lenSqr();
 
                 // Compute force exerted between the two bodies
                 pVec acc(mj.vel * (magdt / (tohimlenSqr + epsilon)));
@@ -947,7 +946,7 @@ void PAMatchRotVelocity::Execute(ParticleGroup& group, ParticleList::iterator ib
                 Particle_t& mj = (*j);
 
                 pVec tohim(mj.pos - m.pos); // tohim = p1 - p0
-                float tohimlenSqr = tohim.length2();
+                float tohimlenSqr = tohim.lenSqr();
 
                 if (tohimlenSqr < max_radiusSqr) {
                     // Compute force exerted between the two bodies
@@ -972,7 +971,7 @@ void PAMatchRotVelocity::Execute(ParticleGroup& group, ParticleList::iterator ib
                 Particle_t& mj = (*j);
 
                 pVec tohim(mj.pos - m.pos); // tohim = p1 - p0
-                float tohimlenSqr = tohim.length2();
+                float tohimlenSqr = tohim.lenSqr();
 
                 // Compute force exerted between the two bodies
                 pVec acc(mj.rvel * (magdt / (tohimlenSqr + epsilon)));
@@ -1003,8 +1002,7 @@ void PAMove::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Partic
             m.up += m.rvel * dt;
         }
     } else {
-        // STL slowness and no SSE.
-        // Not very much slower at all, though. Stick with this until we get a more elegant way to use SSE.
+        // Stick with this until we get a more elegant way to use SSE.
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
             Particle_t& m = (*it);
 
@@ -1035,7 +1033,7 @@ void PAOrbitLine::Execute(ParticleGroup& group, ParticleList::iterator ibegin, P
 
             // Distance to line (force drops as 1/r^2, normalize by 1/r)
             // Soften by epsilon to avoid tight encounters to infinity
-            float rSqr = into.length2();
+            float rSqr = into.lenSqr();
 
             if (rSqr < max_radiusSqr)
                 // Step velocity with acceleration
@@ -1057,7 +1055,7 @@ void PAOrbitLine::Execute(ParticleGroup& group, ParticleList::iterator ibegin, P
 
             // Distance to line (force drops as 1/r^2, normalize by 1/r)
             // Soften by epsilon to avoid tight encounters to infinity
-            float rSqr = into.length2();
+            float rSqr = into.lenSqr();
 
             // Step velocity with acceleration
             m.vel += into * (magdt / (sqrtf(rSqr) * (rSqr + epsilon)));
@@ -1080,7 +1078,7 @@ void PAOrbitPoint::Execute(ParticleGroup& group, ParticleList::iterator ibegin, 
 
             // Distance to gravity well (force drops as 1/r^2, normalize by 1/r)
             // Soften by epsilon to avoid tight encounters to infinity
-            float rSqr = dir.length2();
+            float rSqr = dir.lenSqr();
 
             // Step velocity with acceleration
             if (rSqr < max_radiusSqr) m.vel += dir * (magdt / (sqrtf(rSqr) * (rSqr + epsilon)));
@@ -1095,7 +1093,7 @@ void PAOrbitPoint::Execute(ParticleGroup& group, ParticleList::iterator ibegin, 
 
             // Distance to gravity well (force drops as 1/r^2, normalize by 1/r)
             // Soften by epsilon to avoid tight encounters to infinity
-            float rSqr = dir.length2();
+            float rSqr = dir.lenSqr();
 
             // Step velocity with acceleration
             m.vel += dir * (magdt / (sqrtf(rSqr) * (rSqr + epsilon)));
@@ -1312,7 +1310,7 @@ void PASpeedLimit::Execute(ParticleGroup& group, ParticleList::iterator ibegin, 
 
     for (ParticleList::iterator it = ibegin; it != iend; it++) {
         Particle_t& m = (*it);
-        float sSqr = m.vel.length2();
+        float sSqr = m.vel.lenSqr();
         if (sSqr < min_sqr && sSqr) {
             float s = sqrtf(sSqr);
             m.vel *= (min_speed / s);
@@ -1397,7 +1395,7 @@ void PAVortex::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Part
 
         // Direction from particle to nearest point on line.
         pVec parToAxis = parOnAxis - tipToPar;
-        float rSqr = parToAxis.length2();
+        float rSqr = parToAxis.lenSqr();
 
         if (rSqr >= max_radiusSqr || axisScale < 0.0f || alongAxis > 1.0f) {
             // m.color = pVec(0,0,1);
