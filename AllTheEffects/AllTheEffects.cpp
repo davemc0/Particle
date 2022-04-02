@@ -1,6 +1,6 @@
 // AllTheEffects.cpp
 //
-// Copyright 1998-2006 by David K. McAllister
+/// Copyright 1997-2007, 2022 by David K. McAllister
 //
 // This application demonstrates particle systems for interactive graphics.
 // It uses OpenGL and GLUT.

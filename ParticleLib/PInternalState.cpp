@@ -1,7 +1,6 @@
 /// PInternalState.cpp
 ///
-/// Copyright 1997-2007 by David K. McAllister
-/// http://www.ParticleSystems.org
+/// Copyright 1997-2007, 2022 by David K. McAllister
 ///
 /// This file implements the PInternalState_t class and other under-the-hood stuff that is not part of an API call.
 ///

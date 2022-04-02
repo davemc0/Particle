@@ -1,7 +1,6 @@
 /// Particle.h
 ///
-/// Copyright 1997-2007 by David K. McAllister
-/// http://www.ParticleSystems.org
+/// Copyright 1997-2007, 2022 by David K. McAllister
 ///
 /// This file contains the definition of a particle.
 /// It should only be included by API implementation files, not by applications.

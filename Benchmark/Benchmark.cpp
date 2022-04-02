@@ -1,7 +1,6 @@
 /// Benchmark.cpp
 ///
-/// Copyright 2006-2007 by David K. McAllister
-/// http://www.ParticleSystems.org
+/// Copyright 1997-2007, 2022 by David K. McAllister
 ///
 /// This application benchmarks particle system effects without doing graphics.
 

@@ -1,6 +1,6 @@
 // DrawGroups.cpp
 //
-// Copyright 1998 by David K. McAllister
+/// Copyright 1997-2007, 2022 by David K. McAllister
 //
 // This file draws particle groups in OpenGL.
 

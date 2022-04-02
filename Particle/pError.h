@@ -1,10 +1,8 @@
 /// PError.h
 ///
-/// Copyright 1997-2007 by David K. McAllister
-/// http://www.ParticleSystems.org
+/// Copyright 1997-2007, 2022 by David K. McAllister
 ///
 /// This file defines the error classes that are thrown.
-/// The Particle System API is distributed under the GNU LGPL.
 
 #ifndef _perror_h
 #define _perror_h

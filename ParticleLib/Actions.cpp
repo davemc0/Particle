@@ -1,9 +1,6 @@
 /// Actions.cpp
 ///
-/// Copyright 1997-2007 by David K. McAllister
-/// http://www.ParticleSystems.org
-///
-/// I used code Copyright 1997 by Jonathan P. Leech as an example in implenting this.
+/// Copyright 1997-2007, 2022 by David K. McAllister
 ///
 /// This file implements the dynamics of particle actions.
 
