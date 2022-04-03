@@ -1,8 +1,8 @@
-# AllTheEffects executable using Particle System API
+# Playground executable using Particle System API
 
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
-set(EXE_NAME AllTheEffects)
+set(EXE_NAME Playground)
 
 project(${EXE_NAME})
 
@@ -34,7 +34,7 @@ set(SOURCES
     ../DemoShared/Effects.h
     ../DemoShared/Monarch.cpp
     ../DemoShared/Monarch.h
-    AllTheEffects.cpp
+    Playground.cpp
 )
 
 source_group("src"  FILES ${SOURCES})
