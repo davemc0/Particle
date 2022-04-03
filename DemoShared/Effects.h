@@ -297,9 +297,9 @@ public:
     E_RENDER_GEOMETRY RenderGeometry;
     pVec GravityVec;
     Effect* Demo;
-    int maxParticles;    // The number of particles the app wants in this demo
-    int numSteps;        // The number of simulation time steps per rendered frame
-    int particle_handle; // The handle of the particle group
+    int maxParticles;   // The number of particles the app wants in this demo
+    int numSteps;       // The number of simulation time steps per rendered frame
+    int particleHandle; // The handle of the particle group
 
     void SetPhoto(uc3Image* Im)
     {

@@ -118,9 +118,9 @@ int main(int argc, char** argv)
     glDepthFunc(GL_LESS);
 
     // Make a particle group
-    int particle_handle = P.GenParticleGroups(1, 80000);
+    int particleHandle = P.GenParticleGroups(1, 80000);
 
-    P.CurrentGroup(particle_handle);
+    P.CurrentGroup(particleHandle);
     P.TimeStep(0.1f);
 
     try {

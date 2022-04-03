@@ -18,7 +18,7 @@ static ExecMode_e ExecMode = Internal_Mode;
 static bool SortParticles = false, ShowText = true;
 static int DemoNum = 6;
 
-static Timer Clock;
+static Timer FPSClock;
 static ParticleContext_t P;
 static ParticleEffects Efx(P, 60000);
 
@@ -29,13 +29,13 @@ void Report()
     static int FrameCountForClock = 0;
     FrameCountForClock++;
     if (FrameCountForClock >= NUM_FRAMES_TO_AVG_FOR_CLOCK) {
-        ClockTime = Clock.Reset();
+        ClockTime = FPSClock.Reset();
         float fps = float(NUM_FRAMES_TO_AVG_FOR_CLOCK) / ClockTime;
         int cnt = (int)P.GetGroupCount();
 
         printf("%c%c n=%5d fps=%02.2f %s\n", ExecMode == Immediate_Mode ? 'I' : (ExecMode == Internal_Mode ? 'L' : 'C'), SortParticles ? 'S' : ' ', cnt, fps,
                Efx.GetCurEffectName().c_str());
-        Clock.Start();
+        FPSClock.Start();
         FrameCountForClock = 0;
     }
 }
@@ -44,33 +44,33 @@ void Report()
 // 3 MB works for Q6300.
 void RunBenchmarkCache()
 {
-    Efx.particle_handle = P.GenParticleGroups(1, Efx.maxParticles); // Make a particle group
+    Efx.particleHandle = P.GenParticleGroups(1, Efx.maxParticles); // Make a particle group
 
-    P.CurrentGroup(Efx.particle_handle);
+    P.CurrentGroup(Efx.particleHandle);
 
     Efx.MakeActionLists(ExecMode);
 
     Efx.CallDemo(DemoNum, ExecMode); // Prime it
 
-    Clock.Start();
+    FPSClock.Start();
     for (int CacheSize = 1024 * 16; CacheSize < 8 * 1024 * 1024; CacheSize += (16 * 1024)) {
         P.SetWorkingSetSize(CacheSize);
-        Clock.Reset();
+        FPSClock.Reset();
         for (int i = 0; i < 100; i++) {
             Efx.CallDemo(DemoNum, ExecMode);
             if (SortParticles) P.Sort(pVec(0, -19, 15), pVec(0, 0, 3));
             if (ShowText) Report();
         }
-        double t = Clock.Read();
+        double t = FPSClock.Read();
         printf("%d,%f\n", CacheSize, t);
     }
 }
 
 void RunBenchmark()
 {
-    Efx.particle_handle = P.GenParticleGroups(1, Efx.maxParticles); // Make a particle group
+    Efx.particleHandle = P.GenParticleGroups(1, Efx.maxParticles); // Make a particle group
 
-    P.CurrentGroup(Efx.particle_handle);
+    P.CurrentGroup(Efx.particleHandle);
 
     Efx.MakeActionLists(ExecMode);
 
@@ -83,16 +83,16 @@ void RunBenchmark()
             Report();
         }
     } else {
-        Clock.Reset();
+        FPSClock.Reset();
         while (1) {
             float t = 0.0f;
-            Clock.Start();
+            FPSClock.Start();
             for (int i = 0; i < 10000000; i++) {
                 float v = pNRandf();
                 t += v;
             }
-            printf("%f\n", Clock.Read());
-            Clock.Reset();
+            printf("%f\n", FPSClock.Read());
+            FPSClock.Reset();
         }
     }
 }

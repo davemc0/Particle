@@ -591,14 +591,11 @@ struct PDPlane : public pDomain {
     pDomain* copy() const { return new PDPlane(*this); }
 };
 
-/// Axis-aligned box
+/// Axis-aligned bounding box (AABB)
 ///
 /// e0 and e1 are opposite corners of an axis-aligned box. It doesn't matter which of each coordinate is min and which is max.
 ///
 /// Generate returns a random point in this box. Within returns true if the point is in the box.
-///
-/// It is only possible to bounce particles off the outside of the box, not the inside. Likewise, particles can only Avoid
-/// the box from the outside. To use the Avoid action inside a box, define the box as six planes.
 struct PDBox : public pDomain {
     // P0 is the min corner. p1 is the max corner.
     pVec p0, p1, dif;
@@ -634,7 +631,7 @@ struct PDBox : public pDomain {
         }
 
         dif = p1 - p0;
-        vol = dot(dif, pVec(1, 1, 1));
+        vol = dif.x() * dif.y() * dif.z();
     }
 
     PINLINE bool Within(const pVec& pos) const /// Returns true if the point is in the box.
