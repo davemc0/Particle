@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <typeinfo>
 // For dumping errors
+#include <execution>
 #include <sstream>
 #include <string>
 
@@ -1284,7 +1285,7 @@ void PASort::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Partic
         if (clamp_negative && m.tmp0 < 0) m.tmp0 = 0.0f;
     }
 
-    std::sort<ParticleList::iterator>(ibegin, iend);
+    std::sort(std::execution::par_unseq, ibegin, iend);
 }
 
 // Randomly add particles to the system
