@@ -9,7 +9,6 @@
 // Texture the rain drops
 // Fix motion blur
 // Key to adjust point diameter
-// Multisampling
 // Multiple textures
 // Fountain playground
 // When in random mode reset all rendering params to best for that demo
@@ -323,7 +322,7 @@ void Draw()
     // Use a particle to model the camera motion
     P.CurrentGroup(CameraSystem);
     if (CameraMotion) {
-        P.Bounce(0, 1, 0, PDBox(pVec(-15, 0, 0), pVec(15, -20, 12)));
+        P.Bounce(0, 1, 0, PDBox(pVec(-15, 1, 1), pVec(15, -20, 12)));
         P.SpeedLimit(CamSpeed, CamSpeed);
         P.Move();
     }

@@ -635,7 +635,7 @@ void PhotoShape::StartEffect(EffectsManager& Efx)
             pVec v = pVec(fx, 0, fy);
             v /= float(Efx.Img->w());
 
-            P.Vertex(v * 6.0f - pVec(3.0f), S);
+            P.Vertex(v * 6.0f - pVec(3.0f, 0, 0), S);
         }
     }
 }
