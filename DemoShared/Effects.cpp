@@ -29,25 +29,25 @@ uc3Image* MakeFakeImage()
     return Img;
 }
 
-inline void BoxPoint(pVec& jet, pVec& djet, const float A)
+inline void BoxPoint(pVec& jet, pVec& djet, float itersPerFrame, const float boxSize)
 {
-    jet += djet;
-    if (jet.x() > A || jet.x() < -A) {
+    jet += djet / itersPerFrame;
+    if (jet.x() > boxSize || jet.x() < -boxSize) {
         djet.x() *= -1.0f;
         djet.y() += pRandf() * 0.0005;
     }
-    if (jet.y() > A || jet.y() < -A) {
+    if (jet.y() > boxSize || jet.y() < -boxSize) {
         djet.y() *= -1.0f;
         djet.z() += pRandf() * 0.0005;
     }
-    if (jet.z() > A || jet.z() < -A) {
+    if (jet.z() > boxSize || jet.z() < -boxSize) {
         djet.z() *= -1.0f;
         djet.x() += pRandf() * 0.0005;
     }
 }
 } // namespace
 
-ParticleEffects::ParticleEffects(ParticleContext_t& P_, int mp, E_RENDER_GEOMETRY RG) : P(P_), RenderGeometry(RG)
+EffectsManager::EffectsManager(ParticleContext_t& P_, int mp, E_RENDER_GEOMETRY RG) : P(P_), RenderGeometry(RG)
 {
     Img = MakeFakeImage();
     maxParticles = mp;
@@ -60,7 +60,7 @@ ParticleEffects::ParticleEffects(ParticleContext_t& P_, int mp, E_RENDER_GEOMETR
 // EM specifies how you want to run (for different benchmark purposes, mostly).
 // Allowed values are Immediate_Mode, Internal_Mode, and Compiled_Mode.
 // Set DemoNum to -2 to let NextEffect choose the next demo.
-int ParticleEffects::CallDemo(int DemoNum, ExecMode_e EM)
+int EffectsManager::CallDemo(int DemoNum, ExecMode_e EM)
 {
     if (DemoNum == -1) DemoNum = NumEffects - 1;
     DemoNum = DemoNum % NumEffects;
@@ -95,7 +95,7 @@ int ParticleEffects::CallDemo(int DemoNum, ExecMode_e EM)
     return DemoNum;
 }
 
-void ParticleEffects::MakeEffects()
+void EffectsManager::MakeEffects()
 {
     Effects[0] = new Atom(*this);
     Effects[1] = new Balloons(*this);
@@ -120,7 +120,7 @@ void ParticleEffects::MakeEffects()
     Effects[20] = new WaterfallB(*this);
 }
 
-void ParticleEffects::MakeActionLists(ExecMode_e EM)
+void EffectsManager::MakeActionLists(ExecMode_e EM)
 {
     for (int i = 0; i < NumEffects; i++) { Effects[i]->CreateList(EM, *this); }
 }
@@ -141,7 +141,7 @@ Effect::Effect()
     BIND_KIND = P_INTERNAL_CODE;
 }
 
-void Effect::PerFrame(ExecMode_e EM, ParticleEffects& Efx)
+void Effect::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
     EASSERT(EM != Emit_Mode);
 
@@ -157,7 +157,7 @@ void Effect::PerFrame(ExecMode_e EM, ParticleEffects& Efx)
 }
 
 // Non-varying effects call directly to here without a per-effect overload.
-void Effect::CreateList(ExecMode_e EM, ParticleEffects& Efx)
+void Effect::CreateList(ExecMode_e EM, EffectsManager& Efx)
 {
     EASSERT(EM != Immediate_Mode);
 
@@ -169,11 +169,11 @@ void Effect::CreateList(ExecMode_e EM, ParticleEffects& Efx)
 }
 
 // Non-varying effects call directly to here without a per-effect overload.
-void Effect::EmitList(ParticleEffects& Efx) { CreateList(Emit_Mode, Efx); }
+void Effect::EmitList(EffectsManager& Efx) { CreateList(Emit_Mode, Efx); }
 
-int Effect::NextEffect(ParticleEffects& Efx) { return irand(Efx.NumEffects); }
+int Effect::NextEffect(EffectsManager& Efx) { return irand(Efx.NumEffects); }
 
-void Effect::BindEmitted(ParticleEffects& Efx, P_PARTICLE_EMITTED_ACTION_LIST Func, EmitCodeParams_e Params)
+void Effect::BindEmitted(EffectsManager& Efx, P_PARTICLE_EMITTED_ACTION_LIST Func, EmitCodeParams_e Params)
 {
     Efx.P.BindEmittedActionList(AList, Func, Params);
     CompiledFunc = Func;
@@ -183,7 +183,7 @@ void Effect::BindEmitted(ParticleEffects& Efx, P_PARTICLE_EMITTED_ACTION_LIST Fu
 //////////////////////////////////////////////////////////////////////////////
 
 // Particles orbiting a center
-void Atom::DoActions(ParticleEffects& Efx) const
+void Atom::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -202,22 +202,22 @@ void Atom::DoActions(ParticleEffects& Efx) const
     P.Sink(false, PDSphere(pVec(0.0, 0.0, 0.0), 8.0));
 }
 
-void Atom::EmitList(ParticleEffects& Efx)
+void Atom::EmitList(EffectsManager& Efx)
 {
     particle_rate = P_VARYING_FLOAT;
     Effect::EmitList(Efx);
 }
 
-void Atom::PerFrame(ExecMode_e EM, ParticleEffects& Efx)
+void Atom::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
     particle_rate = Efx.maxParticles / 100.0f;
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
 
-void Atom::StartEffect(ParticleEffects& Efx) { particle_rate = Efx.maxParticles / 100.0f; }
+void Atom::StartEffect(EffectsManager& Efx) { particle_rate = Efx.maxParticles / 100.0f; }
 
 // A bunch of balloons
-void Balloons::DoActions(ParticleEffects& Efx) const
+void Balloons::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
 
@@ -245,21 +245,21 @@ void Balloons::DoActions(ParticleEffects& Efx) const
     P.KillOld(700);
 }
 
-void Balloons::EmitList(ParticleEffects& Efx)
+void Balloons::EmitList(EffectsManager& Efx)
 {
     particle_rate = P_VARYING_FLOAT;
     Effect::EmitList(Efx);
 }
 
-void Balloons::PerFrame(ExecMode_e EM, ParticleEffects& Efx)
+void Balloons::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
     particle_rate = Efx.maxParticles / 100.0f;
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
 
-void Balloons::StartEffect(ParticleEffects& Efx) { particle_rate = Efx.maxParticles / 100.0f; }
+void Balloons::StartEffect(EffectsManager& Efx) { particle_rate = Efx.maxParticles / 100.0f; }
 
-void BounceToy::DoActions(ParticleEffects& Efx) const
+void BounceToy::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
 
@@ -294,7 +294,7 @@ void BounceToy::DoActions(ParticleEffects& Efx) const
 }
 
 // An explosion from the center of the universe, followed by gravity toward a point
-void Explosion::DoActions(ParticleEffects& Efx) const
+void Explosion::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
     P.Damping(pVec(0.999));
@@ -304,22 +304,22 @@ void Explosion::DoActions(ParticleEffects& Efx) const
     P.Sink(false, PDSphere(pVec(0, 0, 0), 30));
 }
 
-void Explosion::EmitList(ParticleEffects& Efx)
+void Explosion::EmitList(EffectsManager& Efx)
 {
     time_since_start = P_VARYING_FLOAT;
     Effect::EmitList(Efx);
 }
 
-void Explosion::PerFrame(ExecMode_e EM, ParticleEffects& Efx)
+void Explosion::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
     time_since_start += (1.0f / float(Efx.numSteps));
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
 
-void Explosion::StartEffect(ParticleEffects& Efx) { time_since_start = 0; }
+void Explosion::StartEffect(EffectsManager& Efx) { time_since_start = 0; }
 
 // Fireflies bobbing around
-void Fireflies::DoActions(ParticleEffects& Efx) const
+void Fireflies::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -336,7 +336,7 @@ void Fireflies::DoActions(ParticleEffects& Efx) const
 }
 
 // Rocket-style fireworks
-void Fireworks::DoActions(ParticleEffects& Efx) const
+void Fireworks::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
 
@@ -362,7 +362,7 @@ void Fireworks::DoActions(ParticleEffects& Efx) const
     P.KillOld(Lifetime);
 }
 
-void Fireworks::PerFrame(ExecMode_e EM, ParticleEffects& Efx)
+void Fireworks::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
 
@@ -389,7 +389,7 @@ void Fireworks::PerFrame(ExecMode_e EM, ParticleEffects& Efx)
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
 
-void Fireworks::EmitList(ParticleEffects& Efx)
+void Fireworks::EmitList(EffectsManager& Efx)
 {
     NumRockets = MaxRockets;
     for (int i = 0; i < NumRockets; i++) {
@@ -400,7 +400,7 @@ void Fireworks::EmitList(ParticleEffects& Efx)
     Effect::EmitList(Efx);
 }
 
-void Fireworks::StartEffect(ParticleEffects& Efx)
+void Fireworks::StartEffect(EffectsManager& Efx)
 {
     if (RocketGroup == -1)
         RocketGroup = Efx.P.GenParticleGroups(1, MaxRockets);
@@ -413,7 +413,7 @@ void Fireworks::StartEffect(ParticleEffects& Efx)
 }
 
 // It's like a flame thrower spinning around
-void FlameThrower::DoActions(ParticleEffects& Efx) const
+void FlameThrower::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -434,27 +434,27 @@ void FlameThrower::DoActions(ParticleEffects& Efx) const
     P.KillOld(Lifetime);
 }
 
-void FlameThrower::EmitList(ParticleEffects& Efx)
+void FlameThrower::EmitList(EffectsManager& Efx)
 {
     particle_rate = P_VARYING_FLOAT;
     dirAng = P_VARYING_FLOAT;
     Effect::EmitList(Efx);
 }
 
-void FlameThrower::PerFrame(ExecMode_e EM, ParticleEffects& Efx)
+void FlameThrower::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
-    dirAng += 0.02;
+    dirAng += 0.02f / Efx.numSteps;
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
 
-void FlameThrower::StartEffect(ParticleEffects& Efx)
+void FlameThrower::StartEffect(EffectsManager& Efx)
 {
     particle_rate = Efx.maxParticles / (float)Lifetime;
     dirAng = 0;
 }
 
 // A fountain spraying up in the middle of the screen
-void Fountain::DoActions(ParticleEffects& Efx) const
+void Fountain::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -470,27 +470,27 @@ void Fountain::DoActions(ParticleEffects& Efx) const
     P.SinkVelocity(true, PDSphere(pVec(0, 0, 0), 0.01));
 }
 
-void Fountain::EmitList(ParticleEffects& Efx)
+void Fountain::EmitList(EffectsManager& Efx)
 {
     particle_rate = P_VARYING_FLOAT;
     Effect::EmitList(Efx);
 }
 
-void Fountain::PerFrame(ExecMode_e EM, ParticleEffects& Efx)
+void Fountain::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
     particle_rate = Efx.maxParticles / 100.0f;
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
 
-void Fountain::StartEffect(ParticleEffects& Efx) { particle_rate = Efx.maxParticles / 100.0f; }
+void Fountain::StartEffect(EffectsManager& Efx) { particle_rate = Efx.maxParticles / 100.0f; }
 
 // A bunch of particles in a grid shape
-void GridShape::DoActions(ParticleEffects& Efx) const
+void GridShape::DoActions(EffectsManager& Efx) const
 {
     // XXX Doesn't do anything. Just sets up initial particle placement
 }
 
-void GridShape::StartEffect(ParticleEffects& Efx)
+void GridShape::StartEffect(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
 
@@ -524,7 +524,7 @@ void GridShape::StartEffect(ParticleEffects& Efx)
 
 // It's like a fan cruising around under a floor, blowing up on some ping pong balls.
 // Like you see in real life.
-void JetSpray::DoActions(ParticleEffects& Efx) const
+void JetSpray::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -544,20 +544,20 @@ void JetSpray::DoActions(ParticleEffects& Efx) const
     P.Move(true, false);
 }
 
-void JetSpray::EmitList(ParticleEffects& Efx)
+void JetSpray::EmitList(EffectsManager& Efx)
 {
     jet = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
     Effect::EmitList(Efx);
 }
 
-void JetSpray::PerFrame(ExecMode_e EM, ParticleEffects& Efx)
+void JetSpray::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
-    BoxPoint(jet, djet, 10);
+    BoxPoint(jet, djet, Efx.numSteps, 10);
     djet.z() = 0;
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
 
-void JetSpray::StartEffect(ParticleEffects& Efx)
+void JetSpray::StartEffect(EffectsManager& Efx)
 {
     jet = pVec(0.f);
     djet = pRandVec() * 0.5f;
@@ -565,7 +565,7 @@ void JetSpray::StartEffect(ParticleEffects& Efx)
 }
 
 // A sprayer with particles that orbit two points
-void Orbit2::DoActions(ParticleEffects& Efx) const
+void Orbit2::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -583,7 +583,7 @@ void Orbit2::DoActions(ParticleEffects& Efx) const
     P.KillOld(Lifetime);
 }
 
-void Orbit2::EmitList(ParticleEffects& Efx)
+void Orbit2::EmitList(EffectsManager& Efx)
 {
     particle_rate = Efx.maxParticles / (float)Lifetime;
     particle_rate = P_VARYING_FLOAT;
@@ -591,13 +591,13 @@ void Orbit2::EmitList(ParticleEffects& Efx)
     Effect::EmitList(Efx);
 }
 
-void Orbit2::PerFrame(ExecMode_e EM, ParticleEffects& Efx)
+void Orbit2::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
-    BoxPoint(jet, djet, 10);
+    BoxPoint(jet, djet, Efx.numSteps, 10);
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
 
-void Orbit2::StartEffect(ParticleEffects& Efx)
+void Orbit2::StartEffect(EffectsManager& Efx)
 {
     particle_rate = Efx.maxParticles / (float)Lifetime;
     jet = pVec(-4, 0, -2.4);
@@ -605,12 +605,12 @@ void Orbit2::StartEffect(ParticleEffects& Efx)
 }
 
 // A bunch of particles in the shape of a photo
-void PhotoShape::DoActions(ParticleEffects& Efx) const
+void PhotoShape::DoActions(EffectsManager& Efx) const
 {
     // XXX Doesn't do anything. Just sets up initial particle placement
 }
 
-void PhotoShape::StartEffect(ParticleEffects& Efx)
+void PhotoShape::StartEffect(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
 
@@ -641,7 +641,7 @@ void PhotoShape::StartEffect(ParticleEffects& Efx)
 }
 
 // It kinda looks like rain hitting a parking lot
-void Rain::DoActions(ParticleEffects& Efx) const
+void Rain::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -659,44 +659,44 @@ void Rain::DoActions(ParticleEffects& Efx) const
     P.KillOld(Lifetime);
 }
 
-void Rain::EmitList(ParticleEffects& Efx)
+void Rain::EmitList(EffectsManager& Efx)
 {
     particle_rate = P_VARYING_FLOAT;
     Effect::EmitList(Efx);
 }
 
-void Rain::PerFrame(ExecMode_e EM, ParticleEffects& Efx)
+void Rain::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
     particle_rate = Efx.maxParticles / (float)Lifetime;
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
 
-void Rain::StartEffect(ParticleEffects& Efx) { particle_rate = Efx.maxParticles / (float)Lifetime; }
+void Rain::StartEffect(EffectsManager& Efx) { particle_rate = Efx.maxParticles / (float)Lifetime; }
 
 // Restore particles to their PositionB and UpVecB.
-void Restore::DoActions(ParticleEffects& Efx) const
+void Restore::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
     P.Restore(time_left);
     P.Move(true, false);
 }
 
-void Restore::EmitList(ParticleEffects& Efx)
+void Restore::EmitList(EffectsManager& Efx)
 {
     time_left = P_VARYING_FLOAT;
     Effect::EmitList(Efx);
 }
 
-void Restore::PerFrame(ExecMode_e EM, ParticleEffects& Efx)
+void Restore::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
     time_left -= (1.0f / float(Efx.numSteps));
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
 
-void Restore::StartEffect(ParticleEffects& Efx) { time_left = 200; }
+void Restore::StartEffect(EffectsManager& Efx) { time_left = 200; }
 
 // A sheet of particles falling down, avoiding various-shaped obstacles
-void Shower::DoActions(ParticleEffects& Efx) const
+void Shower::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -727,16 +727,16 @@ void Shower::DoActions(ParticleEffects& Efx) const
     P.KillOld(130);
 }
 
-void Shower::EmitList(ParticleEffects& Efx)
+void Shower::EmitList(EffectsManager& Efx)
 {
     SteerShape = P_VARYING_INT;
     jet = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
     Effect::EmitList(Efx);
 }
 
-void Shower::PerFrame(ExecMode_e EM, ParticleEffects& Efx)
+void Shower::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
-    BoxPoint(jet, djet, 2);
+    BoxPoint(jet, djet, Efx.numSteps, 2);
     jet += djet;
     djet.z() = 0;
 
@@ -745,7 +745,7 @@ void Shower::PerFrame(ExecMode_e EM, ParticleEffects& Efx)
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
 
-void Shower::StartEffect(ParticleEffects& Efx)
+void Shower::StartEffect(EffectsManager& Efx)
 {
     SteerShape = irand(4);
     jet = pVec(0, 0, 5);
@@ -754,7 +754,7 @@ void Shower::StartEffect(ParticleEffects& Efx)
 }
 
 // A bunch of particles in a line that are attracted to the one ahead of them in line
-void Snake::DoActions(ParticleEffects& Efx) const
+void Snake::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -771,7 +771,7 @@ void Snake::DoActions(ParticleEffects& Efx) const
     P.KillOld(2000);
 }
 
-void Snake::StartEffect(ParticleEffects& Efx)
+void Snake::StartEffect(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
 
@@ -784,7 +784,7 @@ void Snake::StartEffect(ParticleEffects& Efx)
 }
 
 // A bunch of particles inside a sphere
-void Sphere::DoActions(ParticleEffects& Efx) const
+void Sphere::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -802,22 +802,22 @@ void Sphere::DoActions(ParticleEffects& Efx) const
     P.KillOld(1000);
 }
 
-void Sphere::EmitList(ParticleEffects& Efx)
+void Sphere::EmitList(EffectsManager& Efx)
 {
     dirAng = P_VARYING_FLOAT;
     Effect::EmitList(Efx);
 }
 
-void Sphere::PerFrame(ExecMode_e EM, ParticleEffects& Efx)
+void Sphere::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
-    dirAng += 0.02;
+    dirAng += 0.02 / Efx.numSteps;
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
 
-void Sphere::StartEffect(ParticleEffects& Efx) { dirAng = 0; }
+void Sphere::StartEffect(EffectsManager& Efx) { dirAng = 0; }
 
 // A sprayer with particles orbiting a line
-void Swirl::DoActions(ParticleEffects& Efx) const
+void Swirl::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -836,20 +836,20 @@ void Swirl::DoActions(ParticleEffects& Efx) const
     P.KillOld(Lifetime);
 }
 
-void Swirl::EmitList(ParticleEffects& Efx)
+void Swirl::EmitList(EffectsManager& Efx)
 {
     particle_rate = Efx.maxParticles / (float)Lifetime;
     Effect::EmitList(Efx);
 }
 
-void Swirl::PerFrame(ExecMode_e EM, ParticleEffects& Efx)
+void Swirl::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
     particle_rate = Efx.maxParticles / (float)Lifetime;
-    BoxPoint(jet, djet, 10);
+    BoxPoint(jet, djet, Efx.numSteps, 10);
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
 
-void Swirl::StartEffect(ParticleEffects& Efx)
+void Swirl::StartEffect(EffectsManager& Efx)
 {
     jet = pVec(-4, 0, -2.4);
     djet = pRandVec() * 0.05;
@@ -857,7 +857,7 @@ void Swirl::StartEffect(ParticleEffects& Efx)
 }
 
 // A tornado that tests the vortex action
-void Tornado::DoActions(ParticleEffects& Efx) const
+void Tornado::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -877,7 +877,7 @@ void Tornado::DoActions(ParticleEffects& Efx) const
 }
 
 // A waterfall bouncing off invisible rocks
-void WaterfallA::DoActions(ParticleEffects& Efx) const
+void WaterfallA::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -899,7 +899,7 @@ void WaterfallA::DoActions(ParticleEffects& Efx) const
 }
 
 // A waterfall bouncing off invisible rocks
-void WaterfallB::DoActions(ParticleEffects& Efx) const
+void WaterfallB::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
