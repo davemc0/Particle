@@ -90,9 +90,9 @@ void RenderGeometry(const int SteerShape)
 }
 
 #ifdef _DEBUG
-static ParticleEffects Efx(P, 20000, RenderGeometry);
+static EffectsManager Efx(P, 20000, RenderGeometry);
 #else
-static ParticleEffects Efx(P, 200000, RenderGeometry);
+static EffectsManager Efx(P, 200000, RenderGeometry);
 #endif
 
 void menu(int);

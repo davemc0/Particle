@@ -20,7 +20,7 @@ static int DemoNum = 6;
 
 static Timer FPSClock;
 static ParticleContext_t P;
-static ParticleEffects Efx(P, 60000);
+static EffectsManager Efx(P, 60000);
 
 void Report()
 {
