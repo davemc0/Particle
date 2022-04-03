@@ -704,7 +704,7 @@ void Shower::DoActions(ParticleEffects& Efx) const
     S.Size(pVec(1.5));
     S.StartingAge(0);
     S.Color(PDBlob(pVec(.7, .7, .2), .2));
-    P.Source(1, PDPoint(jet), S);
+    P.Source(50, PDPoint(jet), S);
 
     P.Gravity(Efx.GravityVec * .1);
 
@@ -719,8 +719,6 @@ void Shower::DoActions(ParticleEffects& Efx) const
     } else if (SteerShape == 3) {
         P.Avoid(2, 1.0, LA, PDPlane(pVec(0, 0, 0), pVec(0, 0, 1)));
     } else if (SteerShape == P_VARYING_INT) {
-        printf("PDVarying\n");
-        fflush(stdout);
         P.Avoid(2, 1.0, LA, PDVarying());
     }
 
@@ -795,13 +793,13 @@ void Sphere::DoActions(ParticleEffects& Efx) const
                       0.01));
     S.StartingAge(0);
     S.Size(pVec(1));
-    P.Source(5.f, PDPoint(pVec(1, 1, 6)), S);
+    P.Source(50, PDPoint(pVec(1, 1, 6)), S);
 
     P.Gravity(Efx.GravityVec);
     P.Bounce(0, 0.55, 0, PDSphere(pVec(0, 0, 4), 6));
     P.Move(true, false);
 
-    P.KillOld(600);
+    P.KillOld(1000);
 }
 
 void Sphere::EmitList(ParticleEffects& Efx)
