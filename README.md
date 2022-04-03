@@ -53,8 +53,8 @@ Example
 -------
 An OpenGL and GLUT-based example of particle systems used to render a fountain
 
-AllTheEffects
--------------
+Playground
+----------
 Double-click to start the program.
 
 Press 'f' to make it full screen.
@@ -80,7 +80,7 @@ This code never worked well and has not been maintained, as you can see.
 
 Benchmark
 ---------
-This one runs all the same demo effects as AllTheEffects does,
+This one runs all the same demo effects as Playground does,
 but it doesn't do any graphics. It doesn't use OpenGL or GLUT.
 
 Final Notes

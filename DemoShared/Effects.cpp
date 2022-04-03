@@ -719,6 +719,8 @@ void Shower::DoActions(ParticleEffects& Efx) const
     } else if (SteerShape == 3) {
         P.Avoid(2, 1.0, LA, PDPlane(pVec(0, 0, 0), pVec(0, 0, 1)));
     } else if (SteerShape == P_VARYING_INT) {
+        printf("PDVarying\n");
+        fflush(stdout);
         P.Avoid(2, 1.0, LA, PDVarying());
     }
 
