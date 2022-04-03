@@ -398,11 +398,9 @@ void PABounce::Exec(const PDTriangle& dom, ParticleGroup& group, ParticleList::i
         pVec vn = dom.nrm * nv; // Normal Vn = (V.N)N
         pVec vt = m.vel - vn;   // Tangent Vt = V - Vn
 
-        // Compute new velocity heading out; don't apply friction if tangential velocity < cutoff
-        if (vt.lenSqr() <= cutoffSqr)
-            m.vel = vt - vn * resilience;
-        else
-            m.vel = vt * oneMinusFriction - vn * resilience;
+        // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
+        float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
+        m.vel = vt * fric - vn * resilience;
     }
 }
 
@@ -441,11 +439,39 @@ void PABounce::Exec(const PDRectangle& dom, ParticleGroup& group, ParticleList::
         pVec vn = dom.nrm * nv; // Normal Vn = (V.N)N
         pVec vt = m.vel - vn;   // Tangent Vt = V - Vn
 
-        // Compute new velocity heading out; don't apply friction if tangential velocity < cutoff
-        if (vt.lenSqr() <= cutoffSqr)
-            m.vel = vt - vn * resilience;
-        else
-            m.vel = vt * oneMinusFriction - vn * resilience;
+        // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
+        float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
+        m.vel = vt * fric - vn * resilience;
+    }
+}
+
+void PABounce::Exec(const PDBox& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
+{
+    for (ParticleList::iterator it = ibegin; it != iend; it++) {
+        Particle_t& m = (*it);
+
+        // See if particle's current and pnext positions cross boundary. If not, skip it.
+        pVec pnext = m.pos + m.vel * dt;
+
+        bool oldIn = dom.Within(m.pos);
+        bool newIn = dom.Within(pnext);
+        if (oldIn == newIn) continue;
+
+        pVec vn(0.f), vt(m.vel);
+        if (oldIn) { // Bounce off the inside
+            // Does it handle bouncing off two walls on the same time step?
+            if (pnext.x() < dom.p0.x() || pnext.x() > dom.p1.x()) { std::swap(vn.x(), vt.x()); }
+            if (pnext.y() < dom.p0.y() || pnext.y() > dom.p1.y()) { std::swap(vn.y(), vt.y()); }
+            if (pnext.z() < dom.p0.z() || pnext.z() > dom.p1.z()) { std::swap(vn.z(), vt.z()); }
+        } else { // Bounce off the outside
+            if (pnext.x() > dom.p0.x() || pnext.x() < dom.p1.x()) { std::swap(vn.x(), vt.x()); }
+            if (pnext.y() > dom.p0.y() || pnext.y() < dom.p1.y()) { std::swap(vn.y(), vt.y()); }
+            if (pnext.z() > dom.p0.z() || pnext.z() < dom.p1.z()) { std::swap(vn.z(), vt.z()); }
+        }
+
+        // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
+        float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
+        m.vel = vt * fric - vn * resilience;
     }
 }
 
@@ -473,11 +499,9 @@ void PABounce::Exec(const PDPlane& dom, ParticleGroup& group, ParticleList::iter
         pVec vn = dom.nrm * nv; // Normal Vn = (V.N)N
         pVec vt = m.vel - vn;   // Tangent Vt = V - Vn
 
-        // Compute new velocity heading out; don't apply friction if tangential velocity < cutoff
-        if (vt.lenSqr() <= cutoffSqr)
-            m.vel = vt - vn * resilience;
-        else
-            m.vel = vt * oneMinusFriction - vn * resilience;
+        // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
+        float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
+        m.vel = vt * fric - vn * resilience;
     }
 }
 
@@ -553,9 +577,9 @@ void PABounce::Exec(const PDSphere& dom, ParticleGroup& group, ParticleList::ite
             // Reverse normal component of velocity if it points in
             if (nmag < 0) vn = -vn;
 
-            // Compute new velocity heading out; don't apply friction if tangential velocity < cutoff
-            float tanscale = (vt.lenSqr() <= cutoffSqr) ? 1.0f : oneMinusFriction;
-            m.vel = vt * tanscale + vn * resilience;
+            // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
+            float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
+            m.vel = vt * fric - vn * resilience;
         }
     }
 }
@@ -592,11 +616,9 @@ void PABounce::Exec(const PDDisc& dom, ParticleGroup& group, ParticleList::itera
         pVec vn = dom.nrm * NdotV; // Normal Vn = (V.N)N
         pVec vt = m.vel - vn;      // Tangent Vt = V - Vn
 
-        // Compute new velocity heading out; don't apply friction if tangential velocity < cutoff
-        if (vt.lenSqr() <= cutoffSqr)
-            m.vel = vt - vn * resilience;
-        else
-            m.vel = vt * oneMinusFriction - vn * resilience;
+        // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
+        float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
+        m.vel = vt * fric - vn * resilience;
     }
 }
 
@@ -604,20 +626,18 @@ void PABounce::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Part
 {
     // Can build generic bounce function that works on any domain by using the Within function and a normal.
     switch (position->Which) {
-        // case PDUnion_e: Exec(*dynamic_cast<const PDUnion*>(position), group, ibegin, iend); return;
-        // case PDPoint_e: Exec(*dynamic_cast<const PDPoint*>(position), group, ibegin, iend); return;
-        // case PDLine_e: Exec(*dynamic_cast<const PDLine*>(position), group, ibegin, iend); return;
-    case PDTriangle_e: Exec(*dynamic_cast<const PDTriangle*>(position), group, ibegin, iend); return;
-    case PDRectangle_e: Exec(*dynamic_cast<const PDRectangle*>(position), group, ibegin, iend); return;
-    case PDDisc_e: Exec(*dynamic_cast<const PDDisc*>(position), group, ibegin, iend); return;
-    case PDPlane_e:
-        Exec(*dynamic_cast<const PDPlane*>(position), group, ibegin, iend);
-        return;
-        // case PDBox_e: Exec(*dynamic_cast<const PDBox*>(position), group, ibegin, iend); return;
-        // case PDCylinder_e: Exec(*dynamic_cast<const PDCylinder*>(position), group, ibegin, iend); return;
-        // case PDCone_e: Exec(*dynamic_cast<const PDCone*>(position), group, ibegin, iend); return;
-    case PDSphere_e: Exec(*dynamic_cast<const PDSphere*>(position), group, ibegin, iend); return;
     // case PDBlob_e: Exec(*dynamic_cast<const PDBlob*>(position), group, ibegin, iend); return;
+    // case PDCone_e: Exec(*dynamic_cast<const PDCone*>(position), group, ibegin, iend); return;
+    // case PDCylinder_e: Exec(*dynamic_cast<const PDCylinder*>(position), group, ibegin, iend); return;
+    // case PDLine_e: Exec(*dynamic_cast<const PDLine*>(position), group, ibegin, iend); return;
+    // case PDPoint_e: Exec(*dynamic_cast<const PDPoint*>(position), group, ibegin, iend); return;
+    // case PDUnion_e: Exec(*dynamic_cast<const PDUnion*>(position), group, ibegin, iend); return;
+    case PDBox_e: Exec(*dynamic_cast<const PDBox*>(position), group, ibegin, iend); return;
+    case PDDisc_e: Exec(*dynamic_cast<const PDDisc*>(position), group, ibegin, iend); return;
+    case PDPlane_e: Exec(*dynamic_cast<const PDPlane*>(position), group, ibegin, iend); return;
+    case PDRectangle_e: Exec(*dynamic_cast<const PDRectangle*>(position), group, ibegin, iend); return;
+    case PDSphere_e: Exec(*dynamic_cast<const PDSphere*>(position), group, ibegin, iend); return;
+    case PDTriangle_e: Exec(*dynamic_cast<const PDTriangle*>(position), group, ibegin, iend); return;
     default: throw PErrNotImplemented(std::string("Bounce not implemented for domain ") + std::string(typeid(position).name()));
     }
 }

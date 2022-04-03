@@ -12,8 +12,9 @@ using namespace PAPI;
 
 //////////////////////////////////////////////////////////////////////////////
 
+namespace {
 // Make an image for use by the PhotoShape effect if -photo wasn't specified on the command line
-static uc3Image* MakeFakeImage()
+uc3Image* MakeFakeImage()
 {
     const int SZ = 64;
     const float MX = SZ * 0.5;
@@ -28,12 +29,30 @@ static uc3Image* MakeFakeImage()
     return Img;
 }
 
+inline void BoxPoint(pVec& jet, pVec& djet, const float A)
+{
+    jet += djet;
+    if (jet.x() > A || jet.x() < -A) {
+        djet.x() *= -1.0f;
+        djet.y() += pRandf() * 0.0005;
+    }
+    if (jet.y() > A || jet.y() < -A) {
+        djet.y() *= -1.0f;
+        djet.z() += pRandf() * 0.0005;
+    }
+    if (jet.z() > A || jet.z() < -A) {
+        djet.z() *= -1.0f;
+        djet.x() += pRandf() * 0.0005;
+    }
+}
+} // namespace
+
 ParticleEffects::ParticleEffects(ParticleContext_t& P_, int mp, E_RENDER_GEOMETRY RG) : P(P_), RenderGeometry(RG)
 {
     Img = MakeFakeImage();
     maxParticles = mp;
     numSteps = 1;
-    particle_handle = -1;
+    particleHandle = -1;
     GravityVec = pVec(0.0f, 0.0f, -0.01f);
     MakeEffects();
 }
@@ -47,11 +66,11 @@ int ParticleEffects::CallDemo(int DemoNum, ExecMode_e EM)
     DemoNum = DemoNum % NumEffects;
 
     if (DemoNum < 0 || Effects[DemoNum] != Demo) {
-        // Transitioning, so call StartEffect() and NextEffect().
+        // Transitioning, so call NextEffect() and StartEffect().
         if (DemoNum < 0 && Demo != NULL)
-            DemoNum = Demo->NextEffect(*this);
+            DemoNum = Demo->NextEffect(*this); // The effect will tell us what the next effect should be
         else if (Demo == NULL)
-            DemoNum = 0; // Could use a random number here.
+            DemoNum = irand(NumEffects);
 
         EASSERT(DemoNum >= 0 && DemoNum < NumEffects);
         Demo = Effects[DemoNum];
@@ -152,14 +171,7 @@ void Effect::CreateList(ExecMode_e EM, ParticleEffects& Efx)
 // Non-varying effects call directly to here without a per-effect overload.
 void Effect::EmitList(ParticleEffects& Efx) { CreateList(Emit_Mode, Efx); }
 
-int Effect::NextEffect(ParticleEffects& Efx)
-{
-    ParticleContext_t& P = Efx.P;
-
-    int DemoNum = irand(Efx.NumEffects);
-
-    return DemoNum;
-}
+int Effect::NextEffect(ParticleEffects& Efx) { return irand(Efx.NumEffects); }
 
 void Effect::BindEmitted(ParticleEffects& Efx, P_PARTICLE_EMITTED_ACTION_LIST Func, EmitCodeParams_e Params)
 {
@@ -169,23 +181,6 @@ void Effect::BindEmitted(ParticleEffects& Efx, P_PARTICLE_EMITTED_ACTION_LIST Fu
 }
 
 //////////////////////////////////////////////////////////////////////////////
-
-inline void BoxPoint(pVec& jet, pVec& djet, const float A)
-{
-    jet += djet;
-    if (jet.x() > A || jet.x() < -A) {
-        djet.x() *= -1.0f;
-        djet.y() += pRandf() * 0.0005;
-    }
-    if (jet.y() > A || jet.y() < -A) {
-        djet.y() *= -1.0f;
-        djet.z() += pRandf() * 0.0005;
-    }
-    if (jet.z() > A || jet.z() < -A) {
-        djet.z() *= -1.0f;
-        djet.x() += pRandf() * 0.0005;
-    }
-}
 
 // Particles orbiting a center
 void Atom::DoActions(ParticleEffects& Efx) const
@@ -387,7 +382,7 @@ void Fireworks::PerFrame(ExecMode_e EM, ParticleEffects& Efx)
     // Read back the position of the rockets.
     NumRockets = (int)P.GetParticles(0, MaxRockets, (float*)rocketp, (float*)rocketc);
 
-    if (Efx.particle_handle >= 0) P.CurrentGroup(Efx.particle_handle);
+    if (Efx.particleHandle >= 0) P.CurrentGroup(Efx.particleHandle);
 
     particle_rate = (Efx.maxParticles * 2.0f) / float(Lifetime * MaxRockets);
 
@@ -412,7 +407,7 @@ void Fireworks::StartEffect(ParticleEffects& Efx)
     else {
         Efx.P.CurrentGroup(RocketGroup);
         Efx.P.KillOld(-1000);
-        if (Efx.particle_handle >= 0) Efx.P.CurrentGroup(Efx.particle_handle);
+        if (Efx.particleHandle >= 0) Efx.P.CurrentGroup(Efx.particleHandle);
     }
     particle_rate = (Efx.maxParticles * 2.0f) / float(Lifetime * MaxRockets);
 }
@@ -654,7 +649,8 @@ void Rain::DoActions(ParticleEffects& Efx) const
     S.Color(PDSphere(pVec(0.4, 0.4, 0.9), .1));
     S.Size(pVec(1.5));
     S.StartingAge(0);
-    P.Source(particle_rate, PDRectangle(pVec(-11, -10, 12), pVec(20, 0, 0), pVec(0, 20, 0)), S);
+    float D = 80;
+    P.Source(particle_rate, PDRectangle(pVec(-D / 2, -D / 2, 12), pVec(D, 0, 0), pVec(0, D, 0)), S);
 
     P.RandomAccel(PDBlob(pVec(0.002, 0, -0.01), 0.003));
     P.Bounce(0.3, 0.3, 0, PDPlane(pVec(0, 0, 0), pVec(0, 0, 1)));
@@ -797,7 +793,7 @@ void Sphere::DoActions(ParticleEffects& Efx) const
                       0.01));
     S.StartingAge(0);
     S.Size(pVec(1));
-    P.Source(0.8, PDPoint(pVec(1, 1, 6)), S);
+    P.Source(5.f, PDPoint(pVec(1, 1, 6)), S);
 
     P.Gravity(Efx.GravityVec);
     P.Bounce(0, 0.55, 0, PDSphere(pVec(0, 0, 4), 6));

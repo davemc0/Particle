@@ -33,7 +33,7 @@ using namespace PAPI;
 
 // XXX extern void RenderModel(Model &M);
 
-Timer Clock;
+Timer FPSClock;
 Model Mod;
 
 bool FreezeParticles = false, AntiAlias = true, drawGround = true, FullScreen = false;
@@ -227,9 +227,9 @@ void Draw()
 
     NumFrames++;
     if (NumFrames >= NUM_FRAMES) {
-        double c = Clock.Reset();
+        double c = FPSClock.Reset();
         eltime = c;
-        Clock.Start();
+        FPSClock.Start();
         NumFrames = 0;
     }
 
@@ -452,9 +452,9 @@ int main(int argc, char** argv)
     glClearColor(0.0, 0.0, 0.0, 0.0);
 
     // Make a particle group
-    int particle_handle = P.GenParticleGroups(1, maxParticles);
+    int particleHandle = P.GenParticleGroups(1, maxParticles);
 
-    P.CurrentGroup(particle_handle);
+    P.CurrentGroup(particleHandle);
 
     BoidPrep();
 

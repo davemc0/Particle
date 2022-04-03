@@ -25,6 +25,7 @@
 // DMcTools is part of the same source distribution as the Particle API.
 #include "Math/Random.h"
 #include "Util/Assert.h"
+#include "Util/StatTimer.h"
 #include "Util/Timer.h"
 
 // OpenGL
@@ -38,23 +39,24 @@
 #include <iostream>
 #include <string>
 
-#ifdef WIN32
-#pragma warning(disable : 4305) /* disable bogus conversion warnings */
-#endif
+namespace {
+bool MotionBlur = false, FreezeParticles = false, AntiAlias = true, DepthTest = false;
+bool ConstColor = false, ShowText = true, ParticleCam = false, SortParticles = false, SphereTexture = true;
+bool DrawGround = true, CameraMotion = true, FullScreen = false, PointSpritesAllowed = true;
+ExecMode_e ExecMode = Internal_Mode;
+int DemoNum = 0, PrimType = GL_POINTS, DisplayListID = -1, SpotTexID = -1;
+int WinWidth = 880, WinHeight = 880;
+const float DEMO_MIN_SEC = 10.0f;
+bool RandomDemo = true;
+float BlurRate = 0.09;
+float CamSpeed = 0.06f;
+char* PrimName = "Points";
+char* FName = NULL;
 
-static bool MotionBlur = false, FreezeParticles = false, AntiAlias = true, DepthTest = false;
-static bool ConstColor = false, ShowText = true, ParticleCam = false, SortParticles = false, SphereTexture = true;
-static bool DrawGround = false, CameraMotion = true, FullScreen = false, PointSpritesAllowed = true;
-static ExecMode_e ExecMode = Internal_Mode;
-static int DemoNum = 0, PrimType = GL_POINTS, DisplayListID = -1, SpotTexID = -1;
-static const float DEMO_MIN_SEC = 6.0f;
-static int RandomDemo = 500; // A one-in-this-many chance of changing demos this frame
-static float BlurRate = 0.09;
-static char* PrimName = "Points";
-static char* FName = NULL;
-
-static Timer Clock, RandomDemoClock;
-static ParticleContext_t P;
+StatTimer FPSClock(100);
+Timer RandomDemoClock;
+ParticleContext_t P;
+} // namespace
 
 // Render any geometry necessary to support the effects
 void RenderGeometry(const int SteerShape)
@@ -155,8 +157,7 @@ void MakeSphereTexture()
             if (x == 0 || x == DIM - 1 || y == 0 || y == DIM - 1)
                 img[y * DIM + x] = 0;
             else {
-                pVec p = pVec(x, y, 0);
-                p -= pVec(DIM2, DIM2, 0);
+                pVec p = pVec(x, y, 0) - pVec(DIM2, DIM2, 0);
                 float len = p.length();
                 float z = sqrt(DIM2 * DIM2 - len * len);
                 p.z() = z;
@@ -183,7 +184,7 @@ void MakeSphereTexture()
     gluBuild2DMipmaps(GL_TEXTURE_2D, GL_ALPHA16, DIM, DIM, GL_ALPHA, GL_FLOAT, img);
 }
 
-static void showBitmapMessage(GLfloat x, GLfloat y, GLfloat z, char* message)
+static void showBitmapMessage(GLfloat x, GLfloat y, char* message)
 {
     if (message == NULL) return;
 
@@ -196,12 +197,19 @@ static void showBitmapMessage(GLfloat x, GLfloat y, GLfloat z, char* message)
     glPushMatrix();
     glLoadIdentity();
 
-    glRasterPos2f(x, y);
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0, WinWidth, WinHeight, 0, -1, 1);
+    glRasterPos3f(x, y, -1.f);
+
     while (*message) {
         glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, *message);
         message++;
     }
 
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
 
@@ -246,7 +254,7 @@ void InitProgs()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glClearColor(1.0, 1.0, 1.0, 0.0);
 
     // Texture unit state
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -279,9 +287,7 @@ void InitProgs()
 void Draw()
 {
     static int CameraSystem = -1;
-    static bool Init = false;
-    if (!Init) {
-        Init = true;
+    if (CameraSystem < 0) {
         InitProgs();
 
         // Use a particle to model the camera motion
@@ -289,8 +295,8 @@ void Draw()
         P.CurrentGroup(CameraSystem);
 
         pSourceState S;
-        S.Velocity(PDSphere(pVec(0, 0, 0), 0.06, 0.06));
-        P.Vertex(pVec(0, -19, 15), S);
+        S.Velocity(PDSphere(pVec(0, 0, 0), CamSpeed, CamSpeed));
+        P.Vertex(pVec(0, -19, 8), S);
     }
 
     glLoadIdentity();
@@ -317,12 +323,13 @@ void Draw()
     // Use a particle to model the camera motion
     P.CurrentGroup(CameraSystem);
     if (CameraMotion) {
-        P.Bounce(0, 1, 0.1, PDSphere(pVec(0, -10, 7), 15));
+        P.Bounce(0, 1, 0, PDBox(pVec(-15, 0, 0), pVec(15, -20, 12)));
+        P.SpeedLimit(CamSpeed, CamSpeed);
         P.Move();
     }
 
     // Make the camera track a particle
-    if (ParticleCam) P.CurrentGroup(Efx.particle_handle);
+    if (ParticleCam) P.CurrentGroup(Efx.particleHandle);
 
     pVec Cam, Vel;
     P.GetParticles(0, 1, (float*)&Cam, NULL, (float*)&Vel);
@@ -332,26 +339,33 @@ void Draw()
 #else
     pVec At = pVec(0, 0, 3); // Look at the center of action
 #endif
-
     gluLookAt(Cam.x(), Cam.y(), Cam.z(), At.x(), At.y(), At.z(), 0, 0, 1);
 
     if (DrawGround) {
-        glColor3f(0, 0.8, 0.2);
-        glBegin(GL_TRIANGLE_STRIP);
-        glVertex3f(-10, -10, 0);
-        glVertex3f(-10, 10, 0);
-        glVertex3f(10, -10, 0);
-        glVertex3f(10, 10, 0);
+        const float D = 100.f;
+        glBegin(GL_TRIANGLE_FAN);
+        glColor3f(0.7, 0.8, 1.0);
+        glVertex3f(0, 0, 0);
+        glColor3f(1.0, 1.0, 1.0);
+        glVertex3f(-D, -D, 0);
+        glColor3f(1.0, 1.0, 1.0);
+        glVertex3f(D, -D, 0);
+        glColor3f(1.0, 1.0, 1.0);
+        glVertex3f(D, D, 0);
+        glColor3f(1.0, 1.0, 1.0);
+        glVertex3f(-D, D, 0);
+        glColor3f(1.0, 1.0, 1.0);
+        glVertex3f(-D, -D, 0);
         glEnd();
     }
 
     // Do the particle dynamics
     if (!FreezeParticles) {
-        P.CurrentGroup(Efx.particle_handle);
+        P.CurrentGroup(Efx.particleHandle);
         for (int step = 0; step < Efx.numSteps; step++) { Efx.CallDemo(DemoNum, ExecMode); }
     }
 
-    P.CurrentGroup(Efx.particle_handle);
+    P.CurrentGroup(Efx.particleHandle);
     if (SortParticles) {
         pVec Look = DepthTest ? (At - Cam) : (Cam - At);
         P.Sort(Cam, Look);
@@ -392,41 +406,31 @@ void Draw()
 
     GL_ASSERT();
 
-    // Draw the text.
-#define NUM_FRAMES_TO_AVG_FOR_CLOCK 30
-    static double ClockTime = 1.0;
+    FPSClock.Event();
 
+    // Draw the text.
     if (ShowText) {
         glLoadIdentity();
-        glColor3f(1, 0, 0);
         char msg[256];
-        float fps = double(NUM_FRAMES_TO_AVG_FOR_CLOCK) / ClockTime;
+        float fps = 1.f / FPSClock.GetMean();
+
         int cnt = (int)P.GetGroupCount();
+        char exCh = (ExecMode == Immediate_Mode) ? 'I' : (ExecMode == Internal_Mode) ? 'N' : 'C';
 
-        sprintf(msg, " %c%c%c%c%c%c%c%c n=%5d fps=%02.2f %s %s", MotionBlur ? 'B' : ' ', FreezeParticles ? 'F' : ' ', AntiAlias ? 'A' : ' ',
-                (RandomDemo > 0) ? 'R' : ' ', DepthTest ? 'D' : ' ',
-                ((ExecMode == Immediate_Mode)      ? 'I'
-                     : (ExecMode == Internal_Mode) ? 'N'
-                                                   : 'C'),
-                CameraMotion ? 'M' : ' ', SortParticles ? 'S' : ' ', cnt, fps, PrimName, Efx.GetCurEffectName().c_str());
+        sprintf(msg, " %c%c%c%c%c%c%c%c n=%5d iters=%d fps=%02.2f %s %s t=%1.2f", MotionBlur ? 'B' : ' ', FreezeParticles ? 'F' : ' ', AntiAlias ? 'A' : ' ',
+                RandomDemo ? 'R' : ' ', DepthTest ? 'D' : ' ', exCh, CameraMotion ? 'M' : ' ', SortParticles ? 'S' : ' ', cnt, Efx.numSteps, fps, PrimName,
+                Efx.GetCurEffectName().c_str(), RandomDemoClock.Read());
 
-        showBitmapMessage(-0.95f, 0.85f, 0.0f, msg);
+        glColor3f(1, 1, 1);
+        showBitmapMessage(100, 50, msg);
+        glColor3f(0, 0, 0);
+        showBitmapMessage(99, 49, msg);
     }
-
-    static int FrameCountForClock = 0;
-    FrameCountForClock++;
-    if (FrameCountForClock >= NUM_FRAMES_TO_AVG_FOR_CLOCK) {
-        ClockTime = Clock.Reset();
-        Clock.Start();
-        FrameCountForClock = 0;
-    }
-
-    //  std::cerr << FrameCountForClock << " " << cnt << " " << fps << " " << ClockTime << std::endl;
 
     if (!MotionBlur) glutSwapBuffers();
 
     // Change to a different random demo
-    if (RandomDemo > 0 && irand(RandomDemo) == 0 && RandomDemoClock.Read() > DEMO_MIN_SEC) {
+    if (RandomDemo && RandomDemoClock.Read() > DEMO_MIN_SEC) {
         RandomDemoClock.Reset();
         DemoNum = Efx.CallDemo(-2, ExecMode);
     }
@@ -434,6 +438,9 @@ void Draw()
 
 void Reshape(int w, int h)
 {
+    WinWidth = w;
+    WinHeight = h;
+
     glViewport(0, 0, w, h);
 
     glMatrixMode(GL_PROJECTION);
@@ -452,7 +459,8 @@ void menu(int item)
     switch (item) {
     case ' ':
         RandomDemoClock.Reset();
-        DemoNum = Efx.CallDemo(3, ExecMode); // Explosion
+        if (DemoNum == 3) DemoNum = Efx.CallDemo(10, ExecMode); // A workaround to enable sequential explosions
+        DemoNum = Efx.CallDemo(3, ExecMode);                    // Explosion
         break;
     case GLUT_KEY_UP + 0x1000:
         RandomDemoClock.Reset();
@@ -495,7 +503,7 @@ void menu(int item)
         }
         break;
     case 'c': CameraMotion = !CameraMotion; break;
-    case 'r': RandomDemo *= -1; break;
+    case 'r': RandomDemo = !RandomDemo; break;
     case 'f':
         FullScreen = !FullScreen;
         if (FullScreen) {
@@ -551,13 +559,13 @@ void menu(int item)
     case 'x': FreezeParticles = !FreezeParticles; break;
     case '=':
     case '+':
-        Efx.maxParticles += 1000;
+        Efx.maxParticles += 5000;
         P.SetMaxParticles(Efx.maxParticles);
         std::cerr << Efx.maxParticles << std::endl;
         break;
     case '-':
     case '_':
-        Efx.maxParticles -= 1000;
+        Efx.maxParticles -= 5000;
         if (Efx.maxParticles < 0) Efx.maxParticles = 0;
         P.SetMaxParticles(Efx.maxParticles);
         std::cerr << Efx.maxParticles << std::endl;
@@ -621,7 +629,7 @@ void GlutSetup(int argc, char** argv)
     glutInit(&argc, argv);
 
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_MULTISAMPLE);
-    glutInitWindowSize(880, 880);
+    glutInitWindowSize(WinWidth, WinHeight);
     glutInitWindowPosition(300, 0);
     glutCreateWindow("Particle Spray");
 
@@ -661,19 +669,15 @@ int main(int argc, char** argv)
 {
     SRand();
 
-    RandomDemoClock.Start();
-
     Args(argc, argv);
     GlutSetup(argc, argv);
 
     // Make a particle group
-    Efx.particle_handle = P.GenParticleGroups(1, Efx.maxParticles);
+    Efx.particleHandle = P.GenParticleGroups(1, Efx.maxParticles);
 
-    P.CurrentGroup(Efx.particle_handle);
+    P.CurrentGroup(Efx.particleHandle);
 
     Efx.MakeActionLists(ExecMode);
-
-    // BindEffects(Efx);
 
     DemoNum = Efx.CallDemo(-2, ExecMode);
 
