@@ -44,7 +44,7 @@ bool BoidMatchVel = true, BoidNgbrCol = true, BoidAvoid = true;
 ParticleContext_t P;
 
 int maxParticles = 100;
-int numSteps = 1, geomType = -1, listID = -1;
+int simStepsPerFrame = 1, geomType = -1, listID = -1;
 const float BOIDLEN = 0.3f;
 
 void BoidPrep()
@@ -193,7 +193,7 @@ void Draw()
     }
 
     if (!FreezeParticles) {
-        for (int step = 0; step < numSteps; step++) { Boids(); }
+        for (int step = 0; step < simStepsPerFrame; step++) { Boids(); }
     }
 
     GL_ASSERT();
@@ -341,8 +341,8 @@ void menu(int item)
     }
 
     if (item > '0' && item <= '9') {
-        numSteps = item - '0';
-        P.TimeStep(1 / float(numSteps));
+        simStepsPerFrame = item - '0';
+        P.TimeStep(1 / float(simStepsPerFrame));
     }
 
     glutPostRedisplay();

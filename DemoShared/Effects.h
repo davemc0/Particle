@@ -297,9 +297,11 @@ public:
     E_RENDER_GEOMETRY RenderGeometry;
     pVec GravityVec;
     Effect* Demo;
-    int maxParticles;   // The number of particles the app wants in this demo
-    int numSteps;       // The number of simulation time steps per rendered frame
-    int particleHandle; // The handle of the particle group
+    int maxParticles;     // The number of particles the app wants in this demo
+    int simStepsPerFrame; // The number of simulation time steps per rendered frame
+    float timeStep;       // Dt, duration of time step (after acounting for simStepsPerFrame)
+    int particleHandle;   // The handle of the particle group
+    pVec worldCenter = {0.f, 0.f, 3.f};
 
     void SetPhoto(uc3Image* Im)
     {

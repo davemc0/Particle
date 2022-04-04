@@ -45,10 +45,9 @@ bool DrawGround = true, CameraMotion = true, FullScreen = false, PointSpritesAll
 ExecMode_e ExecMode = Internal_Mode;
 int DemoNum = 0, PrimType = GL_POINTS, DisplayListID = -1, SpotTexID = -1;
 int WinWidth = 880, WinHeight = 880;
-const float DEMO_MIN_SEC = 10.0f;
+const float demoRunSec = 10.0f;
 bool RandomDemo = true;
 float BlurRate = 0.09;
-float CamSpeed = 0.06f;
 char* PrimName = "Points";
 char* FName = NULL;
 
@@ -215,8 +214,12 @@ static void showBitmapMessage(GLfloat x, GLfloat y, char* message)
     glPopAttrib();
 }
 
-void InitProgs()
+void InitOpenGL()
 {
+    static bool didInit = false;
+    if (didInit) return;
+    didInit = true;
+
     menu('p');
 
     if (glewInit() != GLEW_OK) throw PError_t("No GLEW");
@@ -225,8 +228,7 @@ void InitProgs()
     // These numbers are arbitrary and need to be fixed for accuracy.
     // The most correct way to do this is to compute the determinant of the upper 3x3 of the
     // ModelView + Viewport matrix. This gives a measure of the change in size from model space
-    // to eye space. The cube root of this estimates the 1D change in scale. Divide this by W
-    // per point.
+    // to eye space. The cube root of this estimates the 1D change in scale. Divide this by W per point.
     float params[3] = {0.0f, 0.0f, 0.00003f};
     glPointParameterfv(GL_POINT_DISTANCE_ATTENUATION, params);
     glPointParameterf(GL_POINT_SIZE_MIN, 0);
@@ -285,18 +287,7 @@ void InitProgs()
 
 void Draw()
 {
-    static int CameraSystem = -1;
-    if (CameraSystem < 0) {
-        InitProgs();
-
-        // Use a particle to model the camera motion
-        CameraSystem = P.GenParticleGroups(1, 1);
-        P.CurrentGroup(CameraSystem);
-
-        pSourceState S;
-        S.Velocity(PDSphere(pVec(0, 0, 0), CamSpeed, CamSpeed));
-        P.Vertex(pVec(0, -19, 8), S);
-    }
+    InitOpenGL();
 
     glLoadIdentity();
 
@@ -319,10 +310,21 @@ void Draw()
         glClear(GL_COLOR_BUFFER_BIT | (DepthTest ? GL_DEPTH_BUFFER_BIT : 0));
     }
 
-    // Use a particle to model the camera motion
+    // Use a particle to model the camera pose
+    float CamSpeed = 0.05f;
+    static int CameraSystem = -1;
+    if (CameraSystem < 0) {
+        CameraSystem = P.GenParticleGroups(1, 1);
+        P.CurrentGroup(CameraSystem);
+
+        pSourceState S;
+        S.Velocity(PDSphere(pVec(0, 0, 0), CamSpeed, CamSpeed));
+        P.Vertex(pVec(0, -19, Efx.worldCenter.z()), S);
+    }
+
     P.CurrentGroup(CameraSystem);
     if (CameraMotion) {
-        P.Bounce(0, 1, 0, PDBox(pVec(-15, 1, 1), pVec(15, -20, 12)));
+        P.Bounce(0, 1, 0, PDBox(pVec(-15, -4, 1), pVec(15, -20, 12)));
         P.SpeedLimit(CamSpeed, CamSpeed);
         P.Move();
     }
@@ -336,7 +338,7 @@ void Draw()
 #if 0
     pVec At=Cam+Vel; // Look in the direction the camera is flying
 #else
-    pVec At = pVec(0, 0, 3); // Look at the center of action
+    pVec At = Efx.worldCenter; // Look at the center of action
 #endif
     gluLookAt(Cam.x(), Cam.y(), Cam.z(), At.x(), At.y(), At.z(), 0, 0, 1);
 
@@ -356,12 +358,18 @@ void Draw()
         glColor3f(1.0, 1.0, 1.0);
         glVertex3f(-D, -D, 0);
         glEnd();
+
+        glColor3ub(0, 115, 0);
+        glPushMatrix();
+        glTranslatef(Efx.worldCenter.x(), Efx.worldCenter.y(), Efx.worldCenter.z());
+        glutWireCube(1);
+        glPopMatrix();
     }
 
     // Do the particle dynamics
     if (!FreezeParticles) {
         P.CurrentGroup(Efx.particleHandle);
-        for (int step = 0; step < Efx.numSteps; step++) { Efx.CallDemo(DemoNum, ExecMode); }
+        for (int step = 0; step < Efx.simStepsPerFrame; step++) { Efx.CallDemo(DemoNum, ExecMode); }
     }
 
     P.CurrentGroup(Efx.particleHandle);
@@ -405,7 +413,13 @@ void Draw()
 
     GL_ASSERT();
 
-    FPSClock.Event();
+    float frameTime = FPSClock.Event();
+
+    // Adjust simulation time step based on frame rate
+    // Time step unit for our demos is 1/60.
+    // So if frameTime == 0.016666 secs then should pass in a 1.
+    Efx.timeStep = (frameTime / 0.016666f) / float(Efx.simStepsPerFrame);
+    P.TimeStep(Efx.timeStep);
 
     // Draw the text.
     if (ShowText) {
@@ -417,8 +431,8 @@ void Draw()
         char exCh = (ExecMode == Immediate_Mode) ? 'I' : (ExecMode == Internal_Mode) ? 'N' : 'C';
 
         sprintf(msg, " %c%c%c%c%c%c%c%c n=%5d iters=%d fps=%02.2f %s %s t=%1.2f", MotionBlur ? 'B' : ' ', FreezeParticles ? 'F' : ' ', AntiAlias ? 'A' : ' ',
-                RandomDemo ? 'R' : ' ', DepthTest ? 'D' : ' ', exCh, CameraMotion ? 'M' : ' ', SortParticles ? 'S' : ' ', cnt, Efx.numSteps, fps, PrimName,
-                Efx.GetCurEffectName().c_str(), RandomDemoClock.Read());
+                RandomDemo ? 'R' : ' ', DepthTest ? 'D' : ' ', exCh, CameraMotion ? 'M' : ' ', SortParticles ? 'S' : ' ', cnt, Efx.simStepsPerFrame, fps,
+                PrimName, Efx.GetCurEffectName().c_str(), RandomDemoClock.Read());
 
         glColor3f(1, 1, 1);
         showBitmapMessage(100, 50, msg);
@@ -429,7 +443,7 @@ void Draw()
     if (!MotionBlur) glutSwapBuffers();
 
     // Change to a different random demo
-    if (RandomDemo && RandomDemoClock.Read() > DEMO_MIN_SEC) {
+    if (RandomDemo && RandomDemoClock.Read() > demoRunSec) {
         RandomDemoClock.Reset();
         DemoNum = Efx.CallDemo(-2, ExecMode);
     }
@@ -581,10 +595,7 @@ void menu(int item)
     case '\033': /* ESC key: quit */ exit(0); break;
     }
 
-    if (item > '0' && item <= '9') {
-        Efx.numSteps = item - '0';
-        P.TimeStep(1 / float(Efx.numSteps));
-    }
+    if (item > '0' && item <= '9') { Efx.simStepsPerFrame = item - '0'; }
 
     glutPostRedisplay();
 }
