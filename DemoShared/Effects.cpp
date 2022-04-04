@@ -29,21 +29,20 @@ uc3Image* MakeFakeImage()
     return Img;
 }
 
-inline void BoxPoint(pVec& jet, pVec& djet, float itersPerFrame, const float boxSize)
+inline void BoxPoint(pVec& jet, pVec& djet, float timeStep, const float boxSize)
 {
-    jet += djet / itersPerFrame;
-    if (jet.x() > boxSize || jet.x() < -boxSize) {
-        djet.x() *= -1.0f;
-        djet.y() += pRandf() * 0.0005;
-    }
-    if (jet.y() > boxSize || jet.y() < -boxSize) {
-        djet.y() *= -1.0f;
-        djet.z() += pRandf() * 0.0005;
-    }
-    if (jet.z() > boxSize || jet.z() < -boxSize) {
-        djet.z() *= -1.0f;
-        djet.x() += pRandf() * 0.0005;
-    }
+    pVec djet2(djet);
+
+    jet += djet * timeStep;
+    if (jet.x() > boxSize) djet2.x() = copySign(djet.x(), -1.f);
+    if (jet.y() > boxSize) djet2.y() = copySign(djet.y(), -1.f);
+    if (jet.z() > boxSize) djet2.z() = copySign(djet.z(), -1.f);
+    if (jet.x() < -boxSize) djet2.x() = copySign(djet.x(), 1.f);
+    if (jet.y() < -boxSize) djet2.y() = copySign(djet.y(), 1.f);
+    if (jet.z() < -boxSize) djet2.z() = copySign(djet.z(), 1.f);
+
+    if (!(djet == djet2)) djet2 += pRandf() * 0.005f - 0.0025f;
+    djet = djet2;
 }
 } // namespace
 
@@ -51,7 +50,8 @@ EffectsManager::EffectsManager(ParticleContext_t& P_, int mp, E_RENDER_GEOMETRY 
 {
     Img = MakeFakeImage();
     maxParticles = mp;
-    numSteps = 1;
+    simStepsPerFrame = 1;
+    timeStep = 1.f;
     particleHandle = -1;
     GravityVec = pVec(0.0f, 0.0f, -0.01f);
     MakeEffects();
@@ -312,7 +312,7 @@ void Explosion::EmitList(EffectsManager& Efx)
 
 void Explosion::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
-    time_since_start += (1.0f / float(Efx.numSteps));
+    time_since_start += Efx.timeStep;
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
 
@@ -418,8 +418,9 @@ void FlameThrower::DoActions(EffectsManager& Efx) const
     ParticleContext_t& P = Efx.P;
     pSourceState S;
     S.Color(PDLine(pVec(0.8, 0, 0), pVec(1, 1, 0.3)));
-    S.Velocity(
-        PDBlob(pVec(dirAng == P_VARYING_FLOAT ? P_VARYING_FLOAT : sin(dirAng) * .8, dirAng == P_VARYING_FLOAT ? P_VARYING_FLOAT : cos(dirAng) * .8, 0), 0.03));
+    pVec vvel(P_VARYING_FLOAT, P_VARYING_FLOAT, 0.f);
+    if (dirAng != P_VARYING_FLOAT) vvel = pVec(sin(dirAng), cos(dirAng), 0.f) * 0.8f;
+    S.Velocity(PDBlob(vvel, 0.03f));
     S.StartingAge(0);
     S.Size(pVec(1));
     P.Source(particle_rate, PDDisc(pVec(0, 0, 2), pVec(0, 0, 1), 0.5), S);
@@ -443,7 +444,8 @@ void FlameThrower::EmitList(EffectsManager& Efx)
 
 void FlameThrower::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
-    dirAng += 0.02f / Efx.numSteps;
+    const float rotRateInRadPerHz = 0.02f; // TODO: Change to seconds
+    dirAng += rotRateInRadPerHz * Efx.timeStep;
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
 
@@ -552,7 +554,7 @@ void JetSpray::EmitList(EffectsManager& Efx)
 
 void JetSpray::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
-    BoxPoint(jet, djet, Efx.numSteps, 10);
+    BoxPoint(jet, djet, Efx.timeStep, 10);
     djet.z() = 0;
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
@@ -593,7 +595,7 @@ void Orbit2::EmitList(EffectsManager& Efx)
 
 void Orbit2::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
-    BoxPoint(jet, djet, Efx.numSteps, 10);
+    BoxPoint(jet, djet, Efx.timeStep, 10);
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
 
@@ -689,7 +691,7 @@ void Restore::EmitList(EffectsManager& Efx)
 
 void Restore::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
-    time_left -= (1.0f / float(Efx.numSteps));
+    time_left -= Efx.timeStep;
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
 
@@ -736,7 +738,7 @@ void Shower::EmitList(EffectsManager& Efx)
 
 void Shower::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
-    BoxPoint(jet, djet, Efx.numSteps, 2);
+    BoxPoint(jet, djet, Efx.timeStep, 2);
     jet += djet;
     djet.z() = 0;
 
@@ -749,7 +751,7 @@ void Shower::StartEffect(EffectsManager& Efx)
 {
     SteerShape = irand(4);
     jet = pVec(0, 0, 5);
-    djet = pRandVec() * 0.01f;
+    djet = pRandVec() * 0.001f;
     djet.z() = 0.0f;
 }
 
@@ -810,7 +812,8 @@ void Sphere::EmitList(EffectsManager& Efx)
 
 void Sphere::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
-    dirAng += 0.02 / Efx.numSteps;
+    const float rotRateInRadPerHz = 0.02f; // TODO: Change to seconds
+    dirAng += rotRateInRadPerHz * Efx.timeStep;
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
 
@@ -845,7 +848,7 @@ void Swirl::EmitList(EffectsManager& Efx)
 void Swirl::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
     particle_rate = Efx.maxParticles / (float)Lifetime;
-    BoxPoint(jet, djet, Efx.numSteps, 10);
+    BoxPoint(jet, djet, Efx.timeStep, 10);
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
 
