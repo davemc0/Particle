@@ -52,7 +52,7 @@ public:
 
 // Particles orbiting a center
 struct Atom : public Effect {
-    float particle_rate;
+    float particleRate;
 
     Atom(EffectsManager& Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Atom"; }
@@ -64,7 +64,7 @@ struct Atom : public Effect {
 
 // A bunch of balloons
 struct Balloons : public Effect {
-    float particle_rate;
+    float particleRate;
 
     Balloons(EffectsManager& Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Balloons"; }
@@ -103,8 +103,8 @@ struct Fireflies : public Effect {
 // Rocket-style fireworks
 struct Fireworks : public Effect {
     static const int MaxRockets = 16;
-    static const int Lifetime = 25;
-    float particle_rate;
+    static const int particleLifetime = 25;
+    float particleRate;
     int RocketGroup, NumRockets;
     pVec rocketp[MaxRockets], rocketc[MaxRockets];
 
@@ -122,8 +122,8 @@ struct Fireworks : public Effect {
 
 // It's like a flame thrower spinning around
 struct FlameThrower : public Effect {
-    static const int Lifetime = 100;
-    float dirAng, particle_rate;
+    static const int particleLifetime = 100;
+    float dirAng, particleRate;
 
     FlameThrower(EffectsManager& Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "FlameThrower"; }
@@ -135,7 +135,7 @@ struct FlameThrower : public Effect {
 
 // A fountain spraying up in the middle of the screen
 struct Fountain : public Effect {
-    float particle_rate;
+    float particleRate;
 
     Fountain(EffectsManager& Efx) { StartEffect(Efx); }
     void EmitList(EffectsManager& Efx);
@@ -167,8 +167,8 @@ struct JetSpray : public Effect {
 
 // A sprayer with particles that orbit two points
 struct Orbit2 : public Effect {
-    static const int Lifetime = 350;
-    float particle_rate;
+    static const int particleLifetime = 350;
+    float particleRate;
     pVec jet, djet;
 
     Orbit2(EffectsManager& Efx) { StartEffect(Efx); }
@@ -191,8 +191,8 @@ private:
 
 // It kinda looks like rain hitting a parking lot
 struct Rain : public Effect {
-    static const int Lifetime = 100;
-    float particle_rate;
+    static const int particleLifetime = 100;
+    float particleRate;
 
     Rain(EffectsManager& Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Rain"; }
@@ -249,9 +249,9 @@ struct Sphere : public Effect {
 
 // A sprayer with particles orbiting a line
 struct Swirl : public Effect {
-    static const int Lifetime = 300;
+    static const int particleLifetime = 300;
     pVec jet, djet;
-    float particle_rate;
+    float particleRate;
 
     Swirl(EffectsManager& Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Swirl"; }
@@ -301,7 +301,7 @@ public:
     int simStepsPerFrame; // The number of simulation time steps per rendered frame
     float timeStep;       // Dt, duration of time step (after acounting for simStepsPerFrame)
     int particleHandle;   // The handle of the particle group
-    pVec worldCenter = {0.f, 0.f, 3.f};
+    pVec effectCenter = {0.f, 0.f, 5.f};
 
     void SetPhoto(uc3Image* Im)
     {

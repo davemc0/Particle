@@ -41,7 +41,7 @@
 namespace {
 bool MotionBlur = false, FreezeParticles = false, AntiAlias = true, DepthTest = false;
 bool ConstColor = false, ShowText = true, ParticleCam = false, SortParticles = false, SphereTexture = true;
-bool DrawGround = true, CameraMotion = true, FullScreen = false, PointSpritesAllowed = true;
+bool DrawGround = true, CameraMotion = false, FullScreen = false, PointSpritesAllowed = true;
 ExecMode_e ExecMode = Internal_Mode;
 int DemoNum = 0, PrimType = GL_POINTS, DisplayListID = -1, SpotTexID = -1;
 int WinWidth = 880, WinHeight = 880;
@@ -311,7 +311,7 @@ void Draw()
     }
 
     // Use a particle to model the camera pose
-    float CamSpeed = 0.05f;
+    float CamSpeed = 3.f;
     static int CameraSystem = -1;
     if (CameraSystem < 0) {
         CameraSystem = P.GenParticleGroups(1, 1);
@@ -319,7 +319,7 @@ void Draw()
 
         pSourceState S;
         S.Velocity(PDSphere(pVec(0, 0, 0), CamSpeed, CamSpeed));
-        P.Vertex(pVec(0, -19, Efx.worldCenter.z()), S);
+        P.Vertex(pVec(0, -19, Efx.effectCenter.z()), S);
     }
 
     P.CurrentGroup(CameraSystem);
@@ -338,7 +338,7 @@ void Draw()
 #if 0
     pVec At=Cam+Vel; // Look in the direction the camera is flying
 #else
-    pVec At = Efx.worldCenter; // Look at the center of action
+    pVec At = Efx.effectCenter; // Look at the center of action
 #endif
     gluLookAt(Cam.x(), Cam.y(), Cam.z(), At.x(), At.y(), At.z(), 0, 0, 1);
 
@@ -361,7 +361,7 @@ void Draw()
 
         glColor3ub(0, 115, 0);
         glPushMatrix();
-        glTranslatef(Efx.worldCenter.x(), Efx.worldCenter.y(), Efx.worldCenter.z());
+        glTranslatef(Efx.effectCenter.x(), Efx.effectCenter.y(), Efx.effectCenter.z());
         glutWireCube(1);
         glPopMatrix();
     }
@@ -416,9 +416,7 @@ void Draw()
     float frameTime = FPSClock.Event();
 
     // Adjust simulation time step based on frame rate
-    // Time step unit for our demos is 1/60.
-    // So if frameTime == 0.016666 secs then should pass in a 1.
-    Efx.timeStep = (frameTime / 0.016666f) / float(Efx.simStepsPerFrame);
+    Efx.timeStep = frameTime / float(Efx.simStepsPerFrame);
     P.TimeStep(Efx.timeStep);
 
     // Draw the text.
