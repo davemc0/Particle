@@ -445,19 +445,19 @@ void JetSpray::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
-    S.Velocity(PDBlob(pVec(0, 0, 0), 0.01));
+    S.Velocity(PDBlob(pVec(0, 0, 0), 0.6));
     S.Size(pVec(1.5));
     S.Color(PDSphere(pVec(.8, .4, .1), .1));
-    P.Source(1, PDRectangle(pVec(-1, -1, 0.1), pVec(2, 0, 0), pVec(0, 2, 0)), S);
+    P.Source(60, PDRectangle(pVec(-1, -1, 0.1), pVec(2, 0, 0), pVec(0, 2, 0)), S);
 
     S.Color(PDSphere(pVec(.5, .4, .1), .1));
-    P.Source(300, PDRectangle(pVec(-10, -10, 0.1), pVec(20, 0, 0), pVec(0, 20, 0)), S);
+    P.Source(particleRate, PDRectangle(pVec(-10, -10, 0.1), pVec(20, 0, 0), pVec(0, 20, 0)), S);
 
     P.Gravity(Efx.GravityVec);
 
-    P.Jet(PDSphere(jet, 1.5), PDBlob(pVec(0, 0, .05), 0.01));
+    P.Jet(PDSphere(jet, 1.5), PDBlob(pVec(0, 0, 200.f), 40.f));
     P.Bounce(0.1, 0.3, 0.1, PDRectangle(pVec(-10, -10, 0.0), pVec(20, 0, 0), pVec(0, 20, 0)));
-    P.Sink(false, PDPlane(pVec(0, 0, -20), pVec(0, 0, 1)));
+    P.Sink(false, PDPlane(pVec(0, 0, -10), pVec(0, 0, 1)));
     P.Move(true, false);
 }
 
@@ -476,8 +476,9 @@ void JetSpray::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 
 void JetSpray::StartEffect(EffectsManager& Efx)
 {
+    particleRate = Efx.maxParticles / particleLifetime;
     jet = pVec(0.f);
-    djet = pRandVec() * 0.5f;
+    djet = pRandVec() * 20.f;
     djet.z() = 0.0f;
 }
 
@@ -772,6 +773,7 @@ void Swirl::StartEffect(EffectsManager& Efx)
 }
 
 // A tornado that tests the vortex action
+// TODO: Change it to move around a bed of particles like JetSpray and suck them up
 void Tornado::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;

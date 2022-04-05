@@ -318,12 +318,12 @@ void Draw()
 
         pSourceState S;
         S.Velocity(PDSphere(pVec(0, 0, 0), CamSpeed, CamSpeed));
-        P.Vertex(pVec(0, -29, Efx.center.z()), S);
+        P.Vertex(pVec(0, -24, Efx.center.z()), S);
     }
 
     P.CurrentGroup(CameraSystem);
     if (CameraMotion) {
-        P.Bounce(0, 1, 0, PDBox(pVec(-15, -4, 1), pVec(15, -20, 12)));
+        P.Bounce(0, 1, 0, PDBox(pVec(-15, -4, 1), pVec(15, -30, 12)));
         P.SpeedLimit(CamSpeed, CamSpeed);
         P.Move();
     }
