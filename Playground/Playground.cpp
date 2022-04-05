@@ -383,7 +383,8 @@ void Draw()
         // can give us a vector pointing to the side. Use this to orient the particles.
         P.CopyVertexB(false, true);
     } else if (PrimType == GL_LINES) {
-        DrawGroupAsLines(P, ConstColor);
+        // DrawGroupAsLines(P, ConstColor, Efx.timeStep);
+        DrawGroupAsLines(P, ConstColor, -0.25f);
     } else if (PrimType == GL_POINTS) {
         DrawGroupAsPoints(P, ConstColor);
     } else if (PrimType == 0x102) { // Point sprites

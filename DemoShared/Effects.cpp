@@ -262,15 +262,15 @@ void Fireworks::DoActions(EffectsManager& Efx) const
     ParticleContext_t& P = Efx.P;
 
     /////////////////////////////////////////
-    // The action list for moving the sparks
+    // The actions for moving the sparks
     pSourceState S;
     S.StartingAge(0, 6);
-    S.Velocity(PDBlob(pVec(0.f), 0.36f));
+    S.Velocity(PDBlob(pVec(0.f), 0.4f));
 
-    // For emitting we should have a constant max number of rockets and vary their params.
+    float particleRatePerRocket = particleRate / MaxRockets;
     for (int i = 0; i < MaxRockets; i++) {
         S.Color(PDLine(rocketColor[i], pVec(1, .5, .5)));
-        P.Source((i < NumRockets) ? particleRate : 0, PDPoint(rocketPos[i]), S);
+        P.Source((i < NumRockets) ? particleRatePerRocket : 0, PDPoint(rocketPos[i]), S);
     }
 
     P.Gravity(Efx.GravityVec);
@@ -285,13 +285,14 @@ void Fireworks::PerFrame(ExecMode_e EM, EffectsManager& Efx)
     ParticleContext_t& P = Efx.P;
 
     /////////////////////////////////////////
-    // The actions for moving the rockets.
+    // The actions for moving the rockets
     P.CurrentGroup(RocketGroup);
 
     pSourceState S;
-    S.Velocity(PDCylinder(pVec(0, 0, 0.3), pVec(0, 0, 0.5), 0.11, 0.07));
+    float s = 30.f;
+    S.Velocity(PDCylinder(pVec(0, 0, 0.3) * s, pVec(0, 0, 0.5) * s, 0.11f * s, 0.07f * s));
     S.Color(PDBox(pVec(0, 0.5, 0), pVec(1, 1, 1)));
-    P.Source(1, PDDisc(pVec(0, 0, 0), pVec(0, 0, 1), 6), S);
+    P.Source(1000, PDDisc(pVec(0, 0, 0), pVec(0, 0, 1), 12.f), S);
 
     P.Sink(false, PDPlane(pVec(0, 0, -1), pVec(0, 0, 1)));
     P.Gravity(Efx.GravityVec);
@@ -300,15 +301,16 @@ void Fireworks::PerFrame(ExecMode_e EM, EffectsManager& Efx)
     // Read back the position of the rockets.
     NumRockets = (int)P.GetParticles(0, MaxRockets, (float*)rocketPos, (float*)rocketColor);
 
+    /////////////////////////////////////////
+    // The actions for moving the sparks
     if (Efx.particleHandle >= 0) P.CurrentGroup(Efx.particleHandle);
-
-    particleRate = (Efx.maxParticles * 2.0f) / float(particleLifetime * MaxRockets);
 
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
 
 void Fireworks::EmitList(EffectsManager& Efx)
 {
+    // For emitting we have a constant max number of rockets and vary their params.
     NumRockets = MaxRockets;
     for (int i = 0; i < NumRockets; i++) {
         rocketPos[i] = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
@@ -320,17 +322,16 @@ void Fireworks::EmitList(EffectsManager& Efx)
 
 void Fireworks::StartEffect(EffectsManager& Efx)
 {
-    static const int MaxRockets = 16;
-    static const int particleLifetime = 25;
+    if (RocketGroup == -1) RocketGroup = Efx.P.GenParticleGroups(1, MaxRockets);
 
-    if (RocketGroup == -1)
-        RocketGroup = Efx.P.GenParticleGroups(1, MaxRockets);
-    else {
-        Efx.P.CurrentGroup(RocketGroup);
-        Efx.P.KillOld(-1000); // Is this used to model the rockets and the sparks in the same particle system? Enhance that.
-        if (Efx.particleHandle >= 0) Efx.P.CurrentGroup(Efx.particleHandle);
-    }
-    particleRate = (Efx.maxParticles * 2.0f) / float(particleLifetime * MaxRockets);
+    // Kill any previous rockets
+    Efx.P.CurrentGroup(RocketGroup);
+    Efx.P.KillOld(0);
+    Efx.P.KillOld(1, true);
+
+    if (Efx.particleHandle >= 0) Efx.P.CurrentGroup(Efx.particleHandle);
+
+    particleRate = Efx.maxParticles / particleLifetime; // Total particle rate for the sparks
 }
 
 // It's like a flame thrower spinning around

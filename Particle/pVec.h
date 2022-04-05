@@ -94,9 +94,9 @@ public:
 
     PINLINE float lenSqr() const { return (vx * vx + vy * vy + vz * vz); }
 
-    PINLINE float normalize()
+    PINLINE float normalize(const float toLen = 1.f)
     {
-        float onel = 1.0f / sqrtf(vx * vx + vy * vy + vz * vz);
+        float onel = toLen / sqrtf(vx * vx + vy * vy + vz * vz);
         vx *= onel;
         vy *= onel;
         vz *= onel;

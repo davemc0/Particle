@@ -101,6 +101,9 @@ public:
     /// can cause particles to pass through the bounce domain instead of bouncing off it.
     void TimeStep(const float new_dt);
 
+    /// Return the current time step, as set with TimeStep()
+    float GetTimeStep() const;
+
     /// Execute the specified action list on the current particle group.
     ///
     /// Call the action functions as specified when this action list was created with NewActionList(). The actions are executed with the state
