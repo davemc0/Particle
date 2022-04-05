@@ -366,7 +366,7 @@ void FlameThrower::EmitList(EffectsManager& Efx)
 
 void FlameThrower::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
-    const float rotRateInRadPerSec = 0.5f;
+    const float rotRateInRadPerSec = 1.f;
     dirAng += rotRateInRadPerSec * Efx.timeStep;
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
@@ -382,12 +382,13 @@ void Fountain::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
-    S.Velocity(PDCylinder(pVec(0.0, -0.01, 0.35), pVec(0.0, -0.01, 0.37), 0.021, 0.019));
+    float s = 0.35f;
+    S.Velocity(PDCylinder(pVec(0.f, -1.f, 35.f) * s, pVec(0.0f, -1.f, 37.f) * s, 2.1f * s, 1.9f * s));
     S.Color(PDLine(pVec(0.8, 0.9, 1.0), pVec(1.0, 1.0, 1.0)));
-    P.Source(particleRate, PDLine(pVec(0.0, 0.0, 0.0), pVec(0.0, 0.0, 0.405)), S);
+    P.Source(particleRate, PDLine(pVec(0.0, 0.0, 1.f), pVec(0.0, 0.0, 1.4f)), S);
 
     P.Gravity(Efx.GravityVec);
-    P.Bounce(-0.05, 0.35, 0, PDDisc(pVec(0, 0, 0), pVec(0, 0, 1), 5));
+    P.Bounce(0.f, 0.5f, 0.f, PDDisc(pVec(0, 0, 1.f), pVec(0, 0, 1.f), 5));
     P.Move(true, false);
 
     P.Sink(false, PDPlane(pVec(0, 0, -3), pVec(0, 0, 1)));
