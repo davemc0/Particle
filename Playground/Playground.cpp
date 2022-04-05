@@ -45,7 +45,6 @@ bool DrawGround = true, CameraMotion = false, FullScreen = false, PointSpritesAl
 ExecMode_e ExecMode = Internal_Mode;
 int DemoNum = 0, PrimType = GL_POINTS, DisplayListID = -1, SpotTexID = -1;
 int WinWidth = 880, WinHeight = 880;
-const float demoRunSec = 10.0f;
 bool RandomDemo = true;
 float BlurRate = 0.09;
 char* PrimName = "Points";
@@ -319,7 +318,7 @@ void Draw()
 
         pSourceState S;
         S.Velocity(PDSphere(pVec(0, 0, 0), CamSpeed, CamSpeed));
-        P.Vertex(pVec(0, -19, Efx.effectCenter.z()), S);
+        P.Vertex(pVec(0, -29, Efx.center.z()), S);
     }
 
     P.CurrentGroup(CameraSystem);
@@ -338,7 +337,7 @@ void Draw()
 #if 0
     pVec At=Cam+Vel; // Look in the direction the camera is flying
 #else
-    pVec At = Efx.effectCenter; // Look at the center of action
+    pVec At = Efx.center; // Look at the center of action
 #endif
     gluLookAt(Cam.x(), Cam.y(), Cam.z(), At.x(), At.y(), At.z(), 0, 0, 1);
 
@@ -361,7 +360,7 @@ void Draw()
 
         glColor3ub(0, 115, 0);
         glPushMatrix();
-        glTranslatef(Efx.effectCenter.x(), Efx.effectCenter.y(), Efx.effectCenter.z());
+        glTranslatef(Efx.center.x(), Efx.center.y(), Efx.center.z());
         glutWireCube(1);
         glPopMatrix();
     }
@@ -441,7 +440,7 @@ void Draw()
     if (!MotionBlur) glutSwapBuffers();
 
     // Change to a different random demo
-    if (RandomDemo && RandomDemoClock.Read() > demoRunSec) {
+    if (RandomDemo && RandomDemoClock.Read() > Efx.demoRunSec) {
         RandomDemoClock.Reset();
         DemoNum = Efx.CallDemo(-2, ExecMode);
     }

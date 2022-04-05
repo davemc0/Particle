@@ -1432,6 +1432,7 @@ void PAVortex::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Part
             continue;
         }
 
+        // Particles inside the cone have their velocity totally replaced right now. :(
         // m.color = pVec(1,0,0);
         // Accelerate up or down to simulate gravity or something
         pVec AccelUp = axisN * (upSpeed * dtOverMass);
