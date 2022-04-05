@@ -16,37 +16,45 @@ using namespace PAPI;
 // Emit OpenGL calls to draw the particles as GL_LINES.
 // The color is set per primitive or is constant.
 // The other vertex of the line is the velocity vector.
-void DrawGroupAsLines(ParticleContext_t& P, bool const_color)
+void DrawGroupAsLines(ParticleContext_t& P, const bool const_color, const float len_scale)
 {
     int cnt = (int)P.GetGroupCount();
     if (cnt < 1) return;
 
     float* ptr;
     size_t flstride, pos3Ofs, posB3Ofs, size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs, up3Ofs, rvel3Ofs, upB3Ofs, mass1Ofs, data1Ofs;
-    ;
 
     cnt = (int)P.GetParticlePointer(ptr, flstride, pos3Ofs, posB3Ofs, size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs, up3Ofs, rvel3Ofs, upB3Ofs,
                                     mass1Ofs, data1Ofs);
     if (cnt < 1) return;
 
     glBegin(GL_LINES);
-
-    if (!const_color) {
+    if (len_scale < 0.f) {
         for (int i = 0; i < cnt; i++) {
-            // Warning: this depends on alpha following color in the Particle struct.
-            glColor4fv((GLfloat*)ptr + flstride * i + color3Ofs);
-            glVertex3fv((GLfloat*)ptr + flstride * i + pos3Ofs);
+            pVec pos = *(pVec*)(ptr + flstride * i + pos3Ofs);
+            pVec vel = *(pVec*)(ptr + flstride * i + vel3Ofs);
 
             // Make a tail with the velocity vector's direction and length.
-            pVec tail = (*(pVec*)(ptr + flstride * i + pos3Ofs)) - (*(pVec*)(ptr + flstride * i + vel3Ofs));
+            vel.normalize(len_scale);
+            pVec tail = pos - vel;
+
+            if (!const_color) // Warning: this depends on alpha following color in the Particle struct.
+                glColor4fv((GLfloat*)ptr + flstride * i + color3Ofs);
+            glVertex3fv((GLfloat*)&pos);
             glVertex3fv((GLfloat*)&tail);
         }
     } else {
         for (int i = 0; i < cnt; i++) {
-            glVertex3fv((GLfloat*)ptr + flstride * i + pos3Ofs);
+            pVec pos = *(pVec*)(ptr + flstride * i + pos3Ofs);
+            pVec vel = *(pVec*)(ptr + flstride * i + vel3Ofs);
 
             // Make a tail with the velocity vector's direction and length.
-            pVec tail = (*(pVec*)(ptr + flstride * i + pos3Ofs)) - (*(pVec*)(ptr + flstride * i + vel3Ofs));
+            vel *= len_scale;
+            pVec tail = pos - vel;
+
+            if (!const_color) // Warning: this depends on alpha following color in the Particle struct.
+                glColor4fv((GLfloat*)ptr + flstride * i + color3Ofs);
+            glVertex3fv((GLfloat*)&pos);
             glVertex3fv((GLfloat*)&tail);
         }
     }

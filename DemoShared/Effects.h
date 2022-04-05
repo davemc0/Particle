@@ -100,13 +100,13 @@ struct Fireflies : public Effect {
 
 // Rocket-style fireworks
 struct Fireworks : public Effect {
-    static const int MaxRockets = 16;
+    static const int MaxRockets = 20;
     int RocketGroup, NumRockets;
     pVec rocketPos[MaxRockets], rocketColor[MaxRockets];
 
     Fireworks(EffectsManager& Efx) : Effect(Efx)
     {
-        RocketGroup = -1;
+        RocketGroup = -1; // Use separate particle system for rockets
         StartEffect(Efx);
     }
     const std::string GetName() const { return "Fireworks"; }

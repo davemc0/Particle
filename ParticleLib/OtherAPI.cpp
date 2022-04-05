@@ -92,6 +92,8 @@ void PContextActionList_t::BindEmittedActionList(const int action_list_num, P_PA
 
 void PContextActionList_t::TimeStep(const float newDT) { PS->dt = newDT; }
 
+float PContextActionList_t::GetTimeStep() const { return PS->dt; }
+
 // Sets the random seed. Unfortunately, it currently sets it for all contexts in this thread.
 void PContextActionList_t::Seed(const unsigned int seed) { pSRandf(seed); }
 
