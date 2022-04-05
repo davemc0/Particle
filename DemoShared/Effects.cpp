@@ -269,7 +269,6 @@ void BounceToy::DoActions(EffectsManager& Efx) const
     const float Fric = 0.f, Res = 0.80f, Cutoff = 999.f;
 
     pVec C(Efx.effectCenter), Side(0, 4, 0);
-    // pVec C(0.f), Side(0, 4, 0);
 
     pSourceState S;
     S.Color(PDLine(pVec(1, 1, 0), pVec(0, 1, 0)));
@@ -301,8 +300,8 @@ void Explosion::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
     P.Damping(pVec(0.999));
-    P.OrbitPoint(pVec(0, 0, 0), .02, 1.5);
-    P.Explosion(pVec(0, 0, 0), time_since_start, 2, 3, 0.1);
+    P.OrbitPoint(Efx.effectCenter, 1.2f, 1.5);
+    P.Explosion(Efx.effectCenter, time_since_start * 30.f, 1200.f, 3.f, 0.1);
     P.Move(true, false);
     P.Sink(false, PDSphere(pVec(0, 0, 0), 30));
 }
