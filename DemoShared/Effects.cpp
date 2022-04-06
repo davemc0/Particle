@@ -343,8 +343,7 @@ void FlameThrower::DoActions(EffectsManager& Efx) const
     pSourceState S;
     S.Color(PDLine(pVec(0.8, 0, 0), pVec(1, 1, 0.3)));
     pVec vvel(P_VARYING_FLOAT, P_VARYING_FLOAT, 0.f);
-    // if (dirAng != P_VARYING_FLOAT)
-    vvel = pVec(sin(dirAng), cos(dirAng), 0.f) * 18.f;
+    if (dirAng != P_VARYING_FLOAT) vvel = pVec(sin(dirAng), cos(dirAng), 0.f) * 18.f;
     S.Velocity(PDBlob(vvel, 0.3f));
     S.StartingAge(0);
     S.Size(pVec(1));
@@ -685,7 +684,7 @@ void Snake::DoActions(EffectsManager& Efx) const
     // P.Gravitate(10.f, 1.0f); // Gives an interesting effect, but very slow
     P.Damping(pVec(0.9));
     P.Move(true, false);
-    // P.KillOld(particleLifetime);
+    P.Sink(false, PDSphere(pVec(0, 0, 0), 25));
 }
 
 void Snake::StartEffect(EffectsManager& Efx)
@@ -701,14 +700,15 @@ void Sphere::DoActions(EffectsManager& Efx) const
     ParticleContext_t& P = Efx.P;
     pSourceState S;
     S.Color(PDLine(pVec(0, 1, 0), pVec(0, 0, 1)));
-    S.Velocity(PDBlob(pVec(dirAng == P_VARYING_FLOAT ? P_VARYING_FLOAT : sin(dirAng) * .1, dirAng == P_VARYING_FLOAT ? P_VARYING_FLOAT : cos(dirAng) * .1, 0.1),
-                      0.01));
+    pVec vvel(P_VARYING_FLOAT, P_VARYING_FLOAT, 0.f);
+    if (dirAng != P_VARYING_FLOAT) vvel = pVec(sin(dirAng), cos(dirAng), 0.f) * 12.f;
+    S.Velocity(PDBlob(vvel, 0.4f));
     S.StartingAge(0);
     S.Size(pVec(1));
-    P.Source(particleRate, PDPoint(pVec(1, 1, 6)), S);
+    P.Source(particleRate, PDPoint(pVec(1, 0, 8)), S);
 
     P.Gravity(Efx.GravityVec);
-    P.Bounce(0, 0.55, 0, PDSphere(pVec(0, 0, 4), 6));
+    P.Bounce(0, 0.55, 0, PDSphere(Efx.center, 5));
     P.Move(true, false);
 
     P.KillOld(particleLifetime);
@@ -738,18 +738,17 @@ void Swirl::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
+    S.Velocity(PDBlob(pVec(2.f, -2.f, 0), 1.5f));
+    S.Size(pVec(1.0));
     const pVec tjet = Abs(jet) * 0.1 + pVec(0.4, 0.4, 0.4);
     S.Color(PDSphere(tjet, 0.1));
-    S.Velocity(PDBlob(pVec(0.02, -0.2, 0), 0.015));
-    S.Size(pVec(1.0));
-    S.StartingAge(0);
     P.Source(particleRate, PDPoint(jet), S);
 
-    P.OrbitLine(pVec(0, 0, 1), pVec(1, 0.1, 0), 0.1, 1.5);
-    P.Damping(pVec(1, 0.994, 0.994));
+    P.OrbitLine(pVec(2, 0, 3), pVec(1.f, 0.f, 0.f), 100.f, 1.5f);
+    P.Damping(pVec(0.995f));
     P.Move(true, false);
 
-    P.Sink(false, PDSphere(pVec(0, 0, 0), 15));
+    P.Sink(false, PDSphere(Efx.center, 25.f));
     P.KillOld(particleLifetime);
 }
 
@@ -763,9 +762,9 @@ void Swirl::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 
 void Swirl::StartEffect(EffectsManager& Efx)
 {
-    jet = pVec(-4, 0, -2.4);
-    djet = pRandVec() * 0.05;
     particleRate = Efx.maxParticles / particleLifetime;
+    jet = pVec(-4, 0, 2.4);
+    djet = pRandVec() * 20.f;
 }
 
 // A tornado that tests the vortex action
@@ -778,7 +777,7 @@ void Tornado::DoActions(EffectsManager& Efx) const
     S.Velocity(PDPoint(pVec(0, 0, 0)));
     S.Color(PDLine(pVec(.0, .8, .8), pVec(1, 1, 1)));
     S.StartingAge(0);
-    P.Source(particleRate, PDLine(pVec(-8, 0, 15), pVec(8, 0, 15)), S);
+    P.Source(particleRate, PDLine(pVec(-7, 0, 15), pVec(7, 0, 15)), S);
 
     P.Damping(pVec(.95));
     P.Gravity(Efx.GravityVec);
@@ -796,21 +795,22 @@ void Waterfall::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
-    S.Velocity(PDBlob(pVec(0.03, -0.001, 0.01), 0.002));
+    float s = 0.3f;
+    S.Velocity(PDBlob(pVec(3.f, -0.1f, 1.f) * s, 0.2f * s));
     S.Color(PDLine(pVec(0.8, 0.9, 1.0), pVec(1.0, 1.0, 1.0)));
     S.Size(pVec(1.5));
     P.Source(particleRate, PDLine(pVec(-5, -1, 8), pVec(-5, -3, 8)), S);
 
     P.Gravity(Efx.GravityVec);
     P.Bounce(0, 0.35, 0, PDRectangle(pVec(-7, -4, 7), pVec(3, 0, 0), pVec(0, 3, 0)));
-    P.Bounce(0, 0.5, 0, PDSphere(pVec(-4, -2, 4), 0.2));
+    P.Bounce(0, 0.5, 0, PDSphere(pVec(-4, -1, 6), 0.5));
     P.Bounce(0, 0.5, 0, PDSphere(pVec(-3.5, 0, 2), 2));
     P.Bounce(0, 0.5, 0, PDSphere(pVec(3.8, 0, 0), 2));
     P.Bounce(-0.01, 0.35, 0, PDPlane(pVec(0, 0, 0), pVec(0, 0, 1)));
     P.Move(true, false);
 
     P.KillOld(particleLifetime);
-    P.Sink(false, PDSphere(pVec(0, 0, 0), 20));
+    P.Sink(false, PDSphere(pVec(0, 0, 0), 25));
 }
 
 void Waterfall::StartEffect(EffectsManager& Efx) { particleRate = Efx.maxParticles / particleLifetime; }
