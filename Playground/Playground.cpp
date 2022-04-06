@@ -60,28 +60,28 @@ void RenderGeometry(const int SteerShape)
 {
     glColor3f(1, 1, 0);
     switch (SteerShape) {
-    case 0: glutSolidSphere(1, 32, 16); break;
-    case 1:
+    case STEER_SPHERE: glutSolidSphere(1, 32, 16); break;
+    case STEER_TRIANGLE:
         glBegin(GL_TRIANGLES);
-        glVertex3f(0, -1, 0);
-        glVertex3f(2, 0, 0);
-        glVertex3f(0, 2, 0);
+        glVertex3f(0, -1, 0.1f);
+        glVertex3f(2, 0, 0.1f);
+        glVertex3f(0, 2, 0.1f);
         glEnd();
         break;
-    case 2:
+    case STEER_RECTANGLE:
         glBegin(GL_QUADS);
-        glVertex3f(0, -1, 0);
-        glVertex3f(2, 0, 0);
-        glVertex3f(2, 2, 0);
-        glVertex3f(0, 1, 0);
+        glVertex3f(0, -1, 0.1f);
+        glVertex3f(2, 0, 0.1f);
+        glVertex3f(2, 2, 0.1f);
+        glVertex3f(0, 1, 0.1f);
         glEnd();
         break;
-    case 3:
+    case STEER_PLANE:
         glBegin(GL_QUADS);
-        glVertex3f(-2, -2, 0);
-        glVertex3f(2, -2, 0);
-        glVertex3f(2, 2, 0);
-        glVertex3f(-2, 2, 0);
+        glVertex3f(-2, -2, 0.1f);
+        glVertex3f(2, -2, 0.1f);
+        glVertex3f(2, 2, 0.1f);
+        glVertex3f(-2, 2, 0.1f);
         glEnd();
     }
 }

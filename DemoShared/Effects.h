@@ -24,6 +24,8 @@ enum ExecMode_e {
     Emit_Mode       // Build an action list for emitting
 };
 
+enum SteerShape_e { STEER_SPHERE, STEER_TRIANGLE, STEER_RECTANGLE, STEER_PLANE, STEER_VARYING };
+
 class Effect {
 protected:
     bool MotionBlur;        // True to enable motion blur when rendering this effect
@@ -96,19 +98,16 @@ struct Fireflies : public Effect {
     Fireflies(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Fireflies"; }
     void DoActions(EffectsManager& Efx) const;
+    void StartEffect(EffectsManager& Efx);
 };
 
 // Rocket-style fireworks
 struct Fireworks : public Effect {
     static const int MaxRockets = 20;
-    int RocketGroup, NumRockets;
+    int RocketGroup = -1, NumRockets; // Use separate particle system for rockets
     pVec rocketPos[MaxRockets], rocketColor[MaxRockets];
 
-    Fireworks(EffectsManager& Efx) : Effect(Efx)
-    {
-        RocketGroup = -1; // Use separate particle system for rockets
-        StartEffect(Efx);
-    }
+    Fireworks(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Fireworks"; }
     void EmitList(EffectsManager& Efx);
     void DoActions(EffectsManager& Efx) const;
@@ -140,7 +139,7 @@ struct Fountain : public Effect {
 
 // A bunch of particles in a grid shape
 struct GridShape : public Effect {
-    GridShape(EffectsManager& Efx) : Effect(Efx) {}
+    GridShape(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "GridShape"; }
     void DoActions(EffectsManager& Efx) const;
     void StartEffect(EffectsManager& Efx);
@@ -172,7 +171,7 @@ struct Orbit2 : public Effect {
 
 // A bunch of particles in the shape of a photo
 struct PhotoShape : public Effect {
-    PhotoShape(EffectsManager& Efx) : Effect(Efx) {}
+    PhotoShape(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "PhotoShape"; }
     void DoActions(EffectsManager& Efx) const;
     void StartEffect(EffectsManager& Efx);
@@ -217,7 +216,7 @@ struct Shower : public Effect {
 
 // A bunch of particles in a line that are attracted to the one ahead of them in line
 struct Snake : public Effect {
-    Snake(EffectsManager& Efx) : Effect(Efx) {}
+    Snake(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Snake"; }
     void DoActions(EffectsManager& Efx) const;
     void StartEffect(EffectsManager& Efx);
@@ -265,7 +264,7 @@ struct Waterfall : public Effect {
 
 //////////////////////////////////////////////////////////////////////////////
 
-typedef void (*E_RENDER_GEOMETRY)(const int SteerShape);
+typedef void (*E_RENDER_GEOMETRY_CB)(const int SteerShape);
 
 class EffectsManager {
 public:
@@ -274,15 +273,15 @@ public:
     std::vector<Effect*> Effects;
 
     ParticleContext_t& P;
-    E_RENDER_GEOMETRY RenderGeometry;
-    pVec GravityVec;
-    Effect* Demo;
-    int maxParticles;     // The number of particles the app wants in this demo
-    int simStepsPerFrame; // The number of simulation time steps per rendered frame
-    float timeStep;       // Dt, duration of time step (after acounting for simStepsPerFrame)
-    float demoRunSec;     // Seconds to run each demo before randomly changing
-    int particleHandle;   // The handle of the particle group
-    pVec center = {0.f, 0.f, 5.f};
+    E_RENDER_GEOMETRY_CB RenderGeometry; // A callback function to render geometry of particle interaction objects
+    pVec GravityVec;                     // Gravity goes in this direction for all effects that use it
+    pVec center = {0.f, 0.f, 5.f};       // Coordinates of the center of interest of particle effects
+    Effect* Demo;                        // Pointer to the current demo
+    int maxParticles;                    // The number of particles the app wants in this demo
+    int simStepsPerFrame;                // The number of simulation time steps per rendered frame
+    float timeStep;                      // Dt, duration of time step (after acounting for simStepsPerFrame)
+    float demoRunSec;                    // Seconds to run each demo before randomly changing
+    int particleHandle;                  // The handle of the particle group
 
     void SetPhoto(uc3Image* Im)
     {
@@ -291,7 +290,7 @@ public:
     }
     const std::string GetCurEffectName() { return Demo->GetName(); }
 
-    EffectsManager(ParticleContext_t& P_, int mp = 100, E_RENDER_GEOMETRY RG = NULL);
+    EffectsManager(ParticleContext_t& P_, int mp = 100, E_RENDER_GEOMETRY_CB RG = NULL);
 
     // Call this to get a demo by number.
     // Returns the DemoNum chosen.

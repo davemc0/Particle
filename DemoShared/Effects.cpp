@@ -245,16 +245,18 @@ void Fireflies::DoActions(EffectsManager& Efx) const
     ParticleContext_t& P = Efx.P;
     pSourceState S;
     S.Size(pVec(1.0));
-    S.Velocity(PDPoint(pVec(0, 0, -2.f)));
+    S.Velocity(PDPoint(pVec(0, 0, -1.f)));
     S.Color(PDLine(pVec(.1, .5, 0), pVec(.9, .9, .1)));
-    S.StartingAge(0);
-    P.Source(120, PDBlob(Efx.center, 5), S);
+    S.StartingAge(0, 1.f);
+    P.Source(particleRate, PDBox(Efx.center - pVec(150, 25, 5), Efx.center + pVec(150, 150, 5)), S);
 
     P.RandomAccel(PDSphere(pVec(0.f, 0.f, 3.6f), 25.f));
     P.Move(true, false);
 
     P.KillOld(1.7f);
 }
+
+void Fireflies::StartEffect(EffectsManager& Efx) { particleRate = 5000.f; }
 
 // Rocket-style fireworks
 void Fireworks::DoActions(EffectsManager& Efx) const
@@ -489,14 +491,14 @@ void Orbit2::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
-    S.Velocity(PDBlob(pVec(0.02, -0.2, 0), 0.015));
+    S.Velocity(PDBlob(pVec(2.f, -2.f, 0), 1.5f));
     S.Size(pVec(1.0));
     const pVec tjet = Abs(jet) * 0.1 + pVec(0.4, 0.4, 0.4);
     S.Color(PDSphere(tjet, 0.1));
     P.Source(particleRate, PDPoint(jet), S);
 
-    P.OrbitPoint(pVec(2, 0, 3), 0.1, 1.5);
-    P.OrbitPoint(pVec(-2, 0, -3), 0.1, 1.5);
+    P.OrbitPoint(pVec(2, 0, 3), 100.f, 1.5f);
+    P.OrbitPoint(pVec(-2, 0, 3), 100.f, 1.5f);
     P.Damping(pVec(0.994));
     P.Move(true, false);
 
@@ -519,8 +521,8 @@ void Orbit2::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 void Orbit2::StartEffect(EffectsManager& Efx)
 {
     particleRate = Efx.maxParticles / particleLifetime;
-    jet = pVec(-4, 0, -2.4);
-    djet = pRandVec() * 0.5f;
+    jet = pVec(-4, 0, 2.4);
+    djet = pRandVec() * 20.f;
 }
 
 // A bunch of particles in the shape of a photo
@@ -535,7 +537,7 @@ void PhotoShape::StartEffect(EffectsManager& Efx)
 
     // Load the particles from the photo
     pSourceState S;
-    S.Velocity(PDBlob(pVec(0, 0, 0), 0.001));
+    S.Velocity(PDBlob(pVec(0, 0, 0), 0.01));
     S.StartingAge(0);
     P.KillOld(0);
     P.KillOld(1, true);
@@ -554,7 +556,7 @@ void PhotoShape::StartEffect(EffectsManager& Efx)
             pVec v = pVec(fx, 0, fy);
             v /= float(Efx.Img->w());
 
-            P.Vertex(v * 6.0f - pVec(3.0f, 0, 0), S);
+            P.Vertex(v * 6.0f - pVec(3.0f, 0, -0.1f), S);
         }
     }
 }
@@ -564,14 +566,13 @@ void Rain::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
-    S.Velocity(pVec(0.f));
+    S.Velocity(PDSphere(pVec(0.f), 1.f));
     S.Color(PDSphere(pVec(0.4, 0.4, 0.9), .1));
     S.Size(pVec(1.5));
-    S.StartingAge(0);
-    float D = 80;
-    P.Source(particleRate, PDRectangle(pVec(-D / 2, -D / 2, 12), pVec(D, 0, 0), pVec(0, D, 0)), S);
-
-    P.RandomAccel(PDBlob(pVec(0.002, 0, -0.01), 0.003));
+    S.StartingAge(0, 5);
+    float D = 200;
+    P.Source(particleRate, PDRectangle(pVec(-D / 2, -D / 2, 15), pVec(D, 0, 0), pVec(0, D, 0)), S);
+    P.Gravity(Efx.GravityVec);
     P.Bounce(0.3, 0.3, 0, PDPlane(pVec(0, 0, 0), pVec(0, 0, 1)));
     P.Move(true, false);
 
@@ -615,26 +616,26 @@ void Shower::DoActions(EffectsManager& Efx) const
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
-    S.Velocity(PDBlob(pVec(0.f), 0.001f));
+    S.Velocity(PDBlob(pVec(0.f), 0.1f));
     S.Size(pVec(1.5));
     S.StartingAge(0);
     S.Color(PDBlob(pVec(.7, .7, .2), .2));
     P.Source(particleRate, PDPoint(jet), S);
 
-    P.Gravity(Efx.GravityVec * .1);
+    P.Gravity(Efx.GravityVec * 0.1f);
 
-    const float LA = 50.0f;
+    const float lookAheadTime = 2.f;
 
-    if (SteerShape == 0) {
-        P.Avoid(0.2, 1.0, LA, PDSphere(pVec(0, 0, 0), 1.1));
-    } else if (SteerShape == 1) {
-        P.Avoid(2, 1.0, LA, PDTriangle(pVec(0, -1, 0), pVec(2, 0, 0), pVec(0, 2, 0)));
-    } else if (SteerShape == 2) {
-        P.Avoid(2, 1.0, LA, PDRectangle(pVec(0, -1, 0), pVec(2, 1, 0), pVec(0, 2, 0)));
-    } else if (SteerShape == 3) {
-        P.Avoid(2, 1.0, LA, PDPlane(pVec(0, 0, 0), pVec(0, 0, 1)));
+    if (SteerShape == STEER_SPHERE) {
+        P.Avoid(2.f, 1.f, lookAheadTime, PDSphere(pVec(0, 0, 0), 1.f));
+    } else if (SteerShape == STEER_TRIANGLE) {
+        P.Avoid(2.f, 1.f, lookAheadTime, PDTriangle(pVec(0, -1, 0.1f), pVec(2, 0, 0.1f), pVec(0, 2, 0.1f)));
+    } else if (SteerShape == STEER_RECTANGLE) {
+        P.Avoid(2.f, 1.f, lookAheadTime, PDRectangle(pVec(0, -1, 0.1f), pVec(2, 1, 0), pVec(0, 2, 0)));
+    } else if (SteerShape == STEER_PLANE) {
+        P.Avoid(2.f, 1.f, lookAheadTime, PDPlane(pVec(0, 0, 0.1f), pVec(0, 0, 1)));
     } else if (SteerShape == P_VARYING_INT) {
-        P.Avoid(2, 1.0, LA, PDVarying());
+        P.Avoid(2.f, 1.f, lookAheadTime, PDVarying());
     }
 
     P.Move(true, false);
@@ -662,43 +663,36 @@ void Shower::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 
 void Shower::StartEffect(EffectsManager& Efx)
 {
-    particleRate = Efx.maxParticles / particleLifetime;
+    particleRate = min(100.f, Efx.maxParticles / particleLifetime);
     SteerShape = irand(4);
-    jet = pVec(0, 0, 5);
-    djet = pRandVec() * 0.001f;
+    jet = Efx.center;
+    djet = pRandVec() * 0.02f;
     djet.z() = 0.0f;
 }
 
-// A bunch of particles in a line that are attracted to the one ahead of them in line
+// A bunch of particles in a line that are attracted to the one after them in the list
 void Snake::DoActions(EffectsManager& Efx) const
 {
+    // Add new particles to attract the older ones back toward the center
     ParticleContext_t& P = Efx.P;
     pSourceState S;
     S.Color(1, 0, 0);
-    S.Velocity(pVec(0.001, 0, 0)); // This makes it able to compute a binormal.
-    float BOX = .005;
-    P.Source(particleRate, PDBox(pVec(-BOX, -BOX, -BOX), pVec(BOX, BOX, BOX)), S);
+    S.Velocity(PDSphere(pVec(0.f), 0.1f)); // This makes it able to compute a binormal.
+    float BOX = .5f;
+    P.Source(particleRate, PDBox(pVec(-BOX), pVec(BOX)), S);
 
-    // Either of these gives an interesting effect.
-    P.Follow(0.01, 1.0);
-    // P.Gravitate(0.01, 1.0);
+    P.Follow(10.f, 1.0f);
+    // P.Gravitate(10.f, 1.0f); // Gives an interesting effect, but very slow
     P.Damping(pVec(0.9));
     P.Move(true, false);
-    P.KillOld(particleLifetime);
+    // P.KillOld(particleLifetime);
 }
 
 void Snake::StartEffect(EffectsManager& Efx)
 {
-    particleRate = 1.0f; // Make a few additional particles
-
     ParticleContext_t& P = Efx.P;
 
-    pSourceState S;
-    S.Velocity(pVec(0.f));
-    S.Size(pVec(1.0));
-    S.Color(PDSphere(pVec(0.93, 0.93, 0), 0.05));
-
-    for (float x = -10.0; x < 2.0; x += 0.05) P.Vertex(pVec(x, 0, 0), S);
+    particleRate = 10.0f; // Make a few additional particles
 }
 
 // A bunch of particles inside a sphere
@@ -823,7 +817,7 @@ void Waterfall::StartEffect(EffectsManager& Efx) { particleRate = Efx.maxParticl
 
 //////////////////////////////////////////////////////////////////////////////
 
-EffectsManager::EffectsManager(ParticleContext_t& P_, int mp, E_RENDER_GEOMETRY RG) : P(P_), RenderGeometry(RG)
+EffectsManager::EffectsManager(ParticleContext_t& P_, int mp, E_RENDER_GEOMETRY_CB RG) : P(P_), RenderGeometry(RG)
 {
     Img = MakeFakeImage();
     maxParticles = mp;
