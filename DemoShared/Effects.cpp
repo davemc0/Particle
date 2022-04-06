@@ -410,18 +410,23 @@ void Fountain::StartEffect(EffectsManager& Efx) { particleRate = Efx.maxParticle
 // A bunch of particles in a grid shape
 void GridShape::DoActions(EffectsManager& Efx) const
 {
-    // Doesn't do anything. Just sets up initial particle placement
+    ParticleContext_t& P = Efx.P;
+    P.Move(true, false);
 }
 
 void GridShape::StartEffect(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
 
+    if (P.GetGroupCount() * 2 > P.GetMaxParticles()) { // Is there room to add the formation without deleting everything?
+        P.KillOld(0);
+        P.KillOld(1, true);
+    }
+    int numNewParticles = (int)P.GetMaxParticles() - (int)P.GetGroupCount();
+
     pSourceState S;
-    S.Velocity(PDBlob(pVec(0, 0, 0), 0.1));
-    P.KillOld(0);
-    P.KillOld(1, true);
-    int dim = int(pow(float(Efx.maxParticles), 0.33333333f));
+    S.Velocity(PDBlob(pVec(0.f), 0.0001f));
+    int dim = int(pow(float(numNewParticles), 0.33333333f));
 
     const pVec DD(8, 12, 9);
     const pVec dd(DD * 2.f / (float)dim);
@@ -527,20 +532,25 @@ void Orbit2::StartEffect(EffectsManager& Efx)
 // A bunch of particles in the shape of a photo
 void PhotoShape::DoActions(EffectsManager& Efx) const
 {
-    // Doesn't do anything. Just sets up initial particle placement
+    ParticleContext_t& P = Efx.P;
+    P.Move(true, false);
 }
 
 void PhotoShape::StartEffect(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
 
+    if (P.GetGroupCount() * 2 > P.GetMaxParticles()) { // Is there room to add the formation without deleting everything?
+        P.KillOld(0);
+        P.KillOld(1, true);
+    }
+    int numNewParticles = (int)P.GetMaxParticles() - (int)P.GetGroupCount();
+
     // Load the particles from the photo
     pSourceState S;
-    S.Velocity(PDBlob(pVec(0, 0, 0), 0.01));
+    S.Velocity(PDBlob(pVec(0.f), 0.0001f));
     S.StartingAge(0);
-    P.KillOld(0);
-    P.KillOld(1, true);
-    int d = (int)sqrtf(P.GetMaxParticles());
+    int d = (int)sqrtf(numNewParticles);
 
     float sx = Efx.Img->w() / float(d);
     float sy = Efx.Img->h() / float(d);
