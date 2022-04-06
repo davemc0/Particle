@@ -1091,7 +1091,7 @@ void PAOrbitPoint::Execute(ParticleGroup& group, ParticleList::iterator ibegin, 
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
             Particle_t& m = (*it);
 
-            // Figure direction to particle.
+            // Figure direction from particle to center
             pVec dir(center - m.pos);
 
             // Distance to gravity well (force drops as 1/r^2, normalize by 1/r)
