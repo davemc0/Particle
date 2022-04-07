@@ -10,7 +10,7 @@
 // Fix motion blur
 // Key to adjust point diameter
 // Multiple textures
-// Fountain playground
+// User interaction
 // When in random mode reset all rendering params to best for that demo
 //   motion blur, kill before start, primitive, texture, depth test, speed, particle size
 // Do I just make an init function, or do I make a struct?
@@ -41,9 +41,9 @@
 namespace {
 bool MotionBlur = false, FreezeParticles = false, AntiAlias = true, DepthTest = false;
 bool ConstColor = false, ShowText = true, ParticleCam = false, SortParticles = false, SphereTexture = true;
-bool DrawGround = true, CameraMotion = false, FullScreen = false, PointSpritesAllowed = true;
-ExecMode_e ExecMode = Internal_Mode;
-int DemoNum = 0, PrimType = GL_POINTS, DisplayListID = -1, SpotTexID = -1;
+bool DrawEffectGeometry = true, CameraMotion = false, FullScreen = false, PointSpritesAllowed = true;
+ExecMode_e ExecMode = Internal_Mode; // Execute compiled action lists on host for non-varying effects or immediate for varying
+int PrimType = GL_POINTS, DisplayListID = -1, SpotTexID = -1;
 int WinWidth = 880, WinHeight = 880;
 bool RandomDemo = true;
 float BlurRate = 0.09;
@@ -55,53 +55,107 @@ Timer RandomDemoClock;
 ParticleContext_t P;
 } // namespace
 
+#ifdef _DEBUG
+static EffectsManager Efx(P, 20000);
+#else
+static EffectsManager Efx(P, 200000);
+#endif
+
 // Render any geometry necessary to support the effects
-void RenderGeometry(const int SteerShape)
+void RenderEffectGeometry()
 {
-    glColor3f(1, 1, 0);
-    switch (SteerShape) {
-    case STEER_SPHERE: glutSolidSphere(1, 32, 16); break;
-    case STEER_TRIANGLE:
-        glBegin(GL_TRIANGLES);
-        glVertex3f(0, -1, 0.1f);
-        glVertex3f(2, 0, 0.1f);
-        glVertex3f(0, 2, 0.1f);
-        glEnd();
-        break;
-    case STEER_RECTANGLE:
-        glBegin(GL_QUADS);
-        glVertex3f(0, -1, 0.1f);
-        glVertex3f(2, 0, 0.1f);
-        glVertex3f(2, 2, 0.1f);
-        glVertex3f(0, 1, 0.1f);
-        glEnd();
-        break;
-    case STEER_PLANE:
-        glBegin(GL_QUADS);
-        glVertex3f(-2, -2, 0.1f);
-        glVertex3f(2, -2, 0.1f);
-        glVertex3f(2, 2, 0.1f);
-        glVertex3f(-2, 2, 0.1f);
-        glEnd();
+    for (auto domPtr : Efx.Demo->Renderables) {
+        pVec v;
+        glColor3ub(0, 115, 0);
+        if (dynamic_cast<PDSphere*>(domPtr.get())) {
+            PDSphere* dom = dynamic_cast<PDSphere*>(domPtr.get());
+            glMatrixMode(GL_MODELVIEW);
+            glPushMatrix();
+            glTranslatef(dom->ctr.x(), dom->ctr.y(), dom->ctr.z());
+            glutWireSphere(dom->radOut, 32, 16);
+            glPopMatrix();
+        } else if (dynamic_cast<PDBox*>(domPtr.get())) {
+            PDBox* dom = dynamic_cast<PDBox*>(domPtr.get());
+            glMatrixMode(GL_MODELVIEW);
+            glPushMatrix();
+            pVec ctr = (dom->p1 + dom->p0) * 0.5f, extent = dom->p1 - dom->p0;
+            glTranslatef(ctr.x(), ctr.y(), ctr.z());
+            glScalef(extent.x(), extent.y(), extent.z());
+            glutWireCube(1);
+            glPopMatrix();
+        } else if (dynamic_cast<PDDisc*>(domPtr.get())) {
+            PDDisc* dom = dynamic_cast<PDDisc*>(domPtr.get());
+            glMatrixMode(GL_MODELVIEW);
+            glPushMatrix();
+            // TODO: Need to rotate orientation of disc
+            glTranslatef(dom->p.x(), dom->p.y(), dom->p.z());
+            GLUquadric* Q = gluNewQuadric();
+            gluDisk(Q, dom->radIn, dom->radOut, 64, 4);
+            glPopMatrix();
+        } else if (dynamic_cast<PDRectangle*>(domPtr.get())) {
+            PDRectangle* dom = dynamic_cast<PDRectangle*>(domPtr.get());
+            glColor3ub(0, 100, 40);
+            glBegin(GL_QUADS);
+            glVertex3fv((GLfloat*)&(v = dom->p));
+            glVertex3fv((GLfloat*)&(v = dom->p + dom->u));
+            glVertex3fv((GLfloat*)&(v = dom->p + dom->u + dom->v));
+            glVertex3fv((GLfloat*)&(v = dom->p + dom->v));
+            glEnd();
+        } else if (dynamic_cast<PDTriangle*>(domPtr.get())) {
+            PDTriangle* dom = dynamic_cast<PDTriangle*>(domPtr.get());
+            glBegin(GL_TRIANGLES);
+            glVertex3fv((GLfloat*)&(v = dom->p));
+            glVertex3fv((GLfloat*)&(v = dom->p + dom->u));
+            glVertex3fv((GLfloat*)&(v = dom->p + dom->v));
+            glEnd();
+        } else if (dynamic_cast<PDPlane*>(domPtr.get())) {
+            PDPlane* dom = dynamic_cast<PDPlane*>(domPtr.get());
+            const float planeDist = 100.f;
+            pVec uu = Cross(pVec(1, 0, 0), dom->nrm);
+            pVec vv = Cross(dom->nrm, uu);
+            uu *= planeDist;
+            vv *= planeDist;
+            glBegin(GL_TRIANGLE_FAN);
+            glColor3f(0.6, 0.7, 0.8);
+            glVertex3fv((GLfloat*)&(v = dom->p));
+            glColor3f(1.0, 1.0, 1.0);
+            glVertex3fv((GLfloat*)&(v = dom->p - uu - vv));
+            glColor3f(1.0, 1.0, 1.0);
+            glVertex3fv((GLfloat*)&(v = dom->p + uu - vv));
+            glColor3f(1.0, 1.0, 1.0);
+            glVertex3fv((GLfloat*)&(v = dom->p + uu + vv));
+            glColor3f(1.0, 1.0, 1.0);
+            glVertex3fv((GLfloat*)&(v = dom->p - uu + vv));
+            glColor3f(1.0, 1.0, 1.0);
+            glVertex3fv((GLfloat*)&(v = dom->p - uu - vv));
+            glEnd();
+
+            glColor3ub(0, 115, 0);
+            glPushMatrix();
+            glTranslatef(Efx.center.x(), Efx.center.y(), Efx.center.z());
+            glutWireCube(1);
+            glPopMatrix();
+        } else if (dynamic_cast<PDLine*>(domPtr.get())) {
+            PDLine* dom = dynamic_cast<PDLine*>(domPtr.get());
+            glBegin(GL_LINES);
+            glVertex3fv((GLfloat*)&(v = dom->p0));
+            glVertex3fv((GLfloat*)&(v = dom->p1));
+            glEnd();
+        } else if (dynamic_cast<PDPoint*>(domPtr.get())) {
+            PDPoint* dom = dynamic_cast<PDPoint*>(domPtr.get());
+            glBegin(GL_POINTS);
+            glVertex3fv((GLfloat*)&(v = dom->p));
+            glEnd();
+        } else {
+            EASSERT(0);
+        }
     }
 }
 
-#ifdef _DEBUG
-static EffectsManager Efx(P, 20000, RenderGeometry);
-#else
-static EffectsManager Efx(P, 200000, RenderGeometry);
-#endif
-
 void menu(int);
 
-// Symmetric gaussian centered at origin.
-// No covariance matrix. Give it X and Y.
-inline float Gaussian2(float x, float y, float sigma)
-{
-    // The sqrt of 2 pi.
-#define MY_SQRT2PI 2.506628274631000502415765284811045253006
-    return exp(-0.5 * (x * x + y * y) / (sigma * sigma)) / (MY_SQRT2PI * sigma);
-}
+// Symmetric gaussian centered at origin; no covariance matrix
+inline float Gaussian2(float x, float y, float sigma) { return expf(-0.5f * (x * x + y * y) / (sigma * sigma)) / (P_SQRT2PI * sigma); }
 
 void MakeGaussianSpotTexture()
 {
@@ -341,34 +395,12 @@ void Draw()
 #endif
     gluLookAt(Cam.x(), Cam.y(), Cam.z(), At.x(), At.y(), At.z(), 0, 0, 1);
 
-    if (DrawGround) {
-        const float D = 100.f;
-        glBegin(GL_TRIANGLE_FAN);
-        glColor3f(0.6, 0.7, 0.8);
-        glVertex3f(0, 0, 0);
-        glColor3f(1.0, 1.0, 1.0);
-        glVertex3f(-D, -D, 0);
-        glColor3f(1.0, 1.0, 1.0);
-        glVertex3f(D, -D, 0);
-        glColor3f(1.0, 1.0, 1.0);
-        glVertex3f(D, D, 0);
-        glColor3f(1.0, 1.0, 1.0);
-        glVertex3f(-D, D, 0);
-        glColor3f(1.0, 1.0, 1.0);
-        glVertex3f(-D, -D, 0);
-        glEnd();
-
-        glColor3ub(0, 115, 0);
-        glPushMatrix();
-        glTranslatef(Efx.center.x(), Efx.center.y(), Efx.center.z());
-        glutWireCube(1);
-        glPopMatrix();
-    }
+    if (DrawEffectGeometry) RenderEffectGeometry();
 
     // Do the particle dynamics
     if (!FreezeParticles) {
         P.CurrentGroup(Efx.particleHandle);
-        for (int step = 0; step < Efx.simStepsPerFrame; step++) { Efx.CallDemo(DemoNum, ExecMode); }
+        for (int step = 0; step < Efx.simStepsPerFrame; step++) { Efx.RunDemoFrame(ExecMode); }
     }
 
     P.CurrentGroup(Efx.particleHandle);
@@ -440,10 +472,9 @@ void Draw()
 
     if (!MotionBlur) glutSwapBuffers();
 
-    // Change to a different random demo
     if (RandomDemo && RandomDemoClock.Read() > Efx.demoRunSec) {
         RandomDemoClock.Reset();
-        DemoNum = Efx.CallDemo(-2, ExecMode);
+        Efx.ChooseDemo(-2, ExecMode); // Change to a different random demo
     }
 }
 
@@ -470,24 +501,23 @@ void menu(int item)
     switch (item) {
     case ' ':
         RandomDemoClock.Reset();
-        if (DemoNum == 3) DemoNum = Efx.CallDemo(10, ExecMode); // A workaround to enable sequential explosions
-        DemoNum = Efx.CallDemo(3, ExecMode);                    // Explosion
+        Efx.ChooseDemo(3, ExecMode); // Explosion
         break;
     case GLUT_KEY_UP + 0x1000:
         RandomDemoClock.Reset();
-        DemoNum = Efx.CallDemo(13, ExecMode); // Restore
+        Efx.ChooseDemo(13, ExecMode); // Restore
         break;
     case GLUT_KEY_DOWN + 0x1000:
         RandomDemoClock.Reset();
-        DemoNum = Efx.CallDemo(-2, ExecMode);
+        Efx.ChooseDemo(-2, ExecMode); // Random
         break;
     case GLUT_KEY_LEFT + 0x1000:
         RandomDemoClock.Reset();
-        DemoNum = Efx.CallDemo(DemoNum - 1, ExecMode);
+        Efx.ChooseDemo(Efx.demoNum - 1, ExecMode); // Prev
         break;
     case GLUT_KEY_RIGHT + 0x1000:
         RandomDemoClock.Reset();
-        DemoNum = Efx.CallDemo(DemoNum + 1, ExecMode);
+        Efx.ChooseDemo(Efx.demoNum + 1, ExecMode); // Next
         break;
     case 'i':
         if (ExecMode == Immediate_Mode)
@@ -563,7 +593,7 @@ void menu(int item)
             glDisable(GL_DEPTH_TEST);
         std::cerr << "DepthTest " << (DepthTest ? "on" : "off") << ".\n";
         break;
-    case 'g': DrawGround = !DrawGround; break;
+    case 'g': DrawEffectGeometry = !DrawEffectGeometry; break;
     case 's': SortParticles = !SortParticles; break;
     case 'w': ParticleCam = !ParticleCam; break;
     case 'z': P.SinkVelocity(true, PDSphere(pVec(0, 0, 0), 0.01)); break;
@@ -652,7 +682,7 @@ void GlutSetup(int argc, char** argv)
     glutAddMenuEntry("2: 2 steps per frame", '2');
     glutAddMenuEntry("3: 3 steps ...", '3');
     glutAddMenuEntry("space : Explosion", ' ');
-    glutAddMenuEntry("g: Draw ground", 'g');
+    glutAddMenuEntry("g: Draw effect geometry", 'g');
     glutAddMenuEntry("a: Toggle antialiasing", 'a');
     glutAddMenuEntry("p: Cycle Primitive", 'p');
     glutAddMenuEntry("t: Show Text", 't');
@@ -687,7 +717,7 @@ int main(int argc, char** argv)
 
     Efx.MakeActionLists(ExecMode);
 
-    DemoNum = Efx.CallDemo(-2, ExecMode);
+    Efx.ChooseDemo(-2, ExecMode); // Random
 
     try {
         glutMainLoop();

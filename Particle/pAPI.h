@@ -145,10 +145,11 @@ public:
     /// list will be created anew. This is as with glNewActionList() in OpenGL.
     void NewActionList(const int action_list_num);
 
-    /// Return the CUDA code of the action list kernel
+    /// Return the source code string of the action list kernel
     ///
     /// Returns a string representing the C code that implements the action list.
     /// This string is suitable for saving as the complete contents of a .cu or .cpp file.
+    /// NOT IMPLEMENTED! When I (or someone) actually implements emitted action lists, get it working completely with host code before attempting CUDA.
     void EmitActionList(const int action_list_num,     ///< the action list number returned from a call to GenActionLists().
                         std::string& Kernel,           ///< a reference to the string to store the kernel source code in
                         const std::string& KernelName, ///< your chosen name for this kernel. This can be the base of the filename where the contents are stored.

@@ -16,7 +16,7 @@
 
 static ExecMode_e ExecMode = Internal_Mode;
 static bool SortParticles = false, ShowText = true;
-static int DemoNum = 6;
+static int demoNum = 6;
 
 static Timer FPSClock;
 static ParticleContext_t P;
@@ -50,14 +50,14 @@ void RunBenchmarkCache()
 
     Efx.MakeActionLists(ExecMode);
 
-    Efx.CallDemo(DemoNum, ExecMode); // Prime it
+    Efx.ChooseDemo(demoNum, ExecMode); // Prime it
 
     FPSClock.Start();
     for (int CacheSize = 1024 * 16; CacheSize < 8 * 1024 * 1024; CacheSize += (16 * 1024)) {
         P.SetWorkingSetSize(CacheSize);
         FPSClock.Reset();
         for (int i = 0; i < 100; i++) {
-            Efx.CallDemo(DemoNum, ExecMode);
+            Efx.RunDemoFrame(ExecMode);
             if (SortParticles) P.Sort(pVec(0, -19, 15), pVec(0, 0, 3));
             if (ShowText) Report();
         }
@@ -74,11 +74,11 @@ void RunBenchmark()
 
     Efx.MakeActionLists(ExecMode);
 
-    Efx.CallDemo(DemoNum, ExecMode);
+    Efx.ChooseDemo(demoNum, ExecMode);
 
     if (1) {
         for (int i = 0; i < 1000; i++) {
-            Efx.CallDemo(DemoNum, ExecMode);
+            Efx.RunDemoFrame(ExecMode);
             if (SortParticles) P.Sort(pVec(0, -19, 15), pVec(0, 0, 3));
             Report();
         }

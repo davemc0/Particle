@@ -3,10 +3,6 @@
 /// Copyright 1997-2007, 2022 by David K. McAllister
 ///
 /// A simple 3D float vector class for internal use by the particle systems.
-///
-/// I have experimented with an implementation of this class that uses four floats.
-/// This allows the class to be implemented using
-/// SSE intrinsics for faster execution on P4 and AMD processors.
 
 #ifndef pvec_h
 #define pvec_h
@@ -19,15 +15,13 @@
 #endif
 
 #ifdef WIN32
-// This is because their stupid compiler thinks it's smart.
 #define PINLINE __forceinline
 #else
 #define PINLINE inline
 #endif
 
 namespace PAPI {
-// typedef unsigned long long pdata_t;
-typedef unsigned int pdata_t; // Making it 32 bit so Particle_t is 128B.
+typedef unsigned int pdata_t;
 
 const float P_SQRT2PI = 2.506628274631000502415765284811045253006f;
 const float P_ONEOVERSQRT2PI = (1.f / P_SQRT2PI);

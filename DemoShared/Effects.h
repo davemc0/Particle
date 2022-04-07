@@ -4,6 +4,7 @@
 #include "Image/tImage.h"
 #include "Particle/pAPI.h"
 
+#include <memory>
 #include <string>
 
 using namespace PAPI;
@@ -15,12 +16,17 @@ using namespace PAPI;
 
 class EffectsManager;
 
-// Execution modes
+// Execution modes:
+// 1) Immediate mode - just do the actions each frame; the only mode that works with varying inputs right now
+// 2) Internal mode  - compile an action list at program start and call it each frame
+// 3) Compiled mode  - set it to Emit_Mode at program start to compile the action lists,
+//                     then per frame set it to Varying_Mode and do the actions to grab the current values of all the varying parameters
+//                     then bind the compiled program and call it in Compiled_Mode to run it with the varying parameters
 enum ExecMode_e {
-    Immediate_Mode, // Apply the actions to the particles right now
-    Internal_Mode,  // Build an action list once and call it each frame
+    Immediate_Mode, // Apply the actions to the particles right now with no action list
+    Internal_Mode,  // Build an action list once at program start and call it each frame
     Compiled_Mode,  // Execute a compiled action list
-    Varying_Mode,   // Create the action list each frame
+    Varying_Mode,   // Create the action list each frame just for passing the varying structure into the previously compiled action list
     Emit_Mode       // Build an action list for emitting
 };
 
@@ -41,13 +47,16 @@ public:
     int AList;                                   // The action list handle
     P_PARTICLE_EMITTED_ACTION_LIST CompiledFunc; // Remember how we bound this so we can unbind/rebind it when the app wants to run differently
     EmitCodeParams_e BIND_KIND;
+    std::vector<std::shared_ptr<pDomain>> Renderables; // A list of domains to render in the app
 
     Effect(EffectsManager& Efx);
 
     void CreateList(ExecMode_e EM, EffectsManager& Efx);
     void BindEmitted(EffectsManager& Efx, P_PARTICLE_EMITTED_ACTION_LIST, EmitCodeParams_e);
+    const pDomain& Effect::Render(const pDomain& dom);
+
     virtual const std::string GetName() const = 0;
-    virtual void DoActions(EffectsManager& Efx) const = 0;     // Call the actions the go in the action list and get executed per frame
+    virtual void DoActions(EffectsManager& Efx) = 0;           // Call the actions the go in the action list and get executed per frame
     virtual void PerFrame(ExecMode_e EM, EffectsManager& Efx); // Set varying state to values for current frame
     virtual void EmitList(EffectsManager& Efx);                // Set varying state to VARYING for emitting the action list as code
     virtual void StartEffect(EffectsManager& Efx) {}           // Initialize internal variables and set up anything else for the start of this effect
@@ -59,7 +68,7 @@ struct Atom : public Effect {
     Atom(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Atom"; }
     void EmitList(EffectsManager& Efx);
-    void DoActions(EffectsManager& Efx) const;
+    void DoActions(EffectsManager& Efx);
     void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
 };
@@ -69,7 +78,7 @@ struct Balloons : public Effect {
     Balloons(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Balloons"; }
     void EmitList(EffectsManager& Efx);
-    void DoActions(EffectsManager& Efx) const;
+    void DoActions(EffectsManager& Efx);
     void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
 };
@@ -78,7 +87,7 @@ struct Balloons : public Effect {
 struct BounceToy : public Effect {
     BounceToy(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "BounceToy"; }
-    void DoActions(EffectsManager& Efx) const;
+    void DoActions(EffectsManager& Efx);
 };
 
 // An explosion from the center of the universe, followed by gravity
@@ -88,7 +97,7 @@ struct Explosion : public Effect {
     Explosion(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Explosion"; }
     void EmitList(EffectsManager& Efx);
-    void DoActions(EffectsManager& Efx) const;
+    void DoActions(EffectsManager& Efx);
     void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
 };
@@ -97,7 +106,7 @@ struct Explosion : public Effect {
 struct Fireflies : public Effect {
     Fireflies(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Fireflies"; }
-    void DoActions(EffectsManager& Efx) const;
+    void DoActions(EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
 };
 
@@ -110,7 +119,7 @@ struct Fireworks : public Effect {
     Fireworks(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Fireworks"; }
     void EmitList(EffectsManager& Efx);
-    void DoActions(EffectsManager& Efx) const;
+    void DoActions(EffectsManager& Efx);
     void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
 };
@@ -122,7 +131,7 @@ struct FlameThrower : public Effect {
     FlameThrower(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "FlameThrower"; }
     void EmitList(EffectsManager& Efx);
-    void DoActions(EffectsManager& Efx) const;
+    void DoActions(EffectsManager& Efx);
     void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
 };
@@ -132,7 +141,7 @@ struct Fountain : public Effect {
     Fountain(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     void EmitList(EffectsManager& Efx);
     const std::string GetName() const { return "Fountain"; }
-    void DoActions(EffectsManager& Efx) const;
+    void DoActions(EffectsManager& Efx);
     void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
 };
@@ -141,7 +150,7 @@ struct Fountain : public Effect {
 struct GridShape : public Effect {
     GridShape(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "GridShape"; }
-    void DoActions(EffectsManager& Efx) const;
+    void DoActions(EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
 };
 
@@ -152,7 +161,7 @@ struct JetSpray : public Effect {
     JetSpray(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "JetSpray"; }
     void EmitList(EffectsManager& Efx);
-    void DoActions(EffectsManager& Efx) const;
+    void DoActions(EffectsManager& Efx);
     void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
 };
@@ -164,7 +173,7 @@ struct Orbit2 : public Effect {
     Orbit2(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Orbit2"; }
     void EmitList(EffectsManager& Efx);
-    void DoActions(EffectsManager& Efx) const;
+    void DoActions(EffectsManager& Efx);
     void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
 };
@@ -173,7 +182,7 @@ struct Orbit2 : public Effect {
 struct PhotoShape : public Effect {
     PhotoShape(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "PhotoShape"; }
-    void DoActions(EffectsManager& Efx) const;
+    void DoActions(EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
 
 private:
@@ -184,7 +193,7 @@ struct Rain : public Effect {
     Rain(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Rain"; }
     void EmitList(EffectsManager& Efx);
-    void DoActions(EffectsManager& Efx) const;
+    void DoActions(EffectsManager& Efx);
     void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
 };
@@ -196,7 +205,7 @@ struct Restore : public Effect {
     Restore(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Restore"; }
     void EmitList(EffectsManager& Efx);
-    void DoActions(EffectsManager& Efx) const;
+    void DoActions(EffectsManager& Efx);
     void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
 };
@@ -209,7 +218,7 @@ struct Shower : public Effect {
     Shower(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Shower"; }
     void EmitList(EffectsManager& Efx);
-    void DoActions(EffectsManager& Efx) const;
+    void DoActions(EffectsManager& Efx);
     void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
 };
@@ -218,7 +227,7 @@ struct Shower : public Effect {
 struct Snake : public Effect {
     Snake(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Snake"; }
-    void DoActions(EffectsManager& Efx) const;
+    void DoActions(EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
 };
 
@@ -229,7 +238,7 @@ struct Sphere : public Effect {
     Sphere(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Sphere"; }
     void EmitList(EffectsManager& Efx);
-    void DoActions(EffectsManager& Efx) const;
+    void DoActions(EffectsManager& Efx);
     void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
 };
@@ -241,7 +250,7 @@ struct Swirl : public Effect {
     Swirl(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Swirl"; }
     void EmitList(EffectsManager& Efx);
-    void DoActions(EffectsManager& Efx) const;
+    void DoActions(EffectsManager& Efx);
     void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
 };
@@ -250,7 +259,7 @@ struct Swirl : public Effect {
 struct Tornado : public Effect {
     Tornado(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Tornado"; }
-    void DoActions(EffectsManager& Efx) const;
+    void DoActions(EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
 };
 
@@ -258,13 +267,11 @@ struct Tornado : public Effect {
 struct Waterfall : public Effect {
     Waterfall(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Waterfall"; }
-    void DoActions(EffectsManager& Efx) const;
+    void DoActions(EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
 };
 
 //////////////////////////////////////////////////////////////////////////////
-
-typedef void (*E_RENDER_GEOMETRY_CB)(const int SteerShape);
 
 class EffectsManager {
 public:
@@ -273,15 +280,15 @@ public:
     std::vector<Effect*> Effects;
 
     ParticleContext_t& P;
-    E_RENDER_GEOMETRY_CB RenderGeometry; // A callback function to render geometry of particle interaction objects
-    pVec GravityVec;                     // Gravity goes in this direction for all effects that use it
-    pVec center = {0.f, 0.f, 5.f};       // Coordinates of the center of interest of particle effects
-    Effect* Demo;                        // Pointer to the current demo
-    int maxParticles;                    // The number of particles the app wants in this demo
-    int simStepsPerFrame;                // The number of simulation time steps per rendered frame
-    float timeStep;                      // Dt, duration of time step (after acounting for simStepsPerFrame)
-    float demoRunSec;                    // Seconds to run each demo before randomly changing
-    int particleHandle;                  // The handle of the particle group
+    pVec GravityVec;               // Gravity goes in this direction for all effects that use it
+    pVec center = {0.f, 0.f, 5.f}; // Coordinates of the center of interest of particle effects
+    Effect* Demo;                  // Pointer to the current demo
+    int demoNum;                   // Index of the current demo
+    int maxParticles;              // The number of particles the app wants in this demo
+    int simStepsPerFrame;          // The number of simulation time steps per rendered frame
+    float timeStep;                // Dt, duration of time step (after acounting for simStepsPerFrame)
+    float demoRunSec;              // Seconds to run each demo before randomly changing
+    int particleHandle;            // The handle of the particle group
 
     void SetPhoto(uc3Image* Im)
     {
@@ -290,11 +297,10 @@ public:
     }
     const std::string GetCurEffectName() { return Demo->GetName(); }
 
-    EffectsManager(ParticleContext_t& P_, int mp = 100, E_RENDER_GEOMETRY_CB RG = NULL);
+    EffectsManager(ParticleContext_t& P_, int mp = 100);
 
-    // Call this to get a demo by number.
-    // Returns the DemoNum chosen.
-    int CallDemo(int DemoNum, ExecMode_e EM);
+    void ChooseDemo(int newDemoNum, ExecMode_e EM); // Choose a demo by number
+    void RunDemoFrame(ExecMode_e EM);
 
     void MakeEffects();
     void MakeActionLists(ExecMode_e EM);
