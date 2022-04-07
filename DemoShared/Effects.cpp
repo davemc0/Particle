@@ -656,6 +656,8 @@ void Shower::DoActions(EffectsManager& Efx)
         P.Avoid(2.f, 1.f, lookAheadTime, Render(PDRectangle(pVec(0, -1, 0.1f), pVec(2, 1, 0), pVec(0, 2, 0))));
     } else if (SteerShape == STEER_PLANE) {
         P.Avoid(2.f, 1.f, lookAheadTime, Render(PDPlane(pVec(0, 0, 0.1f), pVec(0, 0, 1))));
+    } else if (SteerShape == STEER_DISC) {
+        P.Avoid(2.f, 1.f, lookAheadTime, Render(PDDisc(pVec(0, 0, 0.1f), pVec(0, 0, 1), 1.f, 0.f)));
     } else if (SteerShape == P_VARYING_INT) {
         P.Avoid(2.f, 1.f, lookAheadTime, PDVarying());
     }
@@ -684,7 +686,7 @@ void Shower::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 void Shower::StartEffect(EffectsManager& Efx)
 {
     particleRate = min(100.f, Efx.maxParticles / particleLifetime);
-    SteerShape = irand(4);
+    SteerShape = irand(STEER_VARYING);
     jet = Efx.center;
     djet = pRandVec() * 0.02f;
     djet.z() = 0.0f;
