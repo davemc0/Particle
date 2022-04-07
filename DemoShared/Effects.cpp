@@ -16,7 +16,7 @@ namespace {
 // Make an image for use by the PhotoShape effect if -photo wasn't specified on the command line
 uc3Image* MakeFakeImage()
 {
-    const int SZ = 64;
+    const int SZ = 512;
     const float MX = SZ * 0.5;
     const float MN = SZ * 0.25;
     uc3Image* Img = new uc3Image(SZ, SZ);
@@ -71,9 +71,12 @@ void Effect::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 
     ParticleContext_t& P = Efx.P;
 
-    if (EM == Varying_Mode) P.NewActionList(AList);
+    if (EM == Varying_Mode) P.NewActionList(AList); // Create an action list to store current values of varying parameters
 
-    if (EM == Immediate_Mode || EM == Varying_Mode) DoActions(Efx);
+    if (EM == Immediate_Mode || EM == Varying_Mode) {
+        Renderables.clear(); // DoActions fills in the Renderables, so clear it before calling DoActions
+        DoActions(Efx);
+    }
 
     if (EM == Varying_Mode) P.EndActionList();
 
@@ -87,6 +90,7 @@ void Effect::CreateList(ExecMode_e EM, EffectsManager& Efx)
 
     ParticleContext_t& P = Efx.P;
     if (AList < 0) AList = P.GenActionLists();
+    Renderables.clear(); // DoActions fills in the Renderables, so clear it before calling DoActions
     P.NewActionList(AList);
     DoActions(Efx);
     P.EndActionList();
@@ -96,7 +100,7 @@ void Effect::CreateList(ExecMode_e EM, EffectsManager& Efx)
 void Effect::EmitList(EffectsManager& Efx)
 {
     CreateList(Emit_Mode, Efx);
-    StartEffect(Efx); // Should call the derived class.
+    StartEffect(Efx); // Calls the derived class.
 }
 
 int Effect::NextEffect(EffectsManager& Efx) { return irand(Efx.getNumEffects()); }
@@ -108,10 +112,17 @@ void Effect::BindEmitted(EffectsManager& Efx, P_PARTICLE_EMITTED_ACTION_LIST Fun
     BIND_KIND = Params;
 }
 
+// A nonvirtual function to insert the renderable domain into this effect's renderable list
+const pDomain& Effect::Render(const pDomain& dom)
+{
+    Renderables.push_back(std::shared_ptr<pDomain>(dom.copy()));
+    return dom;
+}
+
 //////////////////////////////////////////////////////////////////////////////
 
 // Particles orbiting a center
-void Atom::DoActions(EffectsManager& Efx) const
+void Atom::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -141,7 +152,7 @@ void Atom::PerFrame(ExecMode_e EM, EffectsManager& Efx) { Effect::PerFrame(EM ==
 void Atom::StartEffect(EffectsManager& Efx) { particleRate = Efx.maxParticles / particleLifetime; }
 
 // A bunch of balloons
-void Balloons::DoActions(EffectsManager& Efx) const
+void Balloons::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
 
@@ -166,6 +177,7 @@ void Balloons::DoActions(EffectsManager& Efx) const
     P.RandomAccel(PDBox(pVec(-BOX), pVec(BOX)));
     P.Move(true, false);
     P.KillOld(7.f);
+    P.Sink(false, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
 }
 
 void Balloons::EmitList(EffectsManager& Efx)
@@ -178,7 +190,7 @@ void Balloons::PerFrame(ExecMode_e EM, EffectsManager& Efx) { Effect::PerFrame(E
 
 void Balloons::StartEffect(EffectsManager& Efx) { particleRate = Efx.maxParticles / particleLifetime; }
 
-void BounceToy::DoActions(EffectsManager& Efx) const
+void BounceToy::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
 
@@ -196,26 +208,26 @@ void BounceToy::DoActions(EffectsManager& Efx) const
 
     P.Gravity(Efx.GravityVec);
 
-    P.Bounce(Fric, Res, Cutoff, PDRectangle(C + pVec(-4, -2, 6), pVec(4, 0, 1), Side));
-    P.Bounce(Fric, Res, Cutoff, PDRectangle(C + pVec(4, -2, 8), pVec(4, 0, -3), Side));
-    P.Bounce(Fric, Res, Cutoff, PDRectangle(C + pVec(-1, -2, 6), pVec(2, 0, -2), Side));
-    P.Bounce(Fric, Res, Cutoff, PDRectangle(C + pVec(1, -2, 2), pVec(4, 0, 2), Side));
-    P.Bounce(Fric, Res, Cutoff, PDRectangle(C + pVec(-6, -2, 6), pVec(3, 0, -5), Side));
-    P.Bounce(Fric, Res, Cutoff, PDRectangle(C + pVec(6, -2, 2), pVec(5, 0, 3), Side));
-    P.Bounce(Fric, Res, Cutoff, PDRectangle(C + pVec(4, -2, -1), pVec(5, 0, 1.5), Side));
-    P.Bounce(Fric, Res, Cutoff, PDRectangle(C + pVec(-3, -2, -1), pVec(5, 0, -1), Side));
-    P.Bounce(Fric, Res, Cutoff, PDRectangle(C + pVec(-8, -2, -4.1), pVec(14, 0, 2), Side));
-    P.Bounce(Fric, Res, Cutoff, PDRectangle(C + pVec(-10, -2, 5), pVec(4, 0, 5), Side));
+    P.Bounce(Fric, Res, Cutoff, Render(PDRectangle(C + pVec(-4, -2, 6), pVec(4, 0, 1), Side)));
+    P.Bounce(Fric, Res, Cutoff, Render(PDRectangle(C + pVec(4, -2, 8), pVec(4, 0, -3), Side)));
+    P.Bounce(Fric, Res, Cutoff, Render(PDRectangle(C + pVec(-1, -2, 6), pVec(2, 0, -2), Side)));
+    P.Bounce(Fric, Res, Cutoff, Render(PDRectangle(C + pVec(1, -2, 2), pVec(4, 0, 2), Side)));
+    P.Bounce(Fric, Res, Cutoff, Render(PDRectangle(C + pVec(-6, -2, 6), pVec(3, 0, -5), Side)));
+    P.Bounce(Fric, Res, Cutoff, Render(PDRectangle(C + pVec(6, -2, 2), pVec(5, 0, 3), Side)));
+    P.Bounce(Fric, Res, Cutoff, Render(PDRectangle(C + pVec(4, -2, -1), pVec(5, 0, 1.5), Side)));
+    P.Bounce(Fric, Res, Cutoff, Render(PDRectangle(C + pVec(-3, -2, -1), pVec(5, 0, -1), Side)));
+    P.Bounce(0.05f, Res, 0, Render(PDRectangle(C + pVec(-8, -2, -4.1), pVec(14, 0, 2), Side)));
+    P.Bounce(Fric, Res, Cutoff, Render(PDRectangle(C + pVec(-10, -2, 5), pVec(4, 0, 5), Side)));
 
-    P.Jet(PDBox(C + pVec(-10, -2, -6), C + pVec(-8, 2, -1)), PDPoint(pVec(0.0, 0.0, 9.0f)));
+    P.Jet(Render(PDBox(C + pVec(-10, -2, -6), C + pVec(-8, 2, -1))), PDPoint(pVec(0.0, 0.0, 100.f)));
     P.TargetColor(pVec(0, 0, 1), 1, 0.04);
     P.Move(true, false);
 
-    P.Sink(false, PDPlane(pVec(0, 0, -7), pVec(0, 0, 1)));
+    P.Sink(false, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
 }
 
 // An explosion from the center of the universe, followed by gravity toward a point
-void Explosion::DoActions(EffectsManager& Efx) const
+void Explosion::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
     P.Damping(pVec(0.999));
@@ -240,7 +252,7 @@ void Explosion::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 void Explosion::StartEffect(EffectsManager& Efx) { time_since_start = 0; }
 
 // Fireflies bobbing around
-void Fireflies::DoActions(EffectsManager& Efx) const
+void Fireflies::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -254,12 +266,13 @@ void Fireflies::DoActions(EffectsManager& Efx) const
     P.Move(true, false);
 
     P.KillOld(1.7f);
+    P.Sink(false, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
 }
 
 void Fireflies::StartEffect(EffectsManager& Efx) { particleRate = 5000.f; }
 
 // Rocket-style fireworks
-void Fireworks::DoActions(EffectsManager& Efx) const
+void Fireworks::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
 
@@ -282,6 +295,18 @@ void Fireworks::DoActions(EffectsManager& Efx) const
     P.KillOld(particleLifetime);
 }
 
+void Fireworks::EmitList(EffectsManager& Efx)
+{
+    // For emitting we have a constant max number of rockets and vary their params.
+    NumRockets = MaxRockets;
+    for (int i = 0; i < NumRockets; i++) {
+        rocketPos[i] = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
+        rocketColor[i] = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
+    }
+    particleRate = P_VARYING_FLOAT;
+    Effect::EmitList(Efx);
+}
+
 void Fireworks::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
@@ -296,7 +321,7 @@ void Fireworks::PerFrame(ExecMode_e EM, EffectsManager& Efx)
     S.Color(PDBox(pVec(0, 0.5, 0), pVec(1, 1, 1)));
     P.Source(1000, PDDisc(pVec(0, 0, 0), pVec(0, 0, 1), 12.f), S);
 
-    P.Sink(false, PDPlane(pVec(0, 0, -1), pVec(0, 0, 1)));
+    P.Sink(false, Render(PDPlane(pVec(0, 0, -1), pVec(0, 0, 1))));
     P.Gravity(Efx.GravityVec);
     P.Move(true, false);
 
@@ -308,18 +333,6 @@ void Fireworks::PerFrame(ExecMode_e EM, EffectsManager& Efx)
     if (Efx.particleHandle >= 0) P.CurrentGroup(Efx.particleHandle);
 
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
-}
-
-void Fireworks::EmitList(EffectsManager& Efx)
-{
-    // For emitting we have a constant max number of rockets and vary their params.
-    NumRockets = MaxRockets;
-    for (int i = 0; i < NumRockets; i++) {
-        rocketPos[i] = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
-        rocketColor[i] = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
-    }
-    particleRate = P_VARYING_FLOAT;
-    Effect::EmitList(Efx);
 }
 
 void Fireworks::StartEffect(EffectsManager& Efx)
@@ -337,7 +350,7 @@ void Fireworks::StartEffect(EffectsManager& Efx)
 }
 
 // It's like a flame thrower spinning around
-void FlameThrower::DoActions(EffectsManager& Efx) const
+void FlameThrower::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -380,7 +393,7 @@ void FlameThrower::StartEffect(EffectsManager& Efx)
 }
 
 // A fountain spraying up in the middle of the screen
-void Fountain::DoActions(EffectsManager& Efx) const
+void Fountain::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -390,10 +403,10 @@ void Fountain::DoActions(EffectsManager& Efx) const
     P.Source(particleRate, PDLine(pVec(0.0, 0.0, 1.f), pVec(0.0, 0.0, 1.4f)), S);
 
     P.Gravity(Efx.GravityVec);
-    P.Bounce(0.f, 0.5f, 0.f, PDDisc(pVec(0, 0, 1.f), pVec(0, 0, 1.f), 5));
+    P.Bounce(0.f, 0.5f, 0.f, Render(PDDisc(pVec(0, 0, 1.f), pVec(0, 0, 1.f), 5)));
     P.Move(true, false);
 
-    P.Sink(false, PDPlane(pVec(0, 0, -3), pVec(0, 0, 1)));
+    P.Sink(false, Render(PDPlane(pVec(0, 0, -3), pVec(0, 0, 1))));
     P.SinkVelocity(true, PDSphere(pVec(0, 0, 0), 0.01));
 }
 
@@ -408,7 +421,7 @@ void Fountain::PerFrame(ExecMode_e EM, EffectsManager& Efx) { Effect::PerFrame(E
 void Fountain::StartEffect(EffectsManager& Efx) { particleRate = Efx.maxParticles / particleLifetime; }
 
 // A bunch of particles in a grid shape
-void GridShape::DoActions(EffectsManager& Efx) const
+void GridShape::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
     P.Move(true, false);
@@ -418,9 +431,9 @@ void GridShape::StartEffect(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
 
-    if (P.GetGroupCount() * 2 > P.GetMaxParticles()) { // Is there room to add the formation without deleting everything?
-        P.KillOld(0);
-        P.KillOld(1, true);
+    if (P.GetGroupCount() * 2 > P.GetMaxParticles()) { // Is there room to add the formation without deleting anything?
+        P.SetMaxParticles(P.GetMaxParticles() / 2);
+        P.SetMaxParticles(P.GetMaxParticles() * 2);
     }
     int numNewParticles = (int)P.GetMaxParticles() - (int)P.GetGroupCount();
 
@@ -449,7 +462,7 @@ void GridShape::StartEffect(EffectsManager& Efx)
 
 // It's like a fan cruising around under a floor, blowing up on some ping pong balls.
 // Like you see in real life.
-void JetSpray::DoActions(EffectsManager& Efx) const
+void JetSpray::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -463,9 +476,9 @@ void JetSpray::DoActions(EffectsManager& Efx) const
 
     P.Gravity(Efx.GravityVec);
 
-    P.Jet(PDSphere(jet, 1.5), PDBlob(pVec(0, 0, 200.f), 40.f));
-    P.Bounce(0.1, 0.3, 0.1, PDRectangle(pVec(-10, -10, 0.0), pVec(20, 0, 0), pVec(0, 20, 0)));
-    P.Sink(false, PDPlane(pVec(0, 0, -10), pVec(0, 0, 1)));
+    P.Jet(Render(PDSphere(jet, 1.5)), PDBlob(pVec(0, 0, 200.f), 40.f));
+    P.Bounce(0.1, 0.3, 0.1, Render(PDRectangle(pVec(-10, -10, 0.0), pVec(20, 0, 0), pVec(0, 20, 0))));
+    P.Sink(false, Render(PDPlane(pVec(0, 0, -10), pVec(0, 0, 1))));
     P.Move(true, false);
 }
 
@@ -491,7 +504,7 @@ void JetSpray::StartEffect(EffectsManager& Efx)
 }
 
 // A sprayer with particles that orbit two points
-void Orbit2::DoActions(EffectsManager& Efx) const
+void Orbit2::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -530,7 +543,7 @@ void Orbit2::StartEffect(EffectsManager& Efx)
 }
 
 // A bunch of particles in the shape of a photo
-void PhotoShape::DoActions(EffectsManager& Efx) const
+void PhotoShape::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
     P.Move(true, false);
@@ -540,9 +553,9 @@ void PhotoShape::StartEffect(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
 
-    if (P.GetGroupCount() * 2 > P.GetMaxParticles()) { // Is there room to add the formation without deleting everything?
-        P.KillOld(0);
-        P.KillOld(1, true);
+    if (P.GetGroupCount() * 2 > P.GetMaxParticles()) { // Is there room to add the formation without deleting anything?
+        P.SetMaxParticles(P.GetMaxParticles() / 2);
+        P.SetMaxParticles(P.GetMaxParticles() * 2);
     }
     int numNewParticles = (int)P.GetMaxParticles() - (int)P.GetGroupCount();
 
@@ -571,7 +584,7 @@ void PhotoShape::StartEffect(EffectsManager& Efx)
 }
 
 // It kinda looks like rain hitting a parking lot
-void Rain::DoActions(EffectsManager& Efx) const
+void Rain::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -582,7 +595,7 @@ void Rain::DoActions(EffectsManager& Efx) const
     float D = 200;
     P.Source(particleRate, PDRectangle(pVec(-D / 2, -D / 2, 15), pVec(D, 0, 0), pVec(0, D, 0)), S);
     P.Gravity(Efx.GravityVec);
-    P.Bounce(0.3, 0.3, 0, PDPlane(pVec(0, 0, 0), pVec(0, 0, 1)));
+    P.Bounce(0.3, 0.3, 0, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
     P.Move(true, false);
 
     P.KillOld(particleLifetime);
@@ -599,7 +612,7 @@ void Rain::PerFrame(ExecMode_e EM, EffectsManager& Efx) { Effect::PerFrame(EM ==
 void Rain::StartEffect(EffectsManager& Efx) { particleRate = Efx.maxParticles / particleLifetime; }
 
 // Restore particles to their PositionB and UpVecB.
-void Restore::DoActions(EffectsManager& Efx) const
+void Restore::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
     P.Restore(time_left);
@@ -621,7 +634,7 @@ void Restore::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 void Restore::StartEffect(EffectsManager& Efx) { time_left = Efx.demoRunSec; }
 
 // A sheet of particles falling down, avoiding various-shaped obstacles
-void Shower::DoActions(EffectsManager& Efx) const
+void Shower::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -636,13 +649,13 @@ void Shower::DoActions(EffectsManager& Efx) const
     const float lookAheadTime = 2.f;
 
     if (SteerShape == STEER_SPHERE) {
-        P.Avoid(2.f, 1.f, lookAheadTime, PDSphere(pVec(0, 0, 0), 1.f));
+        P.Avoid(2.f, 1.f, lookAheadTime, Render(PDSphere(pVec(0, 0, 0), 1.f)));
     } else if (SteerShape == STEER_TRIANGLE) {
-        P.Avoid(2.f, 1.f, lookAheadTime, PDTriangle(pVec(0, -1, 0.1f), pVec(2, 0, 0.1f), pVec(0, 2, 0.1f)));
+        P.Avoid(2.f, 1.f, lookAheadTime, Render(PDTriangle(pVec(0, -1, 0.1f), pVec(2, 0, 0.1f), pVec(0, 2, 0.1f))));
     } else if (SteerShape == STEER_RECTANGLE) {
-        P.Avoid(2.f, 1.f, lookAheadTime, PDRectangle(pVec(0, -1, 0.1f), pVec(2, 1, 0), pVec(0, 2, 0)));
+        P.Avoid(2.f, 1.f, lookAheadTime, Render(PDRectangle(pVec(0, -1, 0.1f), pVec(2, 1, 0), pVec(0, 2, 0))));
     } else if (SteerShape == STEER_PLANE) {
-        P.Avoid(2.f, 1.f, lookAheadTime, PDPlane(pVec(0, 0, 0.1f), pVec(0, 0, 1)));
+        P.Avoid(2.f, 1.f, lookAheadTime, Render(PDPlane(pVec(0, 0, 0.1f), pVec(0, 0, 1))));
     } else if (SteerShape == P_VARYING_INT) {
         P.Avoid(2.f, 1.f, lookAheadTime, PDVarying());
     }
@@ -665,8 +678,6 @@ void Shower::PerFrame(ExecMode_e EM, EffectsManager& Efx)
     jet += djet;
     djet.z() = 0;
 
-    if (Efx.RenderGeometry != NULL) Efx.RenderGeometry(SteerShape);
-
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
 
@@ -680,7 +691,7 @@ void Shower::StartEffect(EffectsManager& Efx)
 }
 
 // A bunch of particles in a line that are attracted to the one after them in the list
-void Snake::DoActions(EffectsManager& Efx) const
+void Snake::DoActions(EffectsManager& Efx)
 {
     // Add new particles to attract the older ones back toward the center
     ParticleContext_t& P = Efx.P;
@@ -688,7 +699,7 @@ void Snake::DoActions(EffectsManager& Efx) const
     S.Color(1, 0, 0);
     S.Velocity(PDSphere(pVec(0.f), 0.1f)); // This makes it able to compute a binormal.
     float BOX = .5f;
-    P.Source(particleRate, PDBox(pVec(-BOX), pVec(BOX)), S);
+    P.Source(particleRate, Render(PDBox(pVec(-BOX), pVec(BOX))), S);
 
     P.Follow(10.f, 1.0f);
     // P.Gravitate(10.f, 1.0f); // Gives an interesting effect, but very slow
@@ -705,7 +716,7 @@ void Snake::StartEffect(EffectsManager& Efx)
 }
 
 // A bunch of particles inside a sphere
-void Sphere::DoActions(EffectsManager& Efx) const
+void Sphere::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -718,7 +729,7 @@ void Sphere::DoActions(EffectsManager& Efx) const
     P.Source(particleRate, PDPoint(pVec(1, 0, 8)), S);
 
     P.Gravity(Efx.GravityVec);
-    P.Bounce(0, 0.55, 0, PDSphere(Efx.center, 5));
+    P.Bounce(0, 0.55, 0, Render(PDSphere(Efx.center, 5)));
     P.Move(true, false);
 
     P.KillOld(particleLifetime);
@@ -744,7 +755,7 @@ void Sphere::StartEffect(EffectsManager& Efx)
 }
 
 // A sprayer with particles orbiting a line
-void Swirl::DoActions(EffectsManager& Efx) const
+void Swirl::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -762,7 +773,12 @@ void Swirl::DoActions(EffectsManager& Efx) const
     P.KillOld(particleLifetime);
 }
 
-void Swirl::EmitList(EffectsManager& Efx) { Effect::EmitList(Efx); }
+void Swirl::EmitList(EffectsManager& Efx)
+{
+    particleRate = P_VARYING_FLOAT;
+    jet = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
+    Effect::EmitList(Efx);
+}
 
 void Swirl::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
@@ -779,7 +795,7 @@ void Swirl::StartEffect(EffectsManager& Efx)
 
 // A tornado that tests the vortex action
 // TODO: Change it to move around a bed of particles like JetSpray and suck them up
-void Tornado::DoActions(EffectsManager& Efx) const
+void Tornado::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -787,7 +803,7 @@ void Tornado::DoActions(EffectsManager& Efx) const
     S.Velocity(PDPoint(pVec(0, 0, 0)));
     S.Color(PDLine(pVec(.0, .8, .8), pVec(1, 1, 1)));
     S.StartingAge(0);
-    P.Source(particleRate, PDLine(pVec(-7, 0, 15), pVec(7, 0, 15)), S);
+    P.Source(particleRate, Render(PDLine(pVec(-7, 0, 15), pVec(7, 0, 15))), S);
 
     P.Damping(pVec(.95));
     P.Gravity(Efx.GravityVec);
@@ -795,13 +811,13 @@ void Tornado::DoActions(EffectsManager& Efx) const
     P.Move(true, false);
 
     P.KillOld(particleLifetime);
-    P.Sink(false, PDPlane(pVec(0, 0, -2), pVec(0, 0, 1)));
+    P.Sink(false, Render(PDPlane(pVec(0, 0, -2), pVec(0, 0, 1))));
 }
 
 void Tornado::StartEffect(EffectsManager& Efx) { particleRate = Efx.maxParticles / particleLifetime; }
 
 // A waterfall bouncing off invisible rocks
-void Waterfall::DoActions(EffectsManager& Efx) const
+void Waterfall::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
@@ -809,14 +825,14 @@ void Waterfall::DoActions(EffectsManager& Efx) const
     S.Velocity(PDBlob(pVec(3.f, -0.1f, 1.f) * s, 0.2f * s));
     S.Color(PDLine(pVec(0.8, 0.9, 1.0), pVec(1.0, 1.0, 1.0)));
     S.Size(pVec(1.5));
-    P.Source(particleRate, PDLine(pVec(-5, -1, 8), pVec(-5, -3, 8)), S);
+    P.Source(particleRate, Render(PDLine(pVec(-5, -1, 8), pVec(-5, -3, 8))), S);
 
     P.Gravity(Efx.GravityVec);
-    P.Bounce(0, 0.35, 0, PDRectangle(pVec(-7, -4, 7), pVec(3, 0, 0), pVec(0, 3, 0)));
-    P.Bounce(0, 0.5, 0, PDSphere(pVec(-4, -1, 6), 0.5));
-    P.Bounce(0, 0.5, 0, PDSphere(pVec(-3.5, 0, 2), 2));
-    P.Bounce(0, 0.5, 0, PDSphere(pVec(3.8, 0, 0), 2));
-    P.Bounce(-0.01, 0.35, 0, PDPlane(pVec(0, 0, 0), pVec(0, 0, 1)));
+    P.Bounce(0, 0.35, 0, Render(PDRectangle(pVec(-7, -4, 7), pVec(3, 0, 0), pVec(0, 3, 0))));
+    P.Bounce(0, 0.5, 0, Render(PDSphere(pVec(-4, -1, 6), 0.5)));
+    P.Bounce(0, 0.5, 0, Render(PDSphere(pVec(-3.5, 0, 2), 2)));
+    P.Bounce(0, 0.5, 0, Render(PDSphere(pVec(3.8, 0, 0), 2)));
+    P.Bounce(-0.01, 0.35, 0, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
     P.Move(true, false);
 
     P.KillOld(particleLifetime);
@@ -827,7 +843,7 @@ void Waterfall::StartEffect(EffectsManager& Efx) { particleRate = Efx.maxParticl
 
 //////////////////////////////////////////////////////////////////////////////
 
-EffectsManager::EffectsManager(ParticleContext_t& P_, int mp, E_RENDER_GEOMETRY_CB RG) : P(P_), RenderGeometry(RG)
+EffectsManager::EffectsManager(ParticleContext_t& P_, int mp) : P(P_)
 {
     Img = MakeFakeImage();
     maxParticles = mp;
@@ -841,29 +857,35 @@ EffectsManager::EffectsManager(ParticleContext_t& P_, int mp, E_RENDER_GEOMETRY_
 
 // EM specifies how you want to run (for different benchmark purposes, mostly).
 // Allowed values are Immediate_Mode, Internal_Mode, and Compiled_Mode.
-// Set DemoNum to -2 to let NextEffect choose the next demo.
-int EffectsManager::CallDemo(int DemoNum, ExecMode_e EM)
+// Set demoNum to -2 to let NextEffect choose the next demo.
+void EffectsManager::ChooseDemo(int newDemoNum, ExecMode_e EM)
 {
-    if (DemoNum == -1) DemoNum = getNumEffects() - 1;
-    DemoNum = DemoNum % getNumEffects();
+    EASSERT(EM == Immediate_Mode || EM == Internal_Mode || EM == Compiled_Mode);
 
-    if (DemoNum < 0 || Effects[DemoNum] != Demo) {
-        // Transitioning, so call NextEffect() and StartEffect().
-        if (DemoNum < 0 && Demo != NULL)
-            DemoNum = Demo->NextEffect(*this); // The effect will tell us what the next effect should be
-        else if (Demo == NULL)
-            DemoNum = irand(getNumEffects());
+    demoNum = newDemoNum;
+    if (demoNum == -1) demoNum = getNumEffects() - 1;
+    demoNum = demoNum % getNumEffects();
 
-        EASSERT(DemoNum >= 0 && DemoNum < getNumEffects());
-        Demo = Effects[DemoNum];
+    if (demoNum < 0)
+        if (Demo != NULL)
+            demoNum = Demo->NextEffect(*this); // The effect will tell us what the next effect should be
+        else
+            demoNum = irand(getNumEffects());
 
-        Demo->StartEffect(*this);
-    }
+    EASSERT(demoNum >= 0 && demoNum < getNumEffects());
+    Demo = Effects[demoNum];
 
+    Demo->StartEffect(*this);
+}
+
+// EM specifies how you want to run (for different benchmark purposes, mostly).
+// Allowed values are Immediate_Mode, Internal_Mode, and Compiled_Mode.
+void EffectsManager::RunDemoFrame(ExecMode_e EM)
+{
     EASSERT(EM == Immediate_Mode || EM == Internal_Mode || EM == Compiled_Mode);
 
     if (EM == Internal_Mode && Demo->CompiledFunc != NULL) {
-        // The AL is set up for compiled mode; need to switch it to internal mode
+        // User requested internal mode but the AL is set up for compiled mode; need to switch it to internal mode
         P.BindEmittedActionList(Demo->AList, NULL, P_INTERNAL_CODE);
     }
 
@@ -873,8 +895,6 @@ int EffectsManager::CallDemo(int DemoNum, ExecMode_e EM)
         // We switched the AL to internal mode. Now switch it back.
         P.BindEmittedActionList(Demo->AList, Demo->CompiledFunc, Demo->BIND_KIND);
     }
-
-    return DemoNum;
 }
 
 void EffectsManager::MakeEffects()
@@ -905,25 +925,3 @@ void EffectsManager::MakeActionLists(ExecMode_e EM)
 {
     for (auto e : Effects) { e->CreateList(EM, *this); }
 }
-
-//////////////////////////////////////////////////////////////////////////////
-
-#if 0
-    // Friction: 0 means don't slow its tangential velocity. Bigger than 0 means do.
-    // Cutoff: If less than cutoff, don't apply friction.
-    // Resilience: Scales velocity in normal direction. Bigger is bouncier.
-    const float Fric = 1.0f, Res = 0.95f, Cutoff = 0.0f;
-
-    // Don't apply friction if tangential velocity < cutoff
-    // float tanscale = (vt.lenSqr() <= cutoffSqr) ? 1.0f : oneMinusFriction;
-    // m.vel = vt * tanscale + vn * resilience;
-
-    P.Bounce(Fric, Res, Cutoff, PDPlane(pVec(4,0,0), pVec(1,0,0)));
-    P.Bounce(Fric, Res, Cutoff, PDPlane(pVec(-4,0,0), pVec(1,0,0)));
-    P.Bounce(Fric, Res, Cutoff, PDPlane(pVec(0,1,0), pVec(0,1,0)));
-    P.Bounce(Fric, Res, Cutoff, PDPlane(pVec(0,-4,0), pVec(0,1,0)));
-    P.Bounce(Fric, Res, Cutoff, PDPlane(pVec(0,0,4), pVec(0,0,1)));
-    P.Bounce(Fric, Res, Cutoff, PDPlane(pVec(0,0,0), pVec(0,0,1)));
-
-    P.Move(true, false);
-#endif

@@ -101,9 +101,9 @@ void PInternalState_t::ExecuteActionList(ActionList& AList)
 
     PASSERT((AList.ALFunc == NULL && AList.Params == P_INTERNAL_CODE) || (AList.ALFunc && AList.Params != P_INTERNAL_CODE), "ALFunc and Params mismatch.");
 
-    if (AList.Params & P_CPU_CPP_CODE) {
-        AList.ALFunc(&AList, &pg, dt, 0);
-    } else {
+    if (AList.Params & P_CPU_CPP_CODE) {  // Compiled mode
+        AList.ALFunc(&AList, &pg, dt, 0); // We have a compiled AL for CPU so call that function
+    } else {                              // Internal mode
         ActionList::iterator it = AList.begin();
         while (it != AList.end()) {
             // Make an action segment
