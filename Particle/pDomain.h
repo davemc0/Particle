@@ -72,7 +72,7 @@ public:
     virtual pVec Generate() const = 0;          ///< Returns a random point in the domain.
     virtual float Size() const = 0;             ///< Returns the size of the domain (length, area, or volume).
 
-    virtual pDomain* copy() const = 0; // Returns a pointer to a heap-allocated copy of the derived class
+    virtual std::shared_ptr<pDomain> copy() const = 0; // Returns a pointer to a heap-allocated copy of the derived class
 
     virtual ~pDomain() {}
 };
@@ -114,7 +114,7 @@ PINLINE void NewBasis(const pVec& u, const pVec& v, pVec& s1, pVec& s2)
 /// dimensionality. Note that thin shelled cylinders, cones, and spheres, where InnerRadius==OuterRadius, are considered 2D, not 3D.
 /// Thin shelled discs (circles) are considered 1D. Points are 0D.
 struct PDUnion : public pDomain {
-    std::vector<pDomain*> Doms;
+    std::vector<std::shared_ptr<pDomain>> Doms;
     float TotalSize;
 
     PDUnion() /// Use this one to create an empty PDUnion then call .insert() to add each item to it.
@@ -146,12 +146,12 @@ struct PDUnion : public pDomain {
     /// Makes a copy of all the subdomains and point to the copies.
     ///
     /// Note that the Generate() function goes faster if you supply DomList with the largest domains first.
-    PDUnion(const std::vector<pDomain*>& DomList)
+    PDUnion(const std::vector<std::shared_ptr<pDomain>>& DomList)
     {
         Which = PDUnion_e;
         Varying = false;
         TotalSize = 0.0f;
-        for (std::vector<pDomain*>::const_iterator it = DomList.begin(); it != DomList.end(); it++) {
+        for (std::vector<std::shared_ptr<pDomain>>::const_iterator it = DomList.begin(); it != DomList.end(); it++) {
             Doms.push_back((*it)->copy());
             TotalSize += (*it)->Size();
         }
@@ -163,7 +163,7 @@ struct PDUnion : public pDomain {
         Which = PDUnion_e;
         Varying = false;
         TotalSize = 0.0f;
-        for (std::vector<pDomain*>::const_iterator it = P.Doms.begin(); it != P.Doms.end(); it++) {
+        for (std::vector<std::shared_ptr<pDomain>>::const_iterator it = P.Doms.begin(); it != P.Doms.end(); it++) {
             Doms.push_back((*it)->copy());
             TotalSize += (*it)->Size();
         }
@@ -171,7 +171,7 @@ struct PDUnion : public pDomain {
 
     ~PDUnion()
     {
-        for (std::vector<pDomain*>::const_iterator it = Doms.begin(); it != Doms.end(); it++) { delete (*it); }
+        // for (std::vector<std::shared_ptr<pDomain>>::const_iterator it = Doms.begin(); it != Doms.end(); it++) { delete (*it); }
     }
 
     /// Insert another domain into this PDUnion.
@@ -183,7 +183,7 @@ struct PDUnion : public pDomain {
 
     bool Within(const pVec& pos) const /// Returns true if pos is within any of the domains.
     {
-        for (std::vector<pDomain*>::const_iterator it = Doms.begin(); it != Doms.end(); it++)
+        for (std::vector<std::shared_ptr<pDomain>>::const_iterator it = Doms.begin(); it != Doms.end(); it++)
             if ((*it)->Within(pos)) return true;
         return false;
     }
@@ -191,7 +191,7 @@ struct PDUnion : public pDomain {
     pVec Generate() const /// Generate a point in any subdomain, chosen by the ratio of their sizes.
     {
         float Choose = pRandf() * TotalSize, PastProb = 0.0f;
-        for (std::vector<pDomain*>::const_iterator it = Doms.begin(); it != Doms.end(); it++) {
+        for (std::vector<std::shared_ptr<pDomain>>::const_iterator it = Doms.begin(); it != Doms.end(); it++) {
             PastProb += (*it)->Size();
             if (Choose <= PastProb) return (*it)->Generate();
         }
@@ -200,7 +200,7 @@ struct PDUnion : public pDomain {
 
     float Size() const { return TotalSize; }
 
-    pDomain* copy() const { return new PDUnion(*this); }
+    std::shared_ptr<pDomain> copy() const { return std::shared_ptr<pDomain>(new PDUnion(*this)); }
 };
 
 /// A single point.
@@ -234,7 +234,7 @@ struct PDPoint : public pDomain {
 
     PINLINE float Size() const { return 1.0f; }
 
-    pDomain* copy() const { return new PDPoint(*this); }
+    std::shared_ptr<pDomain> copy() const { return std::shared_ptr<pDomain>(new PDPoint(*this)); }
 };
 
 /// A line segment.
@@ -283,7 +283,7 @@ struct PDLine : public pDomain {
 
     PINLINE float Size() const { return len; }
 
-    pDomain* copy() const { return new PDLine(*this); }
+    std::shared_ptr<pDomain> copy() const { return std::shared_ptr<pDomain>(new PDLine(*this)); }
 };
 
 /// A Triangle.
@@ -369,7 +369,7 @@ struct PDTriangle : public pDomain {
 
     PINLINE float Size() const { return area; }
 
-    pDomain* copy() const { return new PDTriangle(*this); }
+    std::shared_ptr<pDomain> copy() const { return std::shared_ptr<pDomain>(new PDTriangle(*this)); }
 };
 
 /// Rhombus-shaped planar region.
@@ -442,7 +442,7 @@ struct PDRectangle : public pDomain {
 
     PINLINE float Size() const { return area; }
 
-    pDomain* copy() const { return new PDRectangle(*this); }
+    std::shared_ptr<pDomain> copy() const { return std::shared_ptr<pDomain>(new PDRectangle(*this)); }
 };
 
 /// Arbitrarily-oriented disc
@@ -536,7 +536,7 @@ struct PDDisc : public pDomain {
         return 1.0f; // A plane is infinite, so what sensible thing can I return?
     }
 
-    pDomain* copy() const { return new PDDisc(*this); }
+    std::shared_ptr<pDomain> copy() const { return std::shared_ptr<pDomain>(new PDDisc(*this)); }
 };
 
 /// Arbitrarily-oriented plane.
@@ -588,7 +588,7 @@ struct PDPlane : public pDomain {
         return 1.0f; // A plane is infinite, so what sensible thing can I return?
     }
 
-    pDomain* copy() const { return new PDPlane(*this); }
+    std::shared_ptr<pDomain> copy() const { return std::shared_ptr<pDomain>(new PDPlane(*this)); }
 };
 
 /// Axis-aligned bounding box (AABB)
@@ -647,7 +647,7 @@ struct PDBox : public pDomain {
 
     PINLINE float Size() const { return vol; }
 
-    pDomain* copy() const { return new PDBox(*this); }
+    std::shared_ptr<pDomain> copy() const { return std::shared_ptr<pDomain>(new PDBox(*this)); }
 };
 
 /// Cylinder
@@ -765,7 +765,7 @@ struct PDCylinder : public pDomain {
         return vol;
     }
 
-    pDomain* copy() const { return new PDCylinder(*this); }
+    std::shared_ptr<pDomain> copy() const { return std::shared_ptr<pDomain>(new PDCylinder(*this)); }
 };
 
 ///  Cone
@@ -894,7 +894,7 @@ struct PDCone : public pDomain {
         return vol;
     }
 
-    pDomain* copy() const { return new PDCone(*this); }
+    std::shared_ptr<pDomain> copy() const { return std::shared_ptr<pDomain>(new PDCone(*this)); }
 };
 
 /// Sphere
@@ -980,7 +980,7 @@ struct PDSphere : public pDomain {
         return vol;
     }
 
-    pDomain* copy() const { return new PDSphere(*this); }
+    std::shared_ptr<pDomain> copy() const { return std::shared_ptr<pDomain>(new PDSphere(*this)); }
 };
 
 /// Gaussian blob
@@ -1031,7 +1031,7 @@ struct PDBlob : public pDomain {
         return 1.0f;
     }
 
-    pDomain* copy() const { return new PDBlob(*this); }
+    std::shared_ptr<pDomain> copy() const { return std::shared_ptr<pDomain>(new PDBlob(*this)); }
 };
 
 // These are fake constructors for the domain classes.
@@ -1056,7 +1056,7 @@ struct PDVarying : public pDomain {
 
     PINLINE float Size() const { return 1.0f; }
 
-    pDomain* copy() const { return new PDVarying(*this); }
+    std::shared_ptr<pDomain> copy() const { return std::shared_ptr<pDomain>(new PDVarying(*this)); }
 };
 }; // namespace PAPI
 

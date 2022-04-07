@@ -340,19 +340,19 @@ void PAAvoid::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Parti
     // Can build generic bounce function that works on any domain by using the Within function and a normal.
 
     switch (position->Which) {
-    // case PDUnion_e: Exec(*dynamic_cast<const PDUnion_e*>(position), group, ibegin, iend); return;
-    // case PDPoint_e: Exec(*dynamic_cast<const PDPoint_e*>(position), group, ibegin, iend); return;
-    // case PDLine_e: Exec(*dynamic_cast<const PDLine_e*>(position), group, ibegin, iend); return;
-    case PDTriangle_e: Exec(*dynamic_cast<const PDTriangle*>(position), group, ibegin, iend); return;
-    case PDRectangle_e: Exec(*dynamic_cast<const PDRectangle*>(position), group, ibegin, iend); return;
-    case PDDisc_e: Exec(*dynamic_cast<const PDDisc*>(position), group, ibegin, iend); return;
-    case PDPlane_e: Exec(*dynamic_cast<const PDPlane*>(position), group, ibegin, iend); return;
-    // case PDBox_e: Exec(*dynamic_cast<const PDBox_e*>(position), group, ibegin, iend); return;
-    // case PDCylinder_e: Exec(*dynamic_cast<const PDCylinder_e*>(position), group, ibegin, iend); return;
-    // case PDCone_e: Exec(*dynamic_cast<const PDCone_e*>(position), group, ibegin, iend); return;
-    case PDSphere_e: Exec(*dynamic_cast<const PDSphere*>(position), group, ibegin, iend); return;
-    // case PDBlob_e: Exec(*dynamic_cast<const PDBlob_e*>(position), group, ibegin, iend); return;
-    default: throw PErrNotImplemented(std::string("Avoid not implemented for domain ") + std::string(typeid(position).name()));
+    // case PDUnion_e: Exec(*dynamic_cast<const PDUnion_e*>(position.get()), group, ibegin, iend); return;
+    // case PDPoint_e: Exec(*dynamic_cast<const PDPoint_e*>(position.get()), group, ibegin, iend); return;
+    // case PDLine_e: Exec(*dynamic_cast<const PDLine_e*>(position.get()), group, ibegin, iend); return;
+    case PDTriangle_e: Exec(*dynamic_cast<const PDTriangle*>(position.get()), group, ibegin, iend); return;
+    case PDRectangle_e: Exec(*dynamic_cast<const PDRectangle*>(position.get()), group, ibegin, iend); return;
+    case PDDisc_e: Exec(*dynamic_cast<const PDDisc*>(position.get()), group, ibegin, iend); return;
+    case PDPlane_e: Exec(*dynamic_cast<const PDPlane*>(position.get()), group, ibegin, iend); return;
+    // case PDBox_e: Exec(*dynamic_cast<const PDBox_e*>(position.get()), group, ibegin, iend); return;
+    // case PDCylinder_e: Exec(*dynamic_cast<const PDCylinder_e*>(position.get()), group, ibegin, iend); return;
+    // case PDCone_e: Exec(*dynamic_cast<const PDCone_e*>(position.get()), group, ibegin, iend); return;
+    case PDSphere_e: Exec(*dynamic_cast<const PDSphere*>(position.get()), group, ibegin, iend); return;
+    // case PDBlob_e: Exec(*dynamic_cast<const PDBlob_e*>(position.get()), group, ibegin, iend); return;
+    default: throw PErrNotImplemented(std::string("Avoid not implemented for domain ") + std::string(typeid(position.get()).name()));
     }
 }
 
@@ -625,19 +625,19 @@ void PABounce::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Part
 {
     // Can build generic bounce function that works on any domain by using the Within function and a normal.
     switch (position->Which) {
-    // case PDBlob_e: Exec(*dynamic_cast<const PDBlob*>(position), group, ibegin, iend); return;
-    // case PDCone_e: Exec(*dynamic_cast<const PDCone*>(position), group, ibegin, iend); return;
-    // case PDCylinder_e: Exec(*dynamic_cast<const PDCylinder*>(position), group, ibegin, iend); return;
-    // case PDLine_e: Exec(*dynamic_cast<const PDLine*>(position), group, ibegin, iend); return;
-    // case PDPoint_e: Exec(*dynamic_cast<const PDPoint*>(position), group, ibegin, iend); return;
-    // case PDUnion_e: Exec(*dynamic_cast<const PDUnion*>(position), group, ibegin, iend); return;
-    case PDBox_e: Exec(*dynamic_cast<const PDBox*>(position), group, ibegin, iend); return;
-    case PDDisc_e: Exec(*dynamic_cast<const PDDisc*>(position), group, ibegin, iend); return;
-    case PDPlane_e: Exec(*dynamic_cast<const PDPlane*>(position), group, ibegin, iend); return;
-    case PDRectangle_e: Exec(*dynamic_cast<const PDRectangle*>(position), group, ibegin, iend); return;
-    case PDSphere_e: Exec(*dynamic_cast<const PDSphere*>(position), group, ibegin, iend); return;
-    case PDTriangle_e: Exec(*dynamic_cast<const PDTriangle*>(position), group, ibegin, iend); return;
-    default: throw PErrNotImplemented(std::string("Bounce not implemented for domain ") + std::string(typeid(position).name()));
+    // case PDBlob_e: Exec(*dynamic_cast<const PDBlob*>(position.get()), group, ibegin, iend); return;
+    // case PDCone_e: Exec(*dynamic_cast<const PDCone*>(position.get()), group, ibegin, iend); return;
+    // case PDCylinder_e: Exec(*dynamic_cast<const PDCylinder*>(position.get()), group, ibegin, iend); return;
+    // case PDLine_e: Exec(*dynamic_cast<const PDLine*>(position.get()), group, ibegin, iend); return;
+    // case PDPoint_e: Exec(*dynamic_cast<const PDPoint*>(position.get()), group, ibegin, iend); return;
+    // case PDUnion_e: Exec(*dynamic_cast<const PDUnion*>(position.get()), group, ibegin, iend); return;
+    case PDBox_e: Exec(*dynamic_cast<const PDBox*>(position.get()), group, ibegin, iend); return;
+    case PDDisc_e: Exec(*dynamic_cast<const PDDisc*>(position.get()), group, ibegin, iend); return;
+    case PDPlane_e: Exec(*dynamic_cast<const PDPlane*>(position.get()), group, ibegin, iend); return;
+    case PDRectangle_e: Exec(*dynamic_cast<const PDRectangle*>(position.get()), group, ibegin, iend); return;
+    case PDSphere_e: Exec(*dynamic_cast<const PDSphere*>(position.get()), group, ibegin, iend); return;
+    case PDTriangle_e: Exec(*dynamic_cast<const PDTriangle*>(position.get()), group, ibegin, iend); return;
+    default: throw PErrNotImplemented(std::string("Bounce not implemented for domain ") + std::string(typeid(position.get()).name()));
     }
 }
 
