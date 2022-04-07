@@ -9,7 +9,6 @@ set(LIB_SOURCES
     Actions.h
     ActionsAPI.cpp
     OtherAPI.cpp
-    PInternalSourceState.h
     PInternalState.cpp
     PInternalState.h
     Particle.h
