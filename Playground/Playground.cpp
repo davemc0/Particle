@@ -54,7 +54,7 @@ static EffectsManager Efx(P, 200000);
 // Render any geometry necessary to support the effects
 void RenderEffectGeometry()
 {
-    for (auto domPtr : Efx.Demo->Renderables) {
+    for (const auto& domPtr : Efx.Demo->Renderables) {
         pVec v;
         glColor3ub(0, 115, 0);
         if (dynamic_cast<PDSphere*>(domPtr.get())) {

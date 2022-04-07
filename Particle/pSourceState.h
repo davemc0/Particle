@@ -20,13 +20,13 @@ namespace PAPI {
 /// with attributes from the current state.
 class pSourceState {
 public:
-    pDomain* Up_;
-    pDomain* Vel_;
-    pDomain* RotVel_;
-    pDomain* VertexB_;
-    pDomain* Size_;
-    pDomain* Color_;
-    pDomain* Alpha_;
+    std::shared_ptr<pDomain> Up_;
+    std::shared_ptr<pDomain> Vel_;
+    std::shared_ptr<pDomain> RotVel_;
+    std::shared_ptr<pDomain> VertexB_;
+    std::shared_ptr<pDomain> Size_;
+    std::shared_ptr<pDomain> Color_;
+    std::shared_ptr<pDomain> Alpha_;
     pdata_t Data_;
     float Age_;
     float AgeSigma_;
@@ -70,8 +70,8 @@ public:
     /// The default color is 1,1,1,1 (opaque white).
     PINLINE void Color(const pDomain& cdom) ///< The color domain.
     {
-        Color_ = cdom.copy();
-        Alpha_ = new PDPoint(pVec(1));
+        Color_ = std::shared_ptr<pDomain>(cdom.copy());
+        Alpha_ = std::shared_ptr<pDomain>(new PDPoint(pVec(1)));
     }
 
     /// Specify the domain for colors and alpha value of new particles.
@@ -104,7 +104,7 @@ public:
     /// This call is short-hand for Size(PDPoint(size)).
     ///
     /// The default size is 1,1,1.
-    PINLINE void Size(const pVec& size) { Size_ = new PDPoint(size); }
+    PINLINE void Size(const pVec& size) { Size_ = std::shared_ptr<pDomain>(new PDPoint(size)); }
 
     /// Specify the domain for the size of particles to be created.
     ///
@@ -126,7 +126,7 @@ public:
     PINLINE void Mass(const float mass) { Mass_ = mass; }
 
     /// Specify the initial rotational velocity vector of particles to be created.
-    PINLINE void RotVelocity(const pVec& v) { RotVel_ = new PDPoint(v); }
+    PINLINE void RotVelocity(const pVec& v) { RotVel_ = std::shared_ptr<pDomain>(new PDPoint(v)); }
 
     /// Specify the domain for the initial rotational velocity vector of particles to be created.
     ///
@@ -156,7 +156,7 @@ public:
     /// This call is short-hand for UpVec(PDPoint(v)).
     ///
     /// The default Up vector is 0,1,0.
-    PINLINE void UpVec(const pVec& up) { Up_ = new PDPoint(up); }
+    PINLINE void UpVec(const pVec& up) { Up_ = std::shared_ptr<pDomain>(new PDPoint(up)); }
 
     /// Specify the domain for the initial up vector of particles to be created.
     ///
@@ -171,7 +171,7 @@ public:
     /// This call is short-hand for Velocity(PDPoint(vel)).
     ///
     /// The default Velocity vector is 0,0,0.
-    PINLINE void Velocity(const pVec& vel) { Vel_ = new PDPoint(vel); }
+    PINLINE void Velocity(const pVec& vel) { Vel_ = std::shared_ptr<pDomain>(new PDPoint(vel)); }
 
     /// Specify the domain for the initial velocity vector of particles to be created.
     ///
@@ -183,7 +183,7 @@ public:
     /// The PositionB attribute is used to store a destination position for the particle. This is designed for actions such as Restore().
     ///
     /// The default PositionB is 0,0,0.
-    PINLINE void VertexB(const pVec& v) { VertexB_ = new PDPoint(v); }
+    PINLINE void VertexB(const pVec& v) { VertexB_ = std::shared_ptr<pDomain>(new PDPoint(v)); }
 
     /// Specify the domain for the initial secondary position of new particles.
     ///

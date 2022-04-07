@@ -56,10 +56,10 @@ protected:
 // Data types derived from PActionBase.
 
 struct PAAvoid : public PActionBase {
-    pDomain* position; // Avoid region
-    float look_ahead;  // How many time units ahead to look
-    float magnitude;   // What percent of the way to go each time
-    float epsilon;     // Add to r^2 for softening
+    std::shared_ptr<pDomain> position; // Avoid region
+    float look_ahead;                  // How many time units ahead to look
+    float magnitude;                   // What percent of the way to go each time
+    float epsilon;                     // Add to r^2 for softening
 
     ACTION_DECLS;
 
@@ -71,10 +71,10 @@ struct PAAvoid : public PActionBase {
 };
 
 struct PABounce : public PActionBase {
-    pDomain* position;      // Bounce region
-    float oneMinusFriction; // Friction tangent to surface
-    float resilience;       // Resilence perpendicular to surface
-    float cutoffSqr;        // cutoff velocity; friction applies iff v > cutoff
+    std::shared_ptr<pDomain> position; // Bounce region
+    float oneMinusFriction;            // Friction tangent to surface
+    float resilience;                  // Resilence perpendicular to surface
+    float cutoffSqr;                   // cutoff velocity; friction applies iff v > cutoff
 
     ACTION_DECLS;
 
@@ -156,8 +156,8 @@ struct PAGravity : public PActionBase {
 };
 
 struct PAJet : public PActionBase {
-    pDomain* dom; // Accelerate particles that are within this domain
-    pDomain* acc; // Acceleration vector domain
+    std::shared_ptr<pDomain> dom; // Accelerate particles that are within this domain
+    std::shared_ptr<pDomain> acc; // Acceleration vector domain
 
     ACTION_DECLS;
 };
@@ -211,25 +211,25 @@ struct PAOrbitPoint : public PActionBase {
 };
 
 struct PARandomAccel : public PActionBase {
-    pDomain* gen_acc; // The domain of random accelerations.
+    std::shared_ptr<pDomain> gen_acc; // The domain of random accelerations.
 
     ACTION_DECLS;
 };
 
 struct PARandomDisplace : public PActionBase {
-    pDomain* gen_disp; // The domain of random displacements.
+    std::shared_ptr<pDomain> gen_disp; // The domain of random displacements.
 
     ACTION_DECLS;
 };
 
 struct PARandomVelocity : public PActionBase {
-    pDomain* gen_vel; // The domain of random velocities.
+    std::shared_ptr<pDomain> gen_vel; // The domain of random velocities.
 
     ACTION_DECLS;
 };
 
 struct PARandomRotVelocity : public PActionBase {
-    pDomain* gen_vel; // The domain of random velocities.
+    std::shared_ptr<pDomain> gen_vel; // The domain of random velocities.
 
     ACTION_DECLS;
 };
@@ -243,15 +243,15 @@ struct PARestore : public PActionBase {
 };
 
 struct PASink : public PActionBase {
-    bool kill_inside;  // True to dispose of particles *inside* domain
-    pDomain* position; // Disposal region
+    bool kill_inside;                  // True to dispose of particles *inside* domain
+    std::shared_ptr<pDomain> position; // Disposal region
 
     ACTION_DECLS;
 };
 
 struct PASinkVelocity : public PActionBase {
-    bool kill_inside;  // True to dispose of particles with vel *inside* domain
-    pDomain* velocity; // Disposal region
+    bool kill_inside;                  // True to dispose of particles with vel *inside* domain
+    std::shared_ptr<pDomain> velocity; // Disposal region
 
     ACTION_DECLS;
 };
@@ -266,9 +266,9 @@ struct PASort : public PActionBase {
 };
 
 struct PASource : public PActionBase {
-    pDomain* position;   // Choose a position in this domain
-    float particle_rate; // Particles to generate per unit time
-    pSourceState SrcSt;  // The state needed to create a new particle
+    std::shared_ptr<pDomain> position; // Choose a position in this domain
+    float particle_rate;               // Particles to generate per unit time
+    pSourceState SrcSt;                // The state needed to create a new particle
 
     ACTION_DECLS;
 };
