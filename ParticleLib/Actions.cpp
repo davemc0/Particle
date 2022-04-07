@@ -565,18 +565,16 @@ void PABounce::Exec(const PDSphere& dom, ParticleGroup& group, ParticleList::ite
             // Trying to go inside. Bounce back out.
 
             // Outward-pointing normal to surface. This isn't computed quite right;
-            // should extrapolate particle position to surface.
+            // should extrapolate particle position to surface with ray-sphere intersection
             pVec n = m.pos - dom.ctr;
             n.normalize();
 
+            float NdotV = dot(n, m.vel);
+
+            // A hit! A most palpable hit!
             // Compute tangential and normal components of velocity
-            float nmag = dot(m.vel, n);
-
-            pVec vn = n * nmag;   // Velocity in Normal dir  Vn = (V.N)N
-            pVec vt = m.vel - vn; // Velocity in Tangent dir Vt = V - Vn
-
-            // Reverse normal component of velocity if it points in
-            if (nmag < 0) vn = -vn;
+            pVec vn = n * NdotV;  // Normal Vn = (V.N)N
+            pVec vt = m.vel - vn; // Tangent Vt = V - Vn
 
             // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
             float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
