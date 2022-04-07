@@ -5,16 +5,6 @@
 // This application demonstrates particle systems for interactive graphics.
 // It uses OpenGL and GLUT.
 
-// Texture and light the butterflies
-// Texture the rain drops
-// Fix motion blur
-// Key to adjust point diameter
-// Multiple textures
-// User interaction
-// When in random mode reset all rendering params to best for that demo
-//   motion blur, kill before start, primitive, texture, depth test, speed, particle size
-// Do I just make an init function, or do I make a struct?
-
 #include "../DemoShared/DrawGroups.h"
 #include "../DemoShared/Effects.h"
 #include "../DemoShared/Monarch.h"

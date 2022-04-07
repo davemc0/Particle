@@ -30,7 +30,7 @@ enum ExecMode_e {
     Emit_Mode       // Build an action list for emitting
 };
 
-enum SteerShape_e { STEER_SPHERE, STEER_TRIANGLE, STEER_RECTANGLE, STEER_PLANE, STEER_VARYING };
+enum SteerShape_e { STEER_SPHERE, STEER_TRIANGLE, STEER_RECTANGLE, STEER_PLANE, STEER_DISC, STEER_VARYING };
 
 class Effect {
 protected:
