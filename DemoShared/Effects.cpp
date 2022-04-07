@@ -655,7 +655,7 @@ void Shower::DoActions(EffectsManager& Efx)
     } else if (SteerShape == STEER_RECTANGLE) {
         P.Avoid(2.f, 1.f, lookAheadTime, Render(PDRectangle(pVec(0, -1, 0.1f), pVec(2, 1, 0), pVec(0, 2, 0))));
     } else if (SteerShape == STEER_PLANE) {
-        P.Avoid(2.f, 1.f, lookAheadTime, Render(PDPlane(pVec(0, 0, 0.1f), pVec(0, 0, 1))));
+        P.Avoid(10.f, 1.f, lookAheadTime, Render(PDPlane(pVec(0, 0, 0.1f), pVec(0, 0, 1))));
     } else if (SteerShape == STEER_DISC) {
         P.Avoid(2.f, 1.f, lookAheadTime, Render(PDDisc(pVec(0, 0, 0.1f), pVec(0, 0, 1), 1.f, 0.f)));
     } else if (SteerShape == P_VARYING_INT) {
@@ -827,11 +827,11 @@ void Waterfall::DoActions(EffectsManager& Efx)
     S.Velocity(PDBlob(pVec(3.f, -0.1f, 1.f) * s, 0.2f * s));
     S.Color(PDLine(pVec(0.8, 0.9, 1.0), pVec(1.0, 1.0, 1.0)));
     S.Size(pVec(1.5));
-    P.Source(particleRate, Render(PDLine(pVec(-5, -1, 8), pVec(-5, -3, 8))), S);
+    P.Source(particleRate, Render(PDLine(pVec(-5, -1, 8), pVec(-5, 1, 8))), S);
 
     P.Gravity(Efx.GravityVec);
-    P.Bounce(0, 0.35, 0, Render(PDRectangle(pVec(-7, -4, 7), pVec(3, 0, 0), pVec(0, 3, 0))));
-    P.Bounce(0, 0.5, 0, Render(PDSphere(pVec(-4, -1, 6), 0.5)));
+    P.Bounce(0, 0.3, 0, Render(PDRectangle(pVec(-7, -2, 7), pVec(3, 0, 0), pVec(0, 4, 0))));
+    P.Bounce(0, 0.5, 0, Render(PDSphere(pVec(-3.7, 1, 6), 0.5)));
     P.Bounce(0, 0.5, 0, Render(PDSphere(pVec(-3.5, 0, 2), 2)));
     P.Bounce(0, 0.5, 0, Render(PDSphere(pVec(3.8, 0, 0), 2)));
     P.Bounce(-0.01, 0.35, 0, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));

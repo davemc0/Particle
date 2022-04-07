@@ -119,12 +119,6 @@ void RenderEffectGeometry()
             glColor3f(1.0, 1.0, 1.0);
             glVertex3fv((GLfloat*)&(v = dom->p - uu - vv));
             glEnd();
-
-            glColor3ub(0, 115, 0);
-            glPushMatrix();
-            glTranslatef(Efx.center.x(), Efx.center.y(), Efx.center.z());
-            glutWireCube(1);
-            glPopMatrix();
         } else if (dynamic_cast<PDLine*>(domPtr.get())) {
             PDLine* dom = dynamic_cast<PDLine*>(domPtr.get());
             glBegin(GL_LINES);
