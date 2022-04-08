@@ -32,16 +32,21 @@ enum ExecMode_e {
 
 enum SteerShape_e { STEER_SPHERE, STEER_TRIANGLE, STEER_RECTANGLE, STEER_PLANE, STEER_DISC, STEER_VARYING };
 
+enum PrimType_e { PRIM_GAUSSIAN_SPRITE, PRIM_SPHERE_SPRITE, PRIM_TRIANGLE, PRIM_QUAD, PRIM_POINT, PRIM_LINE, PRIM_DISPLAY_LIST, PRIM_NONE, PRIM_TYPE_COUNT };
+static char const* PrimTypeNames[] = {"PRIM_GAUSSIAN_SPRITE", "PRIM_SPHERE_SPRITE", "PRIM_TRIANGLE",     "PRIM_QUAD",
+                                      "PRIM_POINT",           "PRIM_LINE",          "PRIM_DISPLAY_LIST", "PRIM_NONE"};
+
 class Effect {
 protected:
-    bool MotionBlur;        // True to enable motion blur when rendering this effect
-    bool DepthTest;         // True to enable depth test when rendering this effect
-    bool KillAtStart;       // True to kill existing particles when switching to this effect
-    int PrimType;           // Which kind of primitive is best for this particle
-    int TexID;              // What texture to apply to primitives for this effect
-    float particleSize;     // How big of particles for this effect
-    float particleLifetime; // Time in seconds the average particle will live
-    float particleRate;     // Particles to create per second
+    PrimType_e PrimType;     // Which kind of primitive is best for this particle
+    bool WhiteBackground;    // True for white; false for black
+    bool DepthTest;          // True to enable depth test when rendering this effect
+    bool MotionBlur;         // True to enable motion blur when rendering this effect
+    bool SortParticles;      // True to sort particles each frame for rendering
+    bool UseRenderingParams; // True to suggest paying attention to the above rendering preferences
+    float particleLifetime;  // Time in seconds the average particle will live
+    float particleRate;      // Particles to create per second
+    float particleSize;      // How big of particles for this effect
 
 public:
     int AList;                                   // The action list handle
@@ -61,6 +66,12 @@ public:
     virtual void EmitList(EffectsManager& Efx);                // Set varying state to VARYING for emitting the action list as code
     virtual void StartEffect(EffectsManager& Efx) {}           // Initialize internal variables and set up anything else for the start of this effect
     virtual int NextEffect(EffectsManager& Efx);               // Specify next demo to run in case only a particular one is interesting
+
+    PrimType_e getPrimType() { return PrimType; }               // Which kind of primitive is best for this particle
+    bool getDepthTest() { return DepthTest; }                   // True to enable depth test when rendering this effect
+    bool getMotionBlur() { return MotionBlur; }                 // True to enable motion blur when rendering this effect
+    bool getSortParticles() { return SortParticles; }           // True to sort particles each frame for rendering
+    bool getUseRenderingParams() { return UseRenderingParams; } // True to suggest paying attention to the above rendering preferences
 };
 
 // Particles orbiting a center
@@ -88,6 +99,7 @@ struct BounceToy : public Effect {
     BounceToy(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "BounceToy"; }
     void DoActions(EffectsManager& Efx);
+    void StartEffect(EffectsManager& Efx);
 };
 
 // An explosion from the center of the universe, followed by gravity

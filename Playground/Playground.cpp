@@ -29,27 +29,38 @@
 #include <string>
 
 namespace {
-bool MotionBlur = false, FreezeParticles = false, AntiAlias = true, DepthTest = false;
-bool ConstColor = false, ShowText = true, ParticleCam = false, SortParticles = false, SphereTexture = true;
-bool DrawEffectGeometry = true, CameraMotion = false, FullScreen = false, PointSpritesAllowed = true;
-ExecMode_e ExecMode = Internal_Mode; // Execute compiled action lists on host for non-varying effects or immediate for varying
-int PrimType = GL_POINTS, DisplayListID = -1, SpotTexID = -1;
-int WinWidth = 880, WinHeight = 880;
+// Mode controls
+bool CameraMotion = false;
+bool DrawEffectGeometry = true;
+bool FreezeParticles = false;
+bool FullScreen = false;
+bool ParticleCam = false;
 bool RandomDemo = true;
-float BlurRate = 0.09;
-char* PrimName = "Points";
-char* FName = NULL;
+bool ShowText = true;
+bool WantEffectSettings = false;
 
+// Rendering params controlled by the effect
+PrimType_e PrimType = PRIM_SPHERE_SPRITE;
+bool DepthTest = false;
+bool MotionBlur = false;
+bool SortParticles = false;
+
+// Internal state
+ExecMode_e ExecMode = Internal_Mode; // Execute compiled action lists on host for non-varying effects or immediate for varying
+ParticleContext_t P;
 StatTimer FPSClock(100);
 Timer RandomDemoClock;
-ParticleContext_t P;
-} // namespace
-
+char* FName = NULL;
+float BlurRate = 0.09;
+int DisplayListID = -1;
+int SpotTexID = -1, SphereTexID = -1;
+int WinWidth = 880, WinHeight = 880;
 #ifdef _DEBUG
-static EffectsManager Efx(P, 20000);
+EffectsManager Efx(P, 20000);
 #else
-static EffectsManager Efx(P, 200000);
+EffectsManager Efx(P, 200000);
 #endif
+} // namespace
 
 // Render any geometry necessary to support the effects
 void RenderEffectGeometry()
@@ -136,7 +147,18 @@ void RenderEffectGeometry()
     }
 }
 
-void menu(int);
+// Call this after choosing an effect to set the render settings to those of this effect
+void ApplyEffectSettings()
+{
+    if (!WantEffectSettings) return;
+
+    if (!Efx.Demo->getUseRenderingParams()) return; // The effect does not want to give us any rendering params.
+
+    PrimType = Efx.Demo->getPrimType();
+    DepthTest = Efx.Demo->getDepthTest();
+    MotionBlur = Efx.Demo->getMotionBlur();
+    SortParticles = Efx.Demo->getSortParticles();
+}
 
 // Symmetric gaussian centered at origin; no covariance matrix
 inline float Gaussian2(float x, float y, float sigma) { return expf(-0.5f * (x * x + y * y) / (sigma * sigma)) / (P_SQRT2PI * sigma); }
@@ -174,12 +196,11 @@ void MakeGaussianSpotTexture()
 
 void MakeSphereTexture()
 {
-    const int DIM = 128;
-    const int DIM2 = 63;
-    const float TEX_SCALE = 6.0;
+    const int DIM = 512;
+    const int DIM2 = DIM / 2 - 1;
 
-    glGenTextures(1, (GLuint*)&SpotTexID);
-    glBindTexture(GL_TEXTURE_2D, SpotTexID);
+    glGenTextures(1, (GLuint*)&SphereTexID);
+    glBindTexture(GL_TEXTURE_2D, SphereTexID);
 
     float* img = new float[DIM * DIM];
 
@@ -257,8 +278,6 @@ void InitOpenGL()
     if (didInit) return;
     didInit = true;
 
-    menu('p');
-
     if (glewInit() != GLEW_OK) throw PError_t("No GLEW");
 
     // Make the point size attenuate with distance.
@@ -300,10 +319,8 @@ void InitOpenGL()
     glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, col);
     glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
 
-    if (SphereTexture)
-        MakeSphereTexture();
-    else
-        MakeGaussianSpotTexture();
+    MakeSphereTexture();
+    MakeGaussianSpotTexture();
 
     DisplayListID = glGenLists(1);
     if (1)
@@ -328,7 +345,7 @@ void Draw()
 
     glLoadIdentity();
 
-    if (MotionBlur) {
+    if (false && MotionBlur) {
         // This is a cheezy motion blur that dims the old frame contents
         // before rendering the new ones. Requires single-buffering.
         glMatrixMode(GL_PROJECTION);
@@ -343,6 +360,8 @@ void Draw()
         glPopMatrix();
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
+
+        // XXX: When do we restore the projection matrix for normal rendering?
     } else {
         glClear(GL_COLOR_BUFFER_BIT | (DepthTest ? GL_DEPTH_BUFFER_BIT : 0));
     }
@@ -393,38 +412,56 @@ void Draw()
         P.Sort(Cam, Look);
     }
 
-    if (PrimType == 0x0103) {
-        DrawGroupAsDisplayLists(P, DisplayListID, ConstColor, false);
+    // Draw the particle system
+    pVec view = At - Cam;
+    view.normalize();
+    pVec up = pVec(0, 0, 1);
+
+    switch (PrimType) {
+    case PRIM_DISPLAY_LIST:
+        DrawGroupAsDisplayLists(P, DisplayListID, false, false);
         // The cross product of the velocity vector and the previous frame's velocity vector
         // can give us a vector pointing to the side. Use this to orient the particles.
         P.CopyVertexB(false, true);
-    } else if (PrimType == GL_LINES) {
-        // DrawGroupAsLines(P, ConstColor, Efx.timeStep);
-        DrawGroupAsLines(P, ConstColor, -0.25f);
-    } else if (PrimType == GL_POINTS) {
-        DrawGroupAsPoints(P, ConstColor);
-    } else if (PrimType == 0x102) { // Point sprites
+        break;
+    case PRIM_LINE:
+        // DrawGroupAsLines(P, false, Efx.timeStep);
+        DrawGroupAsLines(P, false, -0.25f);
+        break;
+    case PRIM_POINT:
+        glDisable(GL_POINT_SPRITE);
+        DrawGroupAsPoints(P, false);
+        break;
+    case PRIM_GAUSSIAN_SPRITE:
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_POINT_SPRITE);
-        DrawGroupAsPoints(P, ConstColor);
+        glBindTexture(GL_TEXTURE_2D, SpotTexID);
+        DrawGroupAsPoints(P, false);
         glDisable(GL_POINT_SPRITE);
         glDisable(GL_TEXTURE_2D);
-    } else if (PrimType == 0x100) {
-        pVec view = At - Cam;
-        view.normalize();
-        pVec up = pVec(0, 0, 1);
+        break;
+    case PRIM_SPHERE_SPRITE:
         glEnable(GL_TEXTURE_2D);
-        DrawGroupAsTriSprites(P, view, up, 0.16, true, true, ConstColor);
+        glEnable(GL_POINT_SPRITE);
+        glBindTexture(GL_TEXTURE_2D, SphereTexID);
+        DrawGroupAsPoints(P, false);
+        glDisable(GL_POINT_SPRITE);
         glDisable(GL_TEXTURE_2D);
-    } else if (PrimType == 0x101) {
-        pVec view = At - Cam;
-        view.normalize();
-        pVec up = pVec(0, 0, 1);
+        break;
+    case PRIM_TRIANGLE:
         glEnable(GL_TEXTURE_2D);
-        DrawGroupAsQuadSprites(P, view, up, 0.16, true, true, ConstColor);
+        DrawGroupAsTriSprites(P, view, up, 1.f, true, true, false);
         glDisable(GL_TEXTURE_2D);
-    } else {
+        break;
+    case PRIM_QUAD:
+        glEnable(GL_TEXTURE_2D);
+        DrawGroupAsQuadSprites(P, view, up, 1.f, true, true, false);
+        glDisable(GL_TEXTURE_2D);
+        break;
+    case PRIM_NONE:
         // Don't draw.
+        break;
+    default: EASSERT(0);
     }
 
     GL_ASSERT();
@@ -444,9 +481,9 @@ void Draw()
         int cnt = (int)P.GetGroupCount();
         char exCh = (ExecMode == Immediate_Mode) ? 'I' : (ExecMode == Internal_Mode) ? 'N' : 'C';
 
-        sprintf(msg, " %c%c%c%c%c%c%c%c n=%5d iters=%d fps=%02.2f %s %s t=%1.2f", MotionBlur ? 'B' : ' ', FreezeParticles ? 'F' : ' ', AntiAlias ? 'A' : ' ',
-                RandomDemo ? 'R' : ' ', DepthTest ? 'D' : ' ', exCh, CameraMotion ? 'M' : ' ', SortParticles ? 'S' : ' ', cnt, Efx.simStepsPerFrame, fps,
-                PrimName, Efx.GetCurEffectName().c_str(), RandomDemoClock.Read());
+        sprintf(msg, " %c%c%c%c%c%c%c%c n=%5d iters=%d fps=%02.2f %s %s t=%1.2f", MotionBlur ? 'B' : ' ', FreezeParticles ? 'F' : ' ',
+                WantEffectSettings ? 'A' : ' ', RandomDemo ? 'R' : ' ', DepthTest ? 'D' : ' ', exCh, CameraMotion ? 'M' : ' ', SortParticles ? 'S' : ' ', cnt,
+                Efx.simStepsPerFrame, fps, PrimTypeNames[PrimType], Efx.GetCurEffectName().c_str(), RandomDemoClock.Read());
 
         glColor3f(1, 1, 1);
         showBitmapMessage(100, 50, msg);
@@ -459,6 +496,7 @@ void Draw()
     if (RandomDemo && RandomDemoClock.Read() > Efx.demoRunSec) {
         RandomDemoClock.Reset();
         Efx.ChooseDemo(-2, ExecMode); // Change to a different random demo
+        ApplyEffectSettings();
     }
 }
 
@@ -467,11 +505,11 @@ void Reshape(int w, int h)
     WinWidth = w;
     WinHeight = h;
 
-    glViewport(0, 0, w, h);
+    glViewport(0, 0, WinWidth, WinHeight);
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(40, w / double(h), 1, 100);
+    gluPerspective(40, WinWidth / double(WinHeight), 1, 100);
     glMatrixMode(GL_MODELVIEW);
 
     // Useful for motion blur so background doesn't get ugly.
@@ -486,22 +524,27 @@ void menu(int item)
     case ' ':
         RandomDemoClock.Reset();
         Efx.ChooseDemo(3, ExecMode); // Explosion
+        ApplyEffectSettings();
         break;
     case GLUT_KEY_UP + 0x1000:
         RandomDemoClock.Reset();
         Efx.ChooseDemo(13, ExecMode); // Restore
+        ApplyEffectSettings();
         break;
     case GLUT_KEY_DOWN + 0x1000:
         RandomDemoClock.Reset();
         Efx.ChooseDemo(-2, ExecMode); // Random
+        ApplyEffectSettings();
         break;
     case GLUT_KEY_LEFT + 0x1000:
         RandomDemoClock.Reset();
         Efx.ChooseDemo(Efx.demoNum - 1, ExecMode); // Prev
+        ApplyEffectSettings();
         break;
     case GLUT_KEY_RIGHT + 0x1000:
         RandomDemoClock.Reset();
         Efx.ChooseDemo(Efx.demoNum + 1, ExecMode); // Next
+        ApplyEffectSettings();
         break;
     case 'i':
         if (ExecMode == Immediate_Mode)
@@ -517,16 +560,7 @@ void menu(int item)
         MotionBlur = !MotionBlur;
         if (!MotionBlur) glDrawBuffer(GL_BACK);
         break;
-    case 'a':
-        AntiAlias = !AntiAlias;
-        if (AntiAlias) {
-            glEnable(GL_LINE_SMOOTH);
-            glEnable(GL_POINT_SMOOTH);
-        } else {
-            glDisable(GL_LINE_SMOOTH);
-            glDisable(GL_POINT_SMOOTH);
-        }
-        break;
+    case 'a': WantEffectSettings = !WantEffectSettings; break;
     case 'c': CameraMotion = !CameraMotion; break;
     case 'r': RandomDemo = !RandomDemo; break;
     case 'f':
@@ -544,30 +578,7 @@ void menu(int item)
             glutPositionWindow(OldX, OldY);
         }
         break;
-    case 'p':
-        if (PrimType == GL_POINTS && PointSpritesAllowed) {
-            PrimType = 0x0102;
-            PrimName = "Point Sprites";
-        } else if (PrimType == 0x0102 || PrimType == GL_POINTS) {
-            PrimType = GL_LINES;
-            PrimName = "Lines";
-        } else if (PrimType == GL_LINES) {
-            PrimType = 0x0100;
-            PrimName = "Tri Sprites";
-        } else if (PrimType == 0x0100) {
-            PrimType = 0x0101;
-            PrimName = "Quad Sprites";
-        } else if (PrimType == 0x0101) {
-            PrimType = 0x0103;
-            PrimName = "Display List";
-        } else if (PrimType == 0x0103) {
-            PrimType = 0x0104;
-            PrimName = "Not Drawing";
-        } else if (PrimType == 0x0104) {
-            PrimType = GL_POINTS;
-            PrimName = "Points";
-        }
-        break;
+    case 'p': PrimType = (PrimType_e)((PrimType + 1) % PRIM_TYPE_COUNT); break;
     case 't': ShowText = !ShowText; break;
     case 'd':
         DepthTest = !DepthTest;
@@ -637,9 +648,6 @@ static void Args(int argc, char** argv)
             Efx.SetPhoto(new uc3Image(FName));
 
             RemoveArgs(argc, argv, i, 2);
-        } else if (starg == "-spot") {
-            SphereTexture = false;
-            RemoveArgs(argc, argv, i);
         } else {
             Usage(program, "Invalid option!");
         }
@@ -666,22 +674,23 @@ void GlutSetup(int argc, char** argv)
     glutAddMenuEntry("2: 2 steps per frame", '2');
     glutAddMenuEntry("3: 3 steps ...", '3');
     glutAddMenuEntry("space : Explosion", ' ');
-    glutAddMenuEntry("g: Draw effect geometry", 'g');
-    glutAddMenuEntry("a: Toggle antialiasing", 'a');
-    glutAddMenuEntry("p: Cycle Primitive", 'p');
-    glutAddMenuEntry("t: Show Text", 't');
+    glutAddMenuEntry("x: Freeze Particles", 'x');
     glutAddMenuEntry("r: Toggle random demo", 'r');
     glutAddMenuEntry("w: ParticleCam", 'w');
-    glutAddMenuEntry("s: Sort particles", 's');
+    glutAddMenuEntry("+: 5000 more particles", '+');
+    glutAddMenuEntry("-: 5000 less particles", '-');
+
+    glutAddMenuEntry("p: Cycle Primitive", 'p');
+    glutAddMenuEntry("g: Toggle draw effect geometry", 'g');
+    glutAddMenuEntry("a: Toggle apply effect settings", 'a');
+    glutAddMenuEntry("s: Toggle sort particles", 's');
     glutAddMenuEntry("m: Toggle motion blur", 'm');
     glutAddMenuEntry("c: Toggle camera motion", 'c');
     glutAddMenuEntry("d: Toggle depth test", 'd');
-    glutAddMenuEntry("i: Toggle immed mode", 'i');
-    glutAddMenuEntry("+: 1000 more particles", '+');
-    glutAddMenuEntry("-: 1000 less particles", '-');
+    glutAddMenuEntry("i: Toggle immediate mode", 'i');
     glutAddMenuEntry(">: More motion blur", '>');
     glutAddMenuEntry("<: Less motion blur", '<');
-    glutAddMenuEntry("x: Freeze Particles", 'x');
+    glutAddMenuEntry("t: Show Text", 't');
 
     glutAddMenuEntry("<esc> or q: exit program", '\033');
     glutAttachMenu(GLUT_RIGHT_BUTTON);
@@ -702,6 +711,7 @@ int main(int argc, char** argv)
     Efx.MakeActionLists(ExecMode);
 
     Efx.ChooseDemo(-2, ExecMode); // Random
+    ApplyEffectSettings();
 
     try {
         glutMainLoop();
