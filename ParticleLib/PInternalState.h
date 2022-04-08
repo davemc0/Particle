@@ -21,7 +21,7 @@
 
 namespace PAPI {
 
-class ActionList : public std::vector<PActionBase*> {
+class ActionList : public std::vector<std::shared_ptr<PActionBase>> {
 public:
     P_PARTICLE_EMITTED_ACTION_LIST ALFunc;
     EmitCodeParams_e Params;
@@ -57,7 +57,7 @@ public:
     int GenerateALists(int alists_requested);
 
     // Action API entry points call this to either store the action in a list or execute and delete it.
-    void SendAction(PActionBase* S);
+    void SendAction(std::shared_ptr<PActionBase> S);
 
     // Execute an action list
     void ExecuteActionList(ActionList& AList);

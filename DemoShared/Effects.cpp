@@ -1033,26 +1033,26 @@ void EffectsManager::RunDemoFrame(ExecMode_e EM)
 
 void EffectsManager::MakeEffects()
 {
-    Effects.push_back(new Atom(*this));
-    Effects.push_back(new Balloons(*this));
-    Effects.push_back(new BounceToy(*this));
-    Effects.push_back(new Explosion(*this));
-    Effects.push_back(new Fireflies(*this));
-    Effects.push_back(new Fireworks(*this));
-    Effects.push_back(new FlameThrower(*this));
-    Effects.push_back(new Fountain(*this));
-    Effects.push_back(new GridShape(*this));
-    Effects.push_back(new JetSpray(*this));
-    Effects.push_back(new Orbit2(*this));
-    Effects.push_back(new PhotoShape(*this));
-    Effects.push_back(new Rain(*this));
-    Effects.push_back(new Restore(*this));
-    Effects.push_back(new Shower(*this));
-    Effects.push_back(new Snake(*this));
-    Effects.push_back(new Sphere(*this));
-    Effects.push_back(new Swirl(*this));
-    Effects.push_back(new Tornado(*this));
-    Effects.push_back(new Waterfall(*this));
+    Effects.push_back(std::shared_ptr<Effect>(new Atom(*this)));
+    Effects.push_back(std::shared_ptr<Effect>(new Balloons(*this)));
+    Effects.push_back(std::shared_ptr<Effect>(new BounceToy(*this)));
+    Effects.push_back(std::shared_ptr<Effect>(new Explosion(*this)));
+    Effects.push_back(std::shared_ptr<Effect>(new Fireflies(*this)));
+    Effects.push_back(std::shared_ptr<Effect>(new Fireworks(*this)));
+    Effects.push_back(std::shared_ptr<Effect>(new FlameThrower(*this)));
+    Effects.push_back(std::shared_ptr<Effect>(new Fountain(*this)));
+    Effects.push_back(std::shared_ptr<Effect>(new GridShape(*this)));
+    Effects.push_back(std::shared_ptr<Effect>(new JetSpray(*this)));
+    Effects.push_back(std::shared_ptr<Effect>(new Orbit2(*this)));
+    Effects.push_back(std::shared_ptr<Effect>(new PhotoShape(*this)));
+    Effects.push_back(std::shared_ptr<Effect>(new Rain(*this)));
+    Effects.push_back(std::shared_ptr<Effect>(new Restore(*this)));
+    Effects.push_back(std::shared_ptr<Effect>(new Shower(*this)));
+    Effects.push_back(std::shared_ptr<Effect>(new Snake(*this)));
+    Effects.push_back(std::shared_ptr<Effect>(new Sphere(*this)));
+    Effects.push_back(std::shared_ptr<Effect>(new Swirl(*this)));
+    Effects.push_back(std::shared_ptr<Effect>(new Tornado(*this)));
+    Effects.push_back(std::shared_ptr<Effect>(new Waterfall(*this)));
 }
 
 void EffectsManager::MakeActionLists(ExecMode_e EM)

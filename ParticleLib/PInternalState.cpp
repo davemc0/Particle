@@ -21,25 +21,19 @@ namespace PAPI {
 // Constructor for the app-owned context
 ParticleContext_t::ParticleContext_t()
 {
-    PInternalState_t* PSt = new PInternalState_t;
+    std::shared_ptr<PInternalState_t> PSt(new PInternalState_t);
     PContextActionList_t::InternalSetup(PSt);
     PContextActions_t::InternalSetup(PSt);
     PContextParticleGroup_t::InternalSetup(PSt);
 }
 
-ParticleContext_t::~ParticleContext_t()
-{
-    PInternalState_t* ps = PContextActionList_t::getInternalState();
-    delete ps;
-}
+void PContextActionList_t::InternalSetup(std::shared_ptr<PInternalState_t> St) { PS = St; }
 
-void PContextActionList_t::InternalSetup(PInternalState_t* St) { PS = St; }
+void PContextActions_t::InternalSetup(std::shared_ptr<PInternalState_t> St) { PS = St; }
 
-void PContextActions_t::InternalSetup(PInternalState_t* St) { PS = St; }
+void PContextParticleGroup_t::InternalSetup(std::shared_ptr<PInternalState_t> St) { PS = St; }
 
-void PContextParticleGroup_t::InternalSetup(PInternalState_t* St) { PS = St; }
-
-PInternalState_t* PContextActionList_t::getInternalState() const { return PS; }
+std::shared_ptr<PInternalState_t> PContextActionList_t::getInternalState() const { return PS; }
 
 // Constructor for the internal state
 PInternalState_t::PInternalState_t()
@@ -75,8 +69,8 @@ int PInternalState_t::GenerateALists(int alists_requested)
     return old_size;
 }
 
-// Action API entry points call this to either store the action in a list or execute and delete it.
-void PInternalState_t::SendAction(PActionBase* S)
+// Action API entry points call this to either store the action in a list or execute it.
+void PInternalState_t::SendAction(std::shared_ptr<PActionBase> S)
 {
     S->SetPInternalState(this); // Let the actions have access to the PInternalState_t
 
@@ -89,7 +83,6 @@ void PInternalState_t::SendAction(PActionBase* S)
         S->dt = dt; // Provide the action with access to the current dt.
         ParticleGroup& pg = PGroups[pgroup_id];
         S->Execute(pg, pg.begin(), pg.end());
-        delete S;
     }
 }
 

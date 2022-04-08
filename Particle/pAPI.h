@@ -184,9 +184,9 @@ public:
     );
 
 protected:
-    PInternalState_t* PS;                       // The internal API data for this context is stored here.
-    void InternalSetup(PInternalState_t* Sr);   // Calls this after construction to set up the PS pointer
-    PInternalState_t* getInternalState() const; // Return a pointer to the internal state
+    std::shared_ptr<PInternalState_t> PS;                       // The internal API data for this context is stored here.
+    void InternalSetup(std::shared_ptr<PInternalState_t> Sr);   // Calls this after construction to set up the PS pointer
+    std::shared_ptr<PInternalState_t> getInternalState() const; // Return a pointer to the internal state
 };
 
 /// This class contains the API calls that operate on particle groups.
@@ -347,8 +347,8 @@ public:
     void SetWorkingSetSize(const int set_size_bytes);
 
 protected:
-    PInternalState_t* PS;                     // The internal API data for this context is stored here.
-    void InternalSetup(PInternalState_t* Sr); // Calls this after construction to set up the PS pointer
+    std::shared_ptr<PInternalState_t> PS;                     // The internal API data for this context is stored here.
+    void InternalSetup(std::shared_ptr<PInternalState_t> Sr); // Calls this after construction to set up the PS pointer
 };
 
 /// This class contains the actual Action API calls.
@@ -768,8 +768,8 @@ public:
     );
 
 protected:
-    PInternalState_t* PS;                     // The internal API data for this context is stored here.
-    void InternalSetup(PInternalState_t* Sr); // Calls this after construction to set up the PS pointer
+    std::shared_ptr<PInternalState_t> PS;                     // The internal API data for this context is stored here.
+    void InternalSetup(std::shared_ptr<PInternalState_t> Sr); // Calls this after construction to set up the PS pointer
 };
 
 /// The Particle System API - Your app should have one of these.
@@ -781,9 +781,6 @@ class ParticleContext_t : public PContextActionList_t, public PContextParticleGr
 public:
     /// The context's default constructor.
     ParticleContext_t();
-
-    /// The context's destructor.
-    ~ParticleContext_t();
 };
 }; // namespace PAPI
 

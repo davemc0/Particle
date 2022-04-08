@@ -172,7 +172,7 @@ void MakeGaussianSpotTexture()
     glGenTextures(1, (GLuint*)&SpotTexID);
     glBindTexture(GL_TEXTURE_2D, SpotTexID);
 
-    float* img = new float[DIM * DIM];
+    std::shared_ptr<float[]> img(new float[DIM * DIM]);
 
     for (int y = 0; y < DIM; y++) {
         for (int x = 0; x < DIM; x++) {
@@ -191,9 +191,7 @@ void MakeGaussianSpotTexture()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     GL_ASSERT();
 
-    gluBuild2DMipmaps(GL_TEXTURE_2D, GL_ALPHA16, DIM, DIM, GL_ALPHA, GL_FLOAT, img);
-
-    delete[] img;
+    gluBuild2DMipmaps(GL_TEXTURE_2D, GL_ALPHA16, DIM, DIM, GL_ALPHA, GL_FLOAT, img.get());
 }
 
 void MakeSphereTexture()
@@ -205,7 +203,7 @@ void MakeSphereTexture()
     glGenTextures(1, (GLuint*)&SphereTexID);
     glBindTexture(GL_TEXTURE_2D, SphereTexID);
 
-    float* img = new float[DIM * DIM];
+    std::shared_ptr<float[]> img(new float[DIM * DIM]);
 
     pVec light = pVec(1, 1, 3);
     light.normalize();
@@ -233,9 +231,7 @@ void MakeSphereTexture()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     GL_ASSERT();
 
-    gluBuild2DMipmaps(GL_TEXTURE_2D, GL_ALPHA16, DIM, DIM, GL_ALPHA, GL_FLOAT, img);
-
-    delete[] img;
+    gluBuild2DMipmaps(GL_TEXTURE_2D, GL_ALPHA16, DIM, DIM, GL_ALPHA, GL_FLOAT, img.get());
 }
 
 static void showBitmapMessage(GLfloat x, GLfloat y, char* message)

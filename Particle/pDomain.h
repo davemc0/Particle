@@ -73,8 +73,6 @@ public:
     virtual float Size() const = 0;             ///< Returns the size of the domain (length, area, or volume).
 
     virtual std::shared_ptr<pDomain> copy() const = 0; // Returns a pointer to a heap-allocated copy of the derived class
-
-    virtual ~pDomain() {}
 };
 
 namespace {
@@ -167,11 +165,6 @@ struct PDUnion : public pDomain {
             Doms.push_back((*it)->copy());
             TotalSize += (*it)->Size();
         }
-    }
-
-    ~PDUnion()
-    {
-        // for (std::vector<std::shared_ptr<pDomain>>::const_iterator it = Doms.begin(); it != Doms.end(); it++) { delete (*it); }
     }
 
     /// Insert another domain into this PDUnion.

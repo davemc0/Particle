@@ -65,7 +65,7 @@ void PContextActionList_t::CallActionList(const int action_list_num)
         PACallActionList* S = new PACallActionList;
         S->action_list_num = action_list_num;
 
-        PS->SendAction(S);
+        PS->SendAction(std::shared_ptr<PActionBase>(S));
     } else {
         // Execute the specified action list.
         PS->ExecuteActionList(PS->ALists[action_list_num]);

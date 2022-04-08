@@ -22,7 +22,7 @@ void PContextActions_t::Avoid(const float magnitude, const float epsilon, const 
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::Bounce(const float friction, const float resilience, const float cutoff, const pDomain& dom)
@@ -39,7 +39,7 @@ void PContextActions_t::Bounce(const float friction, const float resilience, con
 
     if (dom.Which == PDSphere_e) { PASSERT(dynamic_cast<const PDSphere*>(&dom)->radIn == 0.0f, "Bouncing doesn't work on thick shells. radIn must be 0."); }
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::Callback(P_PARTICLE_CALLBACK_ACTION callbackFunc, const std::string& callbackStr, const pdata_t data)
@@ -52,7 +52,7 @@ void PContextActions_t::Callback(P_PARTICLE_CALLBACK_ACTION callbackFunc, const 
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::CopyVertexB(const bool copy_pos, const bool copy_vel)
@@ -65,7 +65,7 @@ void PContextActions_t::CopyVertexB(const bool copy_pos, const bool copy_vel)
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::Damping(const pVec& damping, const float vlow, const float vhigh)
@@ -79,7 +79,7 @@ void PContextActions_t::Damping(const pVec& damping, const float vlow, const flo
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::RotDamping(const pVec& damping, const float vlow, const float vhigh)
@@ -93,7 +93,7 @@ void PContextActions_t::RotDamping(const pVec& damping, const float vlow, const 
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::Explosion(const pVec& center, const float radius, const float magnitude, const float stdev, const float epsilon)
@@ -111,7 +111,7 @@ void PContextActions_t::Explosion(const pVec& center, const float radius, const 
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::Follow(const float magnitude, const float epsilon, const float max_radius)
@@ -125,7 +125,7 @@ void PContextActions_t::Follow(const float magnitude, const float epsilon, const
     A->SetKillsParticles(false);
     A->SetDoNotSegment(true); // Depends on other particles' state being in sync with this one's.
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::Gravitate(const float magnitude, const float epsilon, const float max_radius)
@@ -139,7 +139,7 @@ void PContextActions_t::Gravitate(const float magnitude, const float epsilon, co
     A->SetKillsParticles(false);
     A->SetDoNotSegment(true); // N^2
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::Gravity(const pVec& dir)
@@ -151,7 +151,7 @@ void PContextActions_t::Gravity(const pVec& dir)
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::Jet(const pDomain& dom, const pDomain& accel)
@@ -164,7 +164,7 @@ void PContextActions_t::Jet(const pDomain& dom, const pDomain& accel)
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::KillOld(const float age_limit, const bool kill_less_than)
@@ -177,7 +177,7 @@ void PContextActions_t::KillOld(const float age_limit, const bool kill_less_than
     A->SetKillsParticles(true);
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::MatchVelocity(const float magnitude, const float epsilon, const float max_radius)
@@ -191,7 +191,7 @@ void PContextActions_t::MatchVelocity(const float magnitude, const float epsilon
     A->SetKillsParticles(false);
     A->SetDoNotSegment(true); // N^2
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::MatchRotVelocity(const float magnitude, const float epsilon, const float max_radius)
@@ -205,7 +205,7 @@ void PContextActions_t::MatchRotVelocity(const float magnitude, const float epsi
     A->SetKillsParticles(false);
     A->SetDoNotSegment(true); // N^2
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::Move(const bool move_velocity, const bool move_rotational_velocity)
@@ -218,7 +218,7 @@ void PContextActions_t::Move(const bool move_velocity, const bool move_rotationa
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::OrbitLine(const pVec& p, const pVec& axis, const float magnitude, const float epsilon, const float max_radius)
@@ -235,7 +235,7 @@ void PContextActions_t::OrbitLine(const pVec& p, const pVec& axis, const float m
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::OrbitPoint(const pVec& center, const float magnitude, const float epsilon, const float max_radius)
@@ -250,7 +250,7 @@ void PContextActions_t::OrbitPoint(const pVec& center, const float magnitude, co
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::RandomAccel(const pDomain& dom)
@@ -261,7 +261,7 @@ void PContextActions_t::RandomAccel(const pDomain& dom)
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::RandomDisplace(const pDomain& dom)
@@ -272,7 +272,7 @@ void PContextActions_t::RandomDisplace(const pDomain& dom)
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::RandomVelocity(const pDomain& dom)
@@ -283,7 +283,7 @@ void PContextActions_t::RandomVelocity(const pDomain& dom)
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::RandomRotVelocity(const pDomain& dom)
@@ -294,7 +294,7 @@ void PContextActions_t::RandomRotVelocity(const pDomain& dom)
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::Restore(const float time_left, const bool vel, const bool rvel)
@@ -308,7 +308,7 @@ void PContextActions_t::Restore(const float time_left, const bool vel, const boo
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::Sink(const bool kill_inside, const pDomain& dom)
@@ -321,7 +321,7 @@ void PContextActions_t::Sink(const bool kill_inside, const pDomain& dom)
     A->SetKillsParticles(true); // Kills.
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::SinkVelocity(const bool kill_inside, const pDomain& dom)
@@ -334,7 +334,7 @@ void PContextActions_t::SinkVelocity(const bool kill_inside, const pDomain& dom)
     A->SetKillsParticles(true); // Kills.
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::Sort(const pVec& eye, const pVec& look, const bool front_to_back, const bool clamp_negative)
@@ -349,7 +349,7 @@ void PContextActions_t::Sort(const pVec& eye, const pVec& look, const bool front
     A->SetKillsParticles(false);
     A->SetDoNotSegment(true); // Particles aren't a function of other particles, but since it can screw up the working set thing, I'm setting it true.
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::Source(const float particle_rate, const pDomain& dom, const pSourceState& SrcSt)
@@ -363,7 +363,7 @@ void PContextActions_t::Source(const float particle_rate, const pDomain& dom, co
     A->SetKillsParticles(false);
     A->SetDoNotSegment(true); // Particles aren't a function of other particles, but does affect the working sets optimizations
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::SpeedLimit(const float min_speed, const float max_speed)
@@ -376,7 +376,7 @@ void PContextActions_t::SpeedLimit(const float min_speed, const float max_speed)
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::TargetColor(const pVec& color, const float alpha, const float scale)
@@ -390,7 +390,7 @@ void PContextActions_t::TargetColor(const pVec& color, const float alpha, const 
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::TargetSize(const pVec& size, const pVec& scale)
@@ -403,7 +403,7 @@ void PContextActions_t::TargetSize(const pVec& size, const pVec& scale)
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::TargetVelocity(const pVec& vel, const float scale)
@@ -416,7 +416,7 @@ void PContextActions_t::TargetVelocity(const pVec& vel, const float scale)
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 void PContextActions_t::TargetRotVelocity(const pVec& vel, const float scale)
@@ -429,7 +429,7 @@ void PContextActions_t::TargetRotVelocity(const pVec& vel, const float scale)
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
 // If in immediate mode, quickly add a vertex.
@@ -485,6 +485,6 @@ void PContextActions_t::Vortex(const pVec& center,            ///< tip of the vo
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
-    PS->SendAction(A);
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 }; // namespace PAPI
