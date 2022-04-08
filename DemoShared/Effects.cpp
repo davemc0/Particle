@@ -58,7 +58,7 @@ Effect::Effect(EffectsManager& Efx)
     SortParticles = false;
     PrimType = PRIM_POINT;
     UseRenderingParams = true;
-    particleSize = 0.15f;
+    particleSize = 0.15f; // World space units
     particleLifetime = Efx.demoRunSec;
     particleRate = Efx.maxParticles / particleLifetime;
 
