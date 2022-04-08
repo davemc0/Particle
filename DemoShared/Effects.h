@@ -67,6 +67,7 @@ public:
     virtual int NextEffect(EffectsManager& Efx);               // Specify next demo to run in case only a particular one is interesting
 
     PrimType_e getPrimType() { return PrimType; }               // Which kind of primitive is best for this particle
+    bool getWhiteBackground() { return WhiteBackground; }       // True for white; false for black
     bool getDepthTest() { return DepthTest; }                   // True to enable depth test when rendering this effect
     bool getMotionBlur() { return MotionBlur; }                 // True to enable motion blur when rendering this effect
     bool getSortParticles() { return SortParticles; }           // True to sort particles each frame for rendering
