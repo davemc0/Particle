@@ -41,6 +41,7 @@ bool WantEffectSettings = false;
 
 // Rendering params controlled by the effect
 PrimType_e PrimType = PRIM_SPHERE_SPRITE;
+bool WhiteBackground = true;
 bool DepthTest = false;
 bool MotionBlur = false;
 bool SortParticles = false;
@@ -65,6 +66,7 @@ EffectsManager Efx(P, 200000);
 // Render any geometry necessary to support the effects
 void RenderEffectGeometry()
 {
+    glLineWidth(1.0);
     for (const auto& domPtr : Efx.Demo->Renderables) {
         pVec v;
         glColor3ub(0, 115, 0);
@@ -155,6 +157,7 @@ void ApplyEffectSettings()
     if (!Efx.Demo->getUseRenderingParams()) return; // The effect does not want to give us any rendering params.
 
     PrimType = Efx.Demo->getPrimType();
+    WhiteBackground = Efx.Demo->getWhiteBackground();
     DepthTest = Efx.Demo->getDepthTest();
     MotionBlur = Efx.Demo->getMotionBlur();
     SortParticles = Efx.Demo->getSortParticles();
@@ -167,7 +170,8 @@ void MakeGaussianSpotTexture()
 {
     const int DIM = 64;
     const int DIM2 = DIM / 2;
-    const float TEX_SCALE = 6.0;
+    const float TEX_SCALE = 24.0f;
+    const int B = 1; // Border of 0
 
     glGenTextures(1, (GLuint*)&SpotTexID);
     glBindTexture(GL_TEXTURE_2D, SpotTexID);
@@ -177,7 +181,7 @@ void MakeGaussianSpotTexture()
     for (int y = 0; y < DIM; y++) {
         for (int x = 0; x < DIM; x++) {
             // Clamping the edges to zero allows Nvidia's blend optimizations to do their thing.
-            if (x < 2 || x >= DIM - 2 || y < 2 || y >= DIM - 2)
+            if (x < B || x >= DIM - B || y < B || y >= DIM - B)
                 img[y * DIM + x] = 0;
             else {
                 img[y * DIM + x] = TEX_SCALE * Gaussian2(x - DIM2, y - DIM2, (DIM * 0.15));
@@ -274,33 +278,25 @@ void InitOpenGL()
 
     if (glewInit() != GLEW_OK) throw PError_t("No GLEW");
 
-    // Make the point size attenuate with distance.
-    // These numbers are arbitrary and need to be fixed for accuracy.
+    // Deprecated: Make the point size attenuate with distance. Modern way is to do this in the geometry shader:
     // The most correct way to do this is to compute the determinant of the upper 3x3 of the
     // ModelView + Viewport matrix. This gives a measure of the change in size from model space
     // to eye space. The cube root of this estimates the 1D change in scale. Divide this by W per point.
+    // These numbers are arbitrary and need to be fixed for accuracy.
     float params[3] = {0.0f, 0.0f, 0.00003f};
     glPointParameterfv(GL_POINT_DISTANCE_ATTENUATION, params);
     glPointParameterf(GL_POINT_SIZE_MIN, 0);
-    glPointParameterf(GL_POINT_SIZE_MAX, 5000);
-    glPointParameterf(GL_POINT_FADE_THRESHOLD_SIZE, 1);
+    glPointParameterf(GL_POINT_SIZE_MAX, 500);
+    glPointParameterf(GL_POINT_FADE_THRESHOLD_SIZE, 1.f); // Points with derived size less than this clamp size to this and reduce alpha.
 
-    glEnable(GL_LINE_SMOOTH);
-    glEnable(GL_POINT_SMOOTH);
-    glLineWidth(1.0);
-    glPointSize(1.0);
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-    glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
+    // glEnable(GL_LINE_SMOOTH);
+    // glEnable(GL_POINT_SMOOTH);
+    // glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    // glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
 
     glEnable(GL_ALPHA_TEST);
     glAlphaFunc(GL_GREATER, 2 / 255.0);
-
-    if (DepthTest)
-        glEnable(GL_DEPTH_TEST);
-    else
-        glDisable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    glMatrixMode(GL_MODELVIEW);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -331,37 +327,14 @@ void InitOpenGL()
         glEnd();
         glEndList();
     }
+
+    glEnable(GL_MULTISAMPLE);
 }
 
-void Draw()
+void MoveCamera(pVec& Cam, pVec& At)
 {
-    InitOpenGL();
-
-    glLoadIdentity();
-
-    if (false && MotionBlur) {
-        // This is a cheezy motion blur that dims the old frame contents
-        // before rendering the new ones. Requires single-buffering.
-        glMatrixMode(GL_PROJECTION);
-        glPushMatrix();
-        glLoadIdentity();
-
-        glDrawBuffer(GL_FRONT);
-        glColor4f(0, 0, 0, BlurRate);
-        glRectf(-1, -1, 1, 1);
-        if (DepthTest) glClear(GL_DEPTH_BUFFER_BIT);
-
-        glPopMatrix();
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-
-        // XXX: When do we restore the projection matrix for normal rendering?
-    } else {
-        glClear(GL_COLOR_BUFFER_BIT | (DepthTest ? GL_DEPTH_BUFFER_BIT : 0));
-    }
-
     // Use a particle to model the camera pose
-    float CamSpeed = 3.f;
+    const float CamSpeed = 3.f;
     static int CameraSystem = -1;
     if (CameraSystem < 0) {
         CameraSystem = P.GenParticleGroups(1, 1);
@@ -379,19 +352,53 @@ void Draw()
         P.Move();
     }
 
-    // Make the camera track a particle
+    // Make the camera track a particle from the main particle system
     if (ParticleCam) P.CurrentGroup(Efx.particleHandle);
 
-    pVec Cam, Vel;
+    pVec Vel;
     P.GetParticles(0, 1, (float*)&Cam, NULL, (float*)&Vel);
 
-#if 0
-    pVec At=Cam+Vel; // Look in the direction the camera is flying
-#else
-    pVec At = Efx.center; // Look at the center of action
-#endif
+    //  At=Cam+Vel; // Look in the direction the camera is flying
+    At = Efx.center; // Look at the center of action
+}
+
+void Draw()
+{
+    InitOpenGL();
+
+    // Screen-space stuff
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glEnable(GL_DEPTH_TEST);
+
+    if (false && MotionBlur) {
+        // This is a cheezy motion blur that dims the old frame contents
+        // before rendering the new ones. Requires single-buffering.
+        glMatrixMode(GL_PROJECTION);
+        glPushMatrix();
+        glLoadIdentity();
+
+        glDrawBuffer(GL_FRONT);
+        glColor4f(0, 0, 0, BlurRate); // Blur rate should be f(frame rate)
+        glRectf(-1, -1, 1, 1);
+        if (DepthTest) glClear(GL_DEPTH_BUFFER_BIT);
+
+        glPopMatrix(); // Restore the projection matrix for normal rendering
+        glMatrixMode(GL_MODELVIEW);
+    } else {
+        if (WhiteBackground)
+            glClearColor(1.0, 1.0, 1.0, 0.0);
+        else
+            glClearColor(0.0, 0.0, 0.0, 0.0);
+        glClear(GL_COLOR_BUFFER_BIT | (DepthTest ? GL_DEPTH_BUFFER_BIT : 0));
+    }
+
+    // Camera stuff
+    pVec Cam, At;
+    MoveCamera(Cam, At);
     gluLookAt(Cam.x(), Cam.y(), Cam.z(), At.x(), At.y(), At.z(), 0, 0, 1);
 
+    // Scene geometry
     if (DrawEffectGeometry) RenderEffectGeometry();
 
     // Do the particle dynamics
@@ -407,9 +414,10 @@ void Draw()
     }
 
     // Draw the particle system
-    pVec view = At - Cam;
-    view.normalize();
-    pVec up = pVec(0, 0, 1);
+    if (DepthTest)
+        glEnable(GL_DEPTH_TEST);
+    else
+        glDisable(GL_DEPTH_TEST);
 
     switch (PrimType) {
     case PRIM_DISPLAY_LIST:
@@ -419,6 +427,7 @@ void Draw()
         P.CopyVertexB(false, true);
         break;
     case PRIM_LINE:
+        glLineWidth(2.0);
         // DrawGroupAsLines(P, false, Efx.timeStep);
         DrawGroupAsLines(P, false, -0.25f);
         break;
@@ -444,7 +453,9 @@ void Draw()
         break;
     case PRIM_QUAD:
         glEnable(GL_TEXTURE_2D);
-        DrawGroupAsQuadSprites(P, view, up, 1.f, true, false, false);
+        pVec view = (At - Cam);
+        view.normalize();
+        DrawGroupAsQuadSprites(P, view, pVec(0, 0, 1), 1.f, true, false, false);
         glDisable(GL_TEXTURE_2D);
         break;
     case PRIM_NONE:
@@ -498,11 +509,12 @@ void Reshape(int w, int h)
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(40, WinWidth / double(WinHeight), 1, 100);
+    gluPerspective(40.f, WinWidth / double(WinHeight), 1, 100);
     glMatrixMode(GL_MODELVIEW);
 
     // Useful for motion blur so background doesn't get ugly.
-    glClear(GL_COLOR_BUFFER_BIT | (DepthTest ? GL_DEPTH_BUFFER_BIT : 0));
+    // glClear(GL_COLOR_BUFFER_BIT | (DepthTest ? GL_DEPTH_BUFFER_BIT : 0));
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void menu(int item)
@@ -571,10 +583,6 @@ void menu(int item)
     case 't': ShowText = !ShowText; break;
     case 'd':
         DepthTest = !DepthTest;
-        if (DepthTest)
-            glEnable(GL_DEPTH_TEST);
-        else
-            glDisable(GL_DEPTH_TEST);
         std::cerr << "DepthTest " << (DepthTest ? "on" : "off") << ".\n";
         break;
     case 'g': DrawEffectGeometry = !DrawEffectGeometry; break;
@@ -647,6 +655,7 @@ void GlutSetup(int argc, char** argv)
 {
     glutInit(&argc, argv);
 
+    glutSetOption(GLUT_MULTISAMPLE, 16);
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_MULTISAMPLE);
     glutInitWindowSize(WinWidth, WinHeight);
     glutInitWindowPosition(300, 0);

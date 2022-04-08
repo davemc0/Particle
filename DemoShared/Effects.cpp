@@ -926,15 +926,15 @@ void Tornado::DoActions(EffectsManager& Efx)
     ParticleContext_t& P = Efx.P;
     pSourceState S;
     S.Size(particleSize);
-    S.Velocity(PDPoint(pVec(0, 0, 0)));
+    S.Velocity(PDBlob(pVec(0.f), 0.5f));
     S.Color(PDLine(pVec(.0, .8, .8), pVec(1, 1, 1)));
     S.StartingAge(0);
     S.Size(particleSize);
-    P.Source(particleRate, Render(PDLine(pVec(-7, 0, 15), pVec(7, 0, 15))), S);
+    P.Source(particleRate, Render(PDBox(pVec(-7, 0, 12), pVec(7, 0, 16))), S);
 
     P.Damping(pVec(.95));
     P.Gravity(Efx.GravityVec);
-    P.Vortex(Efx.center + pVec(0, 0, -5.f), pVec(0, 0, 11), 1.8f, 7.f, 80.f, -2000, 1000.0f);
+    P.Vortex(Efx.center + pVec(0, 0, -5.f), pVec(0, 0, 11), 1.8f, 7.f, 80.f, -200.f, 1000.0f);
     P.Move(true, false);
 
     P.KillOld(particleLifetime);
@@ -1018,6 +1018,7 @@ void EffectsManager::ChooseDemo(int newDemoNum, ExecMode_e EM)
     EASSERT(demoNum >= 0 && demoNum < getNumEffects());
     Demo = Effects[demoNum];
 
+    std::cerr << Demo->GetName() << '\n';
     Demo->StartEffect(*this);
 }
 

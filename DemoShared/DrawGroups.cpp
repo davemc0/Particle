@@ -36,7 +36,7 @@ void DrawGroupAsLines(ParticleContext_t& P, const bool const_color, const float 
 
             // Make a tail with the velocity vector's direction and length.
             vel.normalize(len_scale);
-            pVec tail = pos - vel;
+            pVec tail = pos + vel;
 
             if (!const_color) // Warning: this depends on alpha following color in the Particle struct.
                 glColor4fv((GLfloat*)ptr + flstride * i + color3Ofs);
