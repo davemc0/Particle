@@ -165,8 +165,8 @@ inline float Gaussian2(float x, float y, float sigma) { return expf(-0.5f * (x *
 
 void MakeGaussianSpotTexture()
 {
-    const int DIM = 32;
-    const int DIM2 = 16;
+    const int DIM = 64;
+    const int DIM2 = DIM / 2;
     const float TEX_SCALE = 6.0;
 
     glGenTextures(1, (GLuint*)&SpotTexID);
@@ -177,7 +177,7 @@ void MakeGaussianSpotTexture()
     for (int y = 0; y < DIM; y++) {
         for (int x = 0; x < DIM; x++) {
             // Clamping the edges to zero allows Nvidia's blend optimizations to do their thing.
-            if (x == 0 || x == DIM - 1 || y == 0 || y == DIM - 1)
+            if (x < 2 || x >= DIM - 2 || y < 2 || y >= DIM - 2)
                 img[y * DIM + x] = 0;
             else {
                 img[y * DIM + x] = TEX_SCALE * Gaussian2(x - DIM2, y - DIM2, (DIM * 0.15));
@@ -192,12 +192,15 @@ void MakeGaussianSpotTexture()
     GL_ASSERT();
 
     gluBuild2DMipmaps(GL_TEXTURE_2D, GL_ALPHA16, DIM, DIM, GL_ALPHA, GL_FLOAT, img);
+
+    delete[] img;
 }
 
 void MakeSphereTexture()
 {
     const int DIM = 512;
-    const int DIM2 = DIM / 2 - 1;
+    const int CTR = DIM / 2;
+    const int RAD = CTR - 16; // Clamping the edges to zero allows Nvidia's blend optimizations to do their thing.
 
     glGenTextures(1, (GLuint*)&SphereTexID);
     glBindTexture(GL_TEXTURE_2D, SphereTexID);
@@ -209,23 +212,16 @@ void MakeSphereTexture()
 
     for (int y = 0; y < DIM; y++) {
         for (int x = 0; x < DIM; x++) {
-            // Clamping the edges to zero allows Nvidia's blend optimizations to do their thing.
-            if (x == 0 || x == DIM - 1 || y == 0 || y == DIM - 1)
-                img[y * DIM + x] = 0;
-            else {
-                pVec p = pVec(x, y, 0) - pVec(DIM2, DIM2, 0);
-                float len = p.length();
-                float z = sqrt(DIM2 * DIM2 - len * len);
-                p.z() = z;
-                if (len >= DIM2) {
-                    img[y * DIM + x] = 0.0;
-                    continue;
-                }
-
+            pVec p = pVec(x, y, 0) - pVec(CTR, CTR, 0);
+            float len = p.length();
+            float z = sqrt(RAD * RAD - len * len);
+            p.z() = z;
+            if (len >= RAD) {
+                img[y * DIM + x] = 0.0;
+            } else {
                 p.normalize();
                 float v = dot(p, light);
                 if (v < 0) v = 0;
-
                 img[y * DIM + x] = v;
             }
         }
@@ -238,6 +234,8 @@ void MakeSphereTexture()
     GL_ASSERT();
 
     gluBuild2DMipmaps(GL_TEXTURE_2D, GL_ALPHA16, DIM, DIM, GL_ALPHA, GL_FLOAT, img);
+
+    delete[] img;
 }
 
 static void showBitmapMessage(GLfloat x, GLfloat y, char* message)
@@ -448,14 +446,9 @@ void Draw()
         glDisable(GL_POINT_SPRITE);
         glDisable(GL_TEXTURE_2D);
         break;
-    case PRIM_TRIANGLE:
-        glEnable(GL_TEXTURE_2D);
-        DrawGroupAsTriSprites(P, view, up, 1.f, true, true, false);
-        glDisable(GL_TEXTURE_2D);
-        break;
     case PRIM_QUAD:
         glEnable(GL_TEXTURE_2D);
-        DrawGroupAsQuadSprites(P, view, up, 1.f, true, true, false);
+        DrawGroupAsQuadSprites(P, view, up, 1.f, true, false, false);
         glDisable(GL_TEXTURE_2D);
         break;
     case PRIM_NONE:
