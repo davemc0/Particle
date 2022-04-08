@@ -288,12 +288,12 @@ class EffectsManager {
 public:
     uc3Image* Img; // For the PhotoShape effect
 
-    std::vector<Effect*> Effects;
+    std::vector<std::shared_ptr<Effect>> Effects;
 
     ParticleContext_t& P;
     pVec GravityVec;               // Gravity goes in this direction for all effects that use it
     pVec center = {0.f, 0.f, 5.f}; // Coordinates of the center of interest of particle effects
-    Effect* Demo;                  // Pointer to the current demo
+    std::shared_ptr<Effect> Demo;  // Pointer to the current demo
     int demoNum;                   // Index of the current demo
     int maxParticles;              // The number of particles the app wants in this demo
     int simStepsPerFrame;          // The number of simulation time steps per rendered frame

@@ -12,8 +12,8 @@
     <h2>API</h2>
     <ul>
         <li>Benchmark update
-        <li>Back port _Impl functions to original actions
-        <li>Optimize compiled action lists by combining calls. I believe the CUDA implementation will handle this.
+        <li>Back port _Impl functions from cudagen3 branch to original actions. I don't remember why they're better.
+        <li>Optimize compiled action lists by combining calls. I believe the emitted implementation will handle this.
         <li>Bouncing off multiple nearby or intersecting domains is broken (see Waterfall).
         <li>Bouncing and avoiding of PDUnion domains. This may be the answer for obstacle avoidance.
         <li>Bounce off cylinders
@@ -33,12 +33,11 @@
     <h2>
         Demos</h2>
     <ul>
-        <li>Fix memory leaks. See Sphere demo. But not Atom.
+        <li>Fix inconsistent particle size
         <li>Use multi-sampling and don't use primitive smooth edges
         <li>Per-effect rendering options: motion blur, primitive, texture, depth test, particle size; Do I just make an init function, or do I make a struct?
         <li>Fix motion blur
         <li>Smiley face image restore default
-        <li>Fix crash bug
         <li>par unseq
         <li>Add resiliency cutoff so it bounces 100% if below cutoff and clean up friction
         <li>Force inside / outside a 3D domain
@@ -51,7 +50,7 @@
         <li>Change pVec to not do x(),y(),z()
         <li>Get Boids working and integrated into Playground / Effects.cpp
 
-<li>Environment reflected water drops
+        <li>Environment reflected water drops
         <li>Make demos that use a wider variety of actions
         <li>Demo where you put particles all over the surface of a statue, explode the statue, and then suck the particles back to the original position.
     </ul>
