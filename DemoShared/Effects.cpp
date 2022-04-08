@@ -176,6 +176,7 @@ void Balloons::DoActions(EffectsManager& Efx)
     pSourceState S;
     S.Color(DomList);
     S.StartingAge(0, 5);
+    S.Size(particleSize);
     S.Velocity(pVec(0.f));
     float BBOX = 2.5;
     P.Source(particleRate, PDBox(Efx.center - pVec(BBOX), Efx.center + pVec(BBOX)), S);
@@ -221,6 +222,7 @@ void BounceToy::DoActions(EffectsManager& Efx)
     pSourceState S;
     S.Color(PDLine(pVec(1, 1, 0), pVec(0, 1, 0)));
     S.Velocity(PDDisc(pVec(0, 0, 0), pVec(0, 1, 0), 6.f));
+    S.Size(particleSize);
     P.Source(particleRate, PDLine(C + pVec(-5, 0, 10), C + pVec(5, 0, 10)), S);
 
     P.Gravity(Efx.GravityVec);
@@ -287,10 +289,10 @@ void Fireflies::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
-    S.Size(particleSize);
     S.Velocity(PDPoint(pVec(0, 0, -1.f)));
     S.Color(PDLine(pVec(.1, .5, 0), pVec(.9, .9, .1)));
     S.StartingAge(0, 1.f);
+    S.Size(particleSize);
     P.Source(particleRate, PDBox(Efx.center - pVec(150, 25, 5), Efx.center + pVec(150, 150, 5)), S);
 
     P.RandomAccel(PDSphere(pVec(0.f, 0.f, 3.6f), 25.f));
@@ -318,7 +320,8 @@ void Fireworks::DoActions(EffectsManager& Efx)
     /////////////////////////////////////////
     // The actions for moving the sparks
     pSourceState S;
-    S.StartingAge(0, 6);
+    S.StartingAge(0, 6.f);
+    S.Size(particleSize);
     S.Velocity(PDBlob(pVec(0.f), 0.4f));
 
     float particleRatePerRocket = particleRate / MaxRockets;
@@ -357,6 +360,7 @@ void Fireworks::PerFrame(ExecMode_e EM, EffectsManager& Efx)
     pSourceState S;
     float s = 30.f;
     S.Velocity(PDCylinder(pVec(0, 0, 0.3) * s, pVec(0, 0, 0.5) * s, 0.11f * s, 0.07f * s));
+    S.Size(particleSize);
     S.Color(PDBox(pVec(0, 0.5, 0), pVec(1, 1, 1)));
     P.Source(1000, PDDisc(pVec(0, 0, 0), pVec(0, 0, 1), 12.f), S);
 
@@ -449,6 +453,7 @@ void Fountain::DoActions(EffectsManager& Efx)
     float s = 0.35f;
     S.Velocity(PDCylinder(pVec(0.f, -1.f, 35.f) * s, pVec(0.0f, -1.f, 37.f) * s, 2.1f * s, 1.9f * s));
     S.Color(PDLine(pVec(0.8, 0.9, 1.0), pVec(1.0, 1.0, 1.0)));
+    S.Size(particleSize);
     P.Source(particleRate, PDLine(pVec(0.0, 0.0, 1.f), pVec(0.0, 0.0, 1.4f)), S);
 
     P.Gravity(Efx.GravityVec);
@@ -496,6 +501,7 @@ void GridShape::StartEffect(EffectsManager& Efx)
 
     pSourceState S;
     S.Velocity(PDBlob(pVec(0.f), 0.0001f));
+    S.Size(particleSize);
     int dim = int(pow(float(numNewParticles), 0.33333333f));
 
     const pVec DD(8, 12, 9);
@@ -636,6 +642,7 @@ void PhotoShape::StartEffect(EffectsManager& Efx)
     pSourceState S;
     S.Velocity(PDBlob(pVec(0.f), 0.0001f));
     S.StartingAge(0);
+    S.Size(particleSize);
     int d = (int)sqrtf(numNewParticles);
 
     float sx = Efx.Img->w() / float(d);
@@ -797,6 +804,7 @@ void Snake::DoActions(EffectsManager& Efx)
     pSourceState S;
     S.Color(1, 0, 0);
     S.Velocity(PDSphere(pVec(0.f), 0.1f)); // This makes it able to compute a binormal.
+    S.Size(particleSize);
     float BOX = .5f;
     P.Source(particleRate, Render(PDBox(pVec(-BOX), pVec(BOX))), S);
 
@@ -921,6 +929,7 @@ void Tornado::DoActions(EffectsManager& Efx)
     S.Velocity(PDPoint(pVec(0, 0, 0)));
     S.Color(PDLine(pVec(.0, .8, .8), pVec(1, 1, 1)));
     S.StartingAge(0);
+    S.Size(particleSize);
     P.Source(particleRate, Render(PDLine(pVec(-7, 0, 15), pVec(7, 0, 15))), S);
 
     P.Damping(pVec(.95));
