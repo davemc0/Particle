@@ -141,11 +141,12 @@ void DrawGroupAsTriSprites(ParticleContext_t& P, const pVec& view, const pVec& u
 
     if (cnt < 1) return;
 
-    pVec* ppos = new pVec[cnt];
-    float* color = const_color ? NULL : new float[cnt * 4];
-    pVec* size = const_size ? NULL : new pVec[cnt];
+    // TODO: Slow
+    std::unique_ptr<pVec[]> ppos(new pVec[cnt]);
+    std::unique_ptr<float[]> color(const_color ? NULL : new float[cnt * 4]);
+    std::unique_ptr<pVec[]> size(const_size ? NULL : new pVec[cnt]);
 
-    P.GetParticles(0, cnt, (float*)ppos, color, NULL, (float*)size);
+    P.GetParticles(0, cnt, (float*)ppos.get(), color.get(), NULL, (float*)size.get());
 
     // Compute the vectors from the particle to the corners of its tri.
     // 2
@@ -195,10 +196,6 @@ void DrawGroupAsTriSprites(ParticleContext_t& P, const pVec& view, const pVec& u
     }
 
     glEnd();
-
-    delete[] ppos;
-    if (color) delete[] color;
-    if (size) delete[] size;
 }
 
 // Draw each particle as a screen-aligned quad with texture.
@@ -220,11 +217,12 @@ void DrawGroupAsQuadSprites(ParticleContext_t& P, const pVec& view, const pVec& 
 
     if (cnt < 1) return;
 
-    pVec* ppos = new pVec[cnt];
-    float* color = const_color ? NULL : new float[cnt * 4];
-    pVec* size = const_size ? NULL : new pVec[cnt];
+    // TODO: Slow
+    std::unique_ptr<pVec[]> ppos(new pVec[cnt]);
+    std::unique_ptr<float[]> color(const_color ? NULL : new float[cnt * 4]);
+    std::unique_ptr<pVec[]> size(const_size ? NULL : new pVec[cnt]);
 
-    P.GetParticles(0, cnt, (float*)ppos, color, NULL, (float*)size);
+    P.GetParticles(0, cnt, (float*)ppos.get(), color.get(), NULL, (float*)size.get());
 
     // Compute the vectors from the particle to the corners of its quad.
     // The particle is at the center of the x.
@@ -287,10 +285,6 @@ void DrawGroupAsQuadSprites(ParticleContext_t& P, const pVec& view, const pVec& 
     }
 
     glEnd();
-
-    delete[] ppos;
-    if (color) delete[] color;
-    if (size) delete[] size;
 }
 
 // Draw as points using vertex arrays

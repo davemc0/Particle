@@ -51,13 +51,14 @@ inline void BounceBox(pVec& jet, pVec& djet, float timeStep, const float boxSize
 
 Effect::Effect(EffectsManager& Efx)
 {
+    AList = -1;
+    WhiteBackground = true;
     MotionBlur = false;
     DepthTest = false;
-    KillAtStart = false;
-    AList = -1;
-    PrimType = 0; // GL_POINTS
-    TexID = -1;
-    particleSize = 1;
+    SortParticles = false;
+    PrimType = PRIM_POINT;
+    UseRenderingParams = true;
+    particleSize = 0.15f;
     particleLifetime = Efx.demoRunSec;
     particleRate = Efx.maxParticles / particleLifetime;
 
@@ -128,7 +129,7 @@ void Atom::DoActions(EffectsManager& Efx)
     pSourceState S;
     S.Velocity(PDSphere(pVec(0, 0, 0), 90));
     S.Color(PDBox(pVec(1, 0, 0), pVec(1, 0, 1)));
-    S.Size(pVec(1.5));
+    S.Size(particleSize);
     S.StartingAge(0);
 
     P.Source(particleRate, PDSphere(Efx.center, 6), S);
@@ -149,7 +150,15 @@ void Atom::EmitList(EffectsManager& Efx)
 
 void Atom::PerFrame(ExecMode_e EM, EffectsManager& Efx) { Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx); }
 
-void Atom::StartEffect(EffectsManager& Efx) { particleRate = Efx.maxParticles / particleLifetime; }
+void Atom::StartEffect(EffectsManager& Efx)
+{
+    particleRate = Efx.maxParticles / particleLifetime;
+    PrimType = PRIM_SPHERE_SPRITE;
+    WhiteBackground = false;
+    DepthTest = true;
+    MotionBlur = true;
+    SortParticles = false;
+}
 
 // A bunch of balloons
 void Balloons::DoActions(EffectsManager& Efx)
@@ -188,7 +197,15 @@ void Balloons::EmitList(EffectsManager& Efx)
 
 void Balloons::PerFrame(ExecMode_e EM, EffectsManager& Efx) { Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx); }
 
-void Balloons::StartEffect(EffectsManager& Efx) { particleRate = Efx.maxParticles / particleLifetime; }
+void Balloons::StartEffect(EffectsManager& Efx)
+{
+    particleRate = Efx.maxParticles / particleLifetime;
+    PrimType = PRIM_SPHERE_SPRITE;
+    WhiteBackground = true;
+    DepthTest = true;
+    MotionBlur = false;
+    SortParticles = false;
+}
 
 void BounceToy::DoActions(EffectsManager& Efx)
 {
@@ -204,7 +221,7 @@ void BounceToy::DoActions(EffectsManager& Efx)
     pSourceState S;
     S.Color(PDLine(pVec(1, 1, 0), pVec(0, 1, 0)));
     S.Velocity(PDDisc(pVec(0, 0, 0), pVec(0, 1, 0), 6.f));
-    P.Source(600, PDLine(C + pVec(-5, 0, 10), C + pVec(5, 0, 10)), S);
+    P.Source(particleRate, PDLine(C + pVec(-5, 0, 10), C + pVec(5, 0, 10)), S);
 
     P.Gravity(Efx.GravityVec);
 
@@ -224,6 +241,16 @@ void BounceToy::DoActions(EffectsManager& Efx)
     P.Move(true, false);
 
     P.Sink(false, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
+}
+
+void BounceToy::StartEffect(EffectsManager& Efx)
+{
+    particleRate = 600;
+    PrimType = PRIM_LINE;
+    WhiteBackground = true;
+    DepthTest = true;
+    MotionBlur = false;
+    SortParticles = false;
 }
 
 // An explosion from the center of the universe, followed by gravity toward a point
@@ -249,14 +276,18 @@ void Explosion::PerFrame(ExecMode_e EM, EffectsManager& Efx)
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
 
-void Explosion::StartEffect(EffectsManager& Efx) { time_since_start = 0; }
+void Explosion::StartEffect(EffectsManager& Efx)
+{
+    time_since_start = 0;
+    UseRenderingParams = false;
+}
 
 // Fireflies bobbing around
 void Fireflies::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
-    S.Size(pVec(1.0));
+    S.Size(particleSize);
     S.Velocity(PDPoint(pVec(0, 0, -1.f)));
     S.Color(PDLine(pVec(.1, .5, 0), pVec(.9, .9, .1)));
     S.StartingAge(0, 1.f);
@@ -269,7 +300,15 @@ void Fireflies::DoActions(EffectsManager& Efx)
     P.Sink(false, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
 }
 
-void Fireflies::StartEffect(EffectsManager& Efx) { particleRate = 5000.f; }
+void Fireflies::StartEffect(EffectsManager& Efx)
+{
+    particleRate = 5000.f;
+    PrimType = PRIM_GAUSSIAN_SPRITE;
+    WhiteBackground = false;
+    DepthTest = false;
+    MotionBlur = true;
+    SortParticles = true;
+}
 
 // Rocket-style fireworks
 void Fireworks::DoActions(EffectsManager& Efx)
@@ -347,6 +386,11 @@ void Fireworks::StartEffect(EffectsManager& Efx)
     if (Efx.particleHandle >= 0) Efx.P.CurrentGroup(Efx.particleHandle);
 
     particleRate = Efx.maxParticles / particleLifetime; // Total particle rate for the sparks
+    PrimType = PRIM_GAUSSIAN_SPRITE;
+    WhiteBackground = false;
+    DepthTest = false;
+    MotionBlur = false;
+    SortParticles = true;
 }
 
 // It's like a flame thrower spinning around
@@ -359,7 +403,7 @@ void FlameThrower::DoActions(EffectsManager& Efx)
     if (dirAng != P_VARYING_FLOAT) vvel = pVec(sin(dirAng), cos(dirAng), 0.f) * 18.f;
     S.Velocity(PDBlob(vvel, 0.3f));
     S.StartingAge(0);
-    S.Size(pVec(1));
+    S.Size(particleSize);
     P.Source(particleRate, PDSphere(Efx.center, 0.5f), S);
 
     P.Gravity(pVec(0, 0, .6));
@@ -390,6 +434,11 @@ void FlameThrower::StartEffect(EffectsManager& Efx)
 {
     particleRate = Efx.maxParticles / particleLifetime;
     dirAng = 0;
+    PrimType = PRIM_GAUSSIAN_SPRITE;
+    WhiteBackground = true;
+    DepthTest = false;
+    MotionBlur = false;
+    SortParticles = true;
 }
 
 // A fountain spraying up in the middle of the screen
@@ -418,7 +467,15 @@ void Fountain::EmitList(EffectsManager& Efx)
 
 void Fountain::PerFrame(ExecMode_e EM, EffectsManager& Efx) { Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx); }
 
-void Fountain::StartEffect(EffectsManager& Efx) { particleRate = Efx.maxParticles / particleLifetime; }
+void Fountain::StartEffect(EffectsManager& Efx)
+{
+    particleRate = Efx.maxParticles / particleLifetime;
+    PrimType = PRIM_SPHERE_SPRITE; // None of these look like water.
+    WhiteBackground = true;
+    DepthTest = true;
+    MotionBlur = false;
+    SortParticles = false;
+}
 
 // A bunch of particles in a grid shape
 void GridShape::DoActions(EffectsManager& Efx)
@@ -458,6 +515,12 @@ void GridShape::StartEffect(EffectsManager& Efx)
             }
         }
     }
+
+    PrimType = PRIM_SPHERE_SPRITE;
+    WhiteBackground = true;
+    DepthTest = true;
+    MotionBlur = false;
+    SortParticles = false;
 }
 
 // It's like a fan cruising around under a floor, blowing up on some ping pong balls.
@@ -467,7 +530,7 @@ void JetSpray::DoActions(EffectsManager& Efx)
     ParticleContext_t& P = Efx.P;
     pSourceState S;
     S.Velocity(PDBlob(pVec(0, 0, 0), 0.6));
-    S.Size(pVec(1.5));
+    S.Size(particleSize);
     S.Color(PDSphere(pVec(.8, .4, .1), .1));
     P.Source(60, PDRectangle(pVec(-1, -1, 0.1), pVec(2, 0, 0), pVec(0, 2, 0)), S);
 
@@ -501,6 +564,11 @@ void JetSpray::StartEffect(EffectsManager& Efx)
     jet = pVec(0.f);
     djet = pRandVec() * 20.f;
     djet.z() = 0.0f;
+    PrimType = PRIM_GAUSSIAN_SPRITE;
+    WhiteBackground = false;
+    DepthTest = false;
+    MotionBlur = false;
+    SortParticles = true;
 }
 
 // A sprayer with particles that orbit two points
@@ -509,7 +577,7 @@ void Orbit2::DoActions(EffectsManager& Efx)
     ParticleContext_t& P = Efx.P;
     pSourceState S;
     S.Velocity(PDBlob(pVec(2.f, -2.f, 0), 1.5f));
-    S.Size(pVec(1.0));
+    S.Size(particleSize);
     const pVec tjet = Abs(jet) * 0.1 + pVec(0.4, 0.4, 0.4);
     S.Color(PDSphere(tjet, 0.1));
     P.Source(particleRate, PDPoint(jet), S);
@@ -540,6 +608,11 @@ void Orbit2::StartEffect(EffectsManager& Efx)
     particleRate = Efx.maxParticles / particleLifetime;
     jet = pVec(-4, 0, 2.4);
     djet = pRandVec() * 20.f;
+    PrimType = PRIM_GAUSSIAN_SPRITE;
+    WhiteBackground = true;
+    DepthTest = false;
+    MotionBlur = true;
+    SortParticles = true;
 }
 
 // A bunch of particles in the shape of a photo
@@ -581,6 +654,12 @@ void PhotoShape::StartEffect(EffectsManager& Efx)
             P.Vertex(v * 6.0f - pVec(3.0f, 0, -0.1f), S);
         }
     }
+
+    PrimType = PRIM_GAUSSIAN_SPRITE;
+    WhiteBackground = true;
+    DepthTest = false;
+    MotionBlur = false;
+    SortParticles = false;
 }
 
 // It kinda looks like rain hitting a parking lot
@@ -590,7 +669,7 @@ void Rain::DoActions(EffectsManager& Efx)
     pSourceState S;
     S.Velocity(PDSphere(pVec(0.f), 1.f));
     S.Color(PDSphere(pVec(0.4, 0.4, 0.9), .1));
-    S.Size(pVec(1.5));
+    S.Size(particleSize);
     S.StartingAge(0, 5);
     float D = 200;
     P.Source(particleRate, PDRectangle(pVec(-D / 2, -D / 2, 15), pVec(D, 0, 0), pVec(0, D, 0)), S);
@@ -609,7 +688,15 @@ void Rain::EmitList(EffectsManager& Efx)
 
 void Rain::PerFrame(ExecMode_e EM, EffectsManager& Efx) { Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx); }
 
-void Rain::StartEffect(EffectsManager& Efx) { particleRate = Efx.maxParticles / particleLifetime; }
+void Rain::StartEffect(EffectsManager& Efx)
+{
+    particleRate = Efx.maxParticles / particleLifetime;
+    PrimType = PRIM_SPHERE_SPRITE;
+    WhiteBackground = false;
+    DepthTest = true;
+    MotionBlur = false;
+    SortParticles = false;
+}
 
 // Restore particles to their PositionB and UpVecB.
 void Restore::DoActions(EffectsManager& Efx)
@@ -631,7 +718,11 @@ void Restore::PerFrame(ExecMode_e EM, EffectsManager& Efx)
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
 
-void Restore::StartEffect(EffectsManager& Efx) { time_left = Efx.demoRunSec; }
+void Restore::StartEffect(EffectsManager& Efx)
+{
+    time_left = Efx.demoRunSec;
+    UseRenderingParams = false;
+}
 
 // A sheet of particles falling down, avoiding various-shaped obstacles
 void Shower::DoActions(EffectsManager& Efx)
@@ -639,7 +730,7 @@ void Shower::DoActions(EffectsManager& Efx)
     ParticleContext_t& P = Efx.P;
     pSourceState S;
     S.Velocity(PDBlob(pVec(0.f), 0.1f));
-    S.Size(pVec(1.5));
+    S.Size(particleSize);
     S.StartingAge(0);
     S.Color(PDBlob(pVec(.7, .7, .2), .2));
     P.Source(particleRate, PDPoint(jet), S);
@@ -690,6 +781,12 @@ void Shower::StartEffect(EffectsManager& Efx)
     jet = Efx.center;
     djet = pRandVec() * 0.02f;
     djet.z() = 0.0f;
+
+    PrimType = PRIM_LINE;
+    WhiteBackground = true;
+    DepthTest = true;
+    MotionBlur = false;
+    SortParticles = false;
 }
 
 // A bunch of particles in a line that are attracted to the one after them in the list
@@ -712,9 +809,12 @@ void Snake::DoActions(EffectsManager& Efx)
 
 void Snake::StartEffect(EffectsManager& Efx)
 {
-    ParticleContext_t& P = Efx.P;
-
     particleRate = 10.0f; // Make a few additional particles
+    PrimType = PRIM_DISPLAY_LIST;
+    WhiteBackground = true;
+    DepthTest = true;
+    MotionBlur = false;
+    SortParticles = false;
 }
 
 // A bunch of particles inside a sphere
@@ -727,7 +827,7 @@ void Sphere::DoActions(EffectsManager& Efx)
     if (dirAng != P_VARYING_FLOAT) vvel = pVec(sin(dirAng), cos(dirAng), 0.f) * 12.f;
     S.Velocity(PDBlob(vvel, 0.4f));
     S.StartingAge(0);
-    S.Size(pVec(1));
+    S.Size(particleSize);
     P.Source(particleRate, PDPoint(pVec(1, 0, 8)), S);
 
     P.Gravity(Efx.GravityVec);
@@ -748,12 +848,23 @@ void Sphere::PerFrame(ExecMode_e EM, EffectsManager& Efx)
     const float rotRateInRadPerSec = 0.5f;
     dirAng += rotRateInRadPerSec * Efx.timeStep;
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
+
+    PrimType = PRIM_DISPLAY_LIST;
+    WhiteBackground = true;
+    DepthTest = true;
+    MotionBlur = false;
+    SortParticles = false;
 }
 
 void Sphere::StartEffect(EffectsManager& Efx)
 {
     dirAng = 0;
     particleRate = Efx.maxParticles / particleLifetime;
+    PrimType = PRIM_LINE;
+    WhiteBackground = true;
+    DepthTest = true;
+    MotionBlur = false;
+    SortParticles = false;
 }
 
 // A sprayer with particles orbiting a line
@@ -762,7 +873,7 @@ void Swirl::DoActions(EffectsManager& Efx)
     ParticleContext_t& P = Efx.P;
     pSourceState S;
     S.Velocity(PDBlob(pVec(2.f, -2.f, 0), 1.5f));
-    S.Size(pVec(1.0));
+    S.Size(particleSize);
     const pVec tjet = Abs(jet) * 0.1 + pVec(0.4, 0.4, 0.4);
     S.Color(PDSphere(tjet, 0.1));
     P.Source(particleRate, PDPoint(jet), S);
@@ -793,6 +904,11 @@ void Swirl::StartEffect(EffectsManager& Efx)
     particleRate = Efx.maxParticles / particleLifetime;
     jet = pVec(-4, 0, 2.4);
     djet = pRandVec() * 20.f;
+    PrimType = PRIM_GAUSSIAN_SPRITE;
+    WhiteBackground = true;
+    DepthTest = false;
+    MotionBlur = true;
+    SortParticles = true;
 }
 
 // A tornado that tests the vortex action
@@ -801,7 +917,7 @@ void Tornado::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
-    S.Size(pVec(1.0));
+    S.Size(particleSize);
     S.Velocity(PDPoint(pVec(0, 0, 0)));
     S.Color(PDLine(pVec(.0, .8, .8), pVec(1, 1, 1)));
     S.StartingAge(0);
@@ -816,7 +932,15 @@ void Tornado::DoActions(EffectsManager& Efx)
     P.Sink(false, Render(PDPlane(pVec(0, 0, -2), pVec(0, 0, 1))));
 }
 
-void Tornado::StartEffect(EffectsManager& Efx) { particleRate = Efx.maxParticles / particleLifetime; }
+void Tornado::StartEffect(EffectsManager& Efx)
+{
+    particleRate = Efx.maxParticles / particleLifetime;
+    PrimType = PRIM_SPHERE_SPRITE;
+    WhiteBackground = true;
+    DepthTest = true;
+    MotionBlur = false;
+    SortParticles = false;
+}
 
 // A waterfall bouncing off invisible rocks
 void Waterfall::DoActions(EffectsManager& Efx)
@@ -826,7 +950,7 @@ void Waterfall::DoActions(EffectsManager& Efx)
     float s = 0.3f;
     S.Velocity(PDBlob(pVec(3.f, -0.1f, 1.f) * s, 0.2f * s));
     S.Color(PDLine(pVec(0.8, 0.9, 1.0), pVec(1.0, 1.0, 1.0)));
-    S.Size(pVec(1.5));
+    S.Size(particleSize);
     P.Source(particleRate, Render(PDLine(pVec(-5, -1, 8), pVec(-5, 1, 8))), S);
 
     P.Gravity(Efx.GravityVec);
@@ -841,7 +965,15 @@ void Waterfall::DoActions(EffectsManager& Efx)
     P.Sink(false, PDSphere(pVec(0, 0, 0), 25));
 }
 
-void Waterfall::StartEffect(EffectsManager& Efx) { particleRate = Efx.maxParticles / particleLifetime; }
+void Waterfall::StartEffect(EffectsManager& Efx)
+{
+    particleRate = Efx.maxParticles / particleLifetime;
+    PrimType = PRIM_SPHERE_SPRITE;
+    WhiteBackground = true;
+    DepthTest = true;
+    MotionBlur = false;
+    SortParticles = false;
+}
 
 //////////////////////////////////////////////////////////////////////////////
 
