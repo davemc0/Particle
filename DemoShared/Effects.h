@@ -125,7 +125,7 @@ struct Fireflies : public Effect {
 // Rocket-style fireworks
 struct Fireworks : public Effect {
     static const int MaxRockets = 20;
-    int RocketGroup = -1, NumRockets; // Use separate particle system for rockets
+    int RocketGroup = -1, NumRockets = 0; // Use separate particle system for rockets
     pVec rocketPos[MaxRockets], rocketColor[MaxRockets];
 
     Fireworks(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
@@ -196,8 +196,6 @@ struct PhotoShape : public Effect {
     const std::string GetName() const { return "PhotoShape"; }
     void DoActions(EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
-
-private:
 };
 
 // It kinda looks like rain hitting a parking lot

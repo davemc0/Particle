@@ -145,7 +145,7 @@ void DrawGroupAsTriSprites(ParticleContext_t& P, const pVec& view, const pVec& u
     std::unique_ptr<float[]> color(const_color ? NULL : new float[cnt * 4]);
     std::unique_ptr<pVec[]> size(const_size ? NULL : new pVec[cnt]);
 
-    P.GetParticles(0, cnt, (float*)ppos.get(), color.get(), NULL, (float*)size.get());
+    P.GetParticles(0, cnt, (float*)ppos.get(), true, color.get(), NULL, (float*)size.get());
 
     // Compute the vectors from the particle to the corners of its tri.
     // 2
@@ -217,7 +217,7 @@ void DrawGroupAsQuadSprites(ParticleContext_t& P, const pVec& view, const pVec& 
     std::unique_ptr<float[]> color(const_color ? NULL : new float[cnt * 4]);
     std::unique_ptr<pVec[]> size(const_size ? NULL : new pVec[cnt]);
 
-    P.GetParticles(0, cnt, (float*)ppos.get(), color.get(), NULL, (float*)size.get());
+    P.GetParticles(0, cnt, (float*)ppos.get(), true, color.get(), NULL, (float*)size.get());
 
     // Compute the vectors from the particle to the corners of its quad.
     // The particle is at the center of the x.

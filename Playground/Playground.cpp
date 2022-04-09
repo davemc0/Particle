@@ -365,7 +365,7 @@ void MoveCamera(pVec& Cam, pVec& At)
     if (ParticleCam) P.CurrentGroup(Efx.particleHandle);
 
     pVec Vel;
-    P.GetParticles(0, 1, (float*)&Cam, NULL, (float*)&Vel);
+    P.GetParticles(0, 1, (float*)&Cam, false, NULL, (float*)&Vel);
 
     //  At=Cam+Vel; // Look in the direction the camera is flying
     At = Efx.center; // Look at the center of action
