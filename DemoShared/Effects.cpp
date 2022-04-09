@@ -261,9 +261,9 @@ void Explosion::DoActions(EffectsManager& Efx)
     ParticleContext_t& P = Efx.P;
     P.Damping(pVec(0.999));
     P.OrbitPoint(Efx.center, 30.f, 1.5);
-    P.Explosion(Efx.center, time_since_start * 30.f, 1200.f, 3.f, 0.1);
+    P.Explosion(Efx.center, time_since_start * 30.f, 1000.f, 3.f, 0.1);
     P.Move(true, false);
-    P.Sink(false, PDSphere(pVec(0, 0, 0), 30));
+    P.Sink(false, PDSphere(Efx.center, 50.f));
 }
 
 void Explosion::EmitList(EffectsManager& Efx)
@@ -727,7 +727,7 @@ void Restore::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 
 void Restore::StartEffect(EffectsManager& Efx)
 {
-    time_left = Efx.demoRunSec;
+    time_left = Efx.demoRunSec * 0.8f; // Save some time at the end to appreciate the result
     UseRenderingParams = false;
 }
 

@@ -421,10 +421,7 @@ void Draw()
     }
 
     P.CurrentGroup(Efx.particleHandle);
-    if (SortParticles) {
-        pVec Look = DepthTest ? (At - Cam) : (Cam - At); // XXX
-        P.Sort(Cam, Look);
-    }
+    if (SortParticles) P.Sort(Cam, Cam - At); // Sort back-to-front
 
     // Draw the particle system
     glEnable(GL_DEPTH_TEST);
