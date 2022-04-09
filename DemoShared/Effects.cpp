@@ -291,14 +291,14 @@ void Fireflies::DoActions(EffectsManager& Efx)
     pSourceState S;
     S.Velocity(PDPoint(pVec(0, 0, -1.f)));
     S.Color(PDLine(pVec(.1, .5, 0), pVec(.9, .9, .1)));
-    S.StartingAge(0, 1.f);
+    S.StartingAge(100.f, 0.f);
     S.Size(particleSize);
     P.Source(particleRate, PDBox(Efx.center - pVec(150, 25, 5), Efx.center + pVec(150, 150, 5)), S);
 
     P.RandomAccel(PDSphere(pVec(0.f, 0.f, 3.6f), 25.f));
     P.Move(true, false);
 
-    P.KillOld(1.7f);
+    P.KillOld(101.7f);
     P.Sink(false, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
 }
 
@@ -307,7 +307,7 @@ void Fireflies::StartEffect(EffectsManager& Efx)
     particleRate = 5000.f;
     PrimType = PRIM_GAUSSIAN_SPRITE;
     WhiteBackground = false;
-    DepthTest = false;
+    DepthTest = true;
     MotionBlur = true;
     SortParticles = true;
 }
@@ -334,7 +334,7 @@ void Fireworks::DoActions(EffectsManager& Efx)
     // P.Damping(pVec(0.999));
     P.TargetColor(pVec(0, 0, 0), 0, 0.01);
     P.Move(true, false);
-    P.KillOld(particleLifetime);
+    P.Sink(false, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
 }
 
 void Fireworks::EmitList(EffectsManager& Efx)
@@ -392,7 +392,7 @@ void Fireworks::StartEffect(EffectsManager& Efx)
     particleRate = Efx.maxParticles / particleLifetime; // Total particle rate for the sparks
     PrimType = PRIM_GAUSSIAN_SPRITE;
     WhiteBackground = false;
-    DepthTest = false;
+    DepthTest = true;
     MotionBlur = false;
     SortParticles = true;
 }
@@ -572,9 +572,9 @@ void JetSpray::StartEffect(EffectsManager& Efx)
     djet.z() = 0.0f;
     PrimType = PRIM_GAUSSIAN_SPRITE;
     WhiteBackground = false;
-    DepthTest = false;
+    DepthTest = true;
     MotionBlur = false;
-    SortParticles = true;
+    SortParticles = false;
 }
 
 // A sprayer with particles that orbit two points
