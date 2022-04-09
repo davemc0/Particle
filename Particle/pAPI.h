@@ -271,13 +271,14 @@ public:
     /// int cnt = GetGroupCount();
     /// float *ppos = new float[cnt * 3];
     /// int num_ret = GetParticles(0, cnt, ppos);
-    size_t GetParticles(const size_t index,     ///< index of the first particle to return
-                        const size_t count,     ///< max number of particles to return
-                        float* position = NULL, ///< location to store 3 floats per particle for position
-                        float* color = NULL,    ///< location to store 4 floats per particle for color and alpha
-                        float* vel = NULL,      ///< location to store 3 floats per particle for velocity
-                        float* size = NULL,     ///< location to store 3 floats per particle for size
-                        float* age = NULL       ///< location to store 1 float per particle for age
+    size_t GetParticles(const size_t index,  ///< index of the first particle to return
+                        const size_t count,  ///< max number of particles to return
+                        float* position,     ///< location to store 3 floats per particle for position
+                        const bool getAlpha, ///< true to get a float4 color with alpha; false to get a float3 color
+                        float* color = NULL, ///< location to store 3 or 4 floats per particle for color and optionally alpha
+                        float* vel = NULL,   ///< location to store 3 floats per particle for velocity
+                        float* size = NULL,  ///< location to store 3 floats per particle for size
+                        float* age = NULL    ///< location to store 1 float per particle for age
     );
 
     /// Return a pointer to particle data stored in API memory.

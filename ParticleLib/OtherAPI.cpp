@@ -168,7 +168,8 @@ void PContextParticleGroup_t::CopyGroup(const int p_src_group_num, const size_t 
 }
 
 // Copy from the current group to application memory.
-size_t PContextParticleGroup_t::GetParticles(const size_t index, const size_t cnt, float* verts, float* color, float* vel, float* size, float* age)
+size_t PContextParticleGroup_t::GetParticles(const size_t index, const size_t cnt, float* verts, const bool getAlpha, float* color, float* vel, float* size,
+                                             float* age)
 {
     if (PS->in_new_list) throw PErrInNewActionList("Can't call GetParticles while in NewActionList.");
     if (PS->pgroup_id < 0 || PS->pgroup_id >= (int)PS->PGroups.size()) throw PErrParticleGroup("GetParticles: Invalid pgroup_id");
@@ -200,7 +201,7 @@ size_t PContextParticleGroup_t::GetParticles(const size_t index, const size_t cn
             color[ci++] = m.color.x();
             color[ci++] = m.color.y();
             color[ci++] = m.color.z();
-            color[ci++] = m.alpha;
+            if (getAlpha) color[ci++] = m.alpha;
         }
 
         if (vel) {

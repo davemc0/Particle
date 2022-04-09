@@ -44,6 +44,25 @@ public:
         vertexB_tracks_ = true;
     }
 
+    pSourceState& operator=(const pSourceState& src)
+    {
+        Up_ = src.Up_->copy();
+        Vel_ = src.Vel_->copy();
+        RotVel_ = src.RotVel_->copy();
+        VertexB_ = src.VertexB_->copy();
+        Size_ = src.Size_->copy();
+        Color_ = src.Color_->copy();
+        Alpha_ = src.Alpha_->copy();
+
+        Data_ = src.Data_;
+        Age_ = src.Age_;
+        AgeSigma_ = src.AgeSigma_;
+        Mass_ = src.Mass_;
+        vertexB_tracks_ = src.vertexB_tracks_;
+
+        return *this;
+    }
+
     /// Specify the color of particles to be created.
     ///
     /// This call is short-hand for Color(PDPoint(color), PDPoint(pVec(alpha)).

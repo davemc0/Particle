@@ -325,9 +325,9 @@ void Fireworks::DoActions(EffectsManager& Efx)
     S.Velocity(PDBlob(pVec(0.f), 0.4f));
 
     float particleRatePerRocket = particleRate / MaxRockets;
-    for (int i = 0; i < MaxRockets; i++) {
+    for (int i = 0; i < NumRockets; i++) {
         S.Color(PDLine(rocketColor[i], pVec(1, .5, .5)));
-        P.Source((i < NumRockets) ? particleRatePerRocket : 0, PDPoint(rocketPos[i]), S);
+        P.Source(particleRatePerRocket, PDPoint(rocketPos[i]), S);
     }
 
     P.Gravity(Efx.GravityVec);
@@ -339,6 +339,7 @@ void Fireworks::DoActions(EffectsManager& Efx)
 
 void Fireworks::EmitList(EffectsManager& Efx)
 {
+    EASSERT(0); // Just make sure this code isn't used for now.
     // For emitting we have a constant max number of rockets and vary their params.
     NumRockets = MaxRockets;
     for (int i = 0; i < NumRockets; i++) {
@@ -362,14 +363,14 @@ void Fireworks::PerFrame(ExecMode_e EM, EffectsManager& Efx)
     S.Velocity(PDCylinder(pVec(0, 0, 0.3) * s, pVec(0, 0, 0.5) * s, 0.11f * s, 0.07f * s));
     S.Size(particleSize);
     S.Color(PDBox(pVec(0, 0.5, 0), pVec(1, 1, 1)));
-    P.Source(1000, PDDisc(pVec(0, 0, 0), pVec(0, 0, 1), 12.f), S);
+    P.Source(1000, PDDisc(pVec(0, 0, 0.1f), pVec(0, 0, 1), 12.f), S);
 
-    P.Sink(false, Render(PDPlane(pVec(0, 0, -1), pVec(0, 0, 1))));
+    P.Sink(false, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
     P.Gravity(Efx.GravityVec);
     P.Move(true, false);
 
     // Read back the position of the rockets.
-    NumRockets = (int)P.GetParticles(0, MaxRockets, (float*)rocketPos, (float*)rocketColor);
+    NumRockets = (int)P.GetParticles(0, MaxRockets, (float*)rocketPos, false, (float*)rocketColor);
 
     /////////////////////////////////////////
     // The actions for moving the sparks
