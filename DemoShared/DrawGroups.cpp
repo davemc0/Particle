@@ -15,7 +15,7 @@ using namespace PAPI;
 
 // Emit OpenGL calls to draw the particles as GL_LINES.
 // The color is set per primitive or is constant.
-// The other vertex of the line is the velocity vector.
+// The line direction is from the velocity vector.
 void DrawGroupAsLines(ParticleContext_t& P, const bool const_color, const float len_scale)
 {
     int cnt = (int)P.GetGroupCount();
@@ -33,9 +33,10 @@ void DrawGroupAsLines(ParticleContext_t& P, const bool const_color, const float 
         for (int i = 0; i < cnt; i++) {
             pVec pos = *(pVec*)(ptr + flstride * i + pos3Ofs);
             pVec vel = *(pVec*)(ptr + flstride * i + vel3Ofs);
+            pVec siz = *(pVec*)(ptr + flstride * i + size3Ofs);
 
-            // Make a tail with the velocity vector's direction and length.
-            vel.normalize(len_scale);
+            // Make a tail with the velocity vector's direction and the length as the particle's size scaled by len_scale .
+            vel.normalize(len_scale * siz.x());
             pVec tail = pos + vel;
 
             if (!const_color) // Warning: this depends on alpha following color in the Particle struct.
@@ -48,9 +49,9 @@ void DrawGroupAsLines(ParticleContext_t& P, const bool const_color, const float 
             pVec pos = *(pVec*)(ptr + flstride * i + pos3Ofs);
             pVec vel = *(pVec*)(ptr + flstride * i + vel3Ofs);
 
-            // Make a tail with the velocity vector's direction and length.
+            // Make a tail with the velocity vector's direction and length, scaled by len_scale.
             vel *= len_scale;
-            pVec tail = pos - vel;
+            pVec tail = pos + vel;
 
             if (!const_color) // Warning: this depends on alpha following color in the Particle struct.
                 glColor4fv((GLfloat*)ptr + flstride * i + color3Ofs);
@@ -124,16 +125,14 @@ void DrawGroupAsDisplayLists(ParticleContext_t& P, int dlist, bool const_color, 
     }
 }
 
-// Draw each particle as a screen-aligned triangle with texture.
 // Doesn't make the texture current. Just emits texcoords, if specified.
-// If size_scale is 1 and const_size is true then the textured square
-// will be 2x2 in world space (making the triangle sides be 4x4).
+// If size_scale is 1 and const_size is true or the particle size is 1 then the textured square will be 1x1 in world space (making the triangle sides be 2x2).
 
 // ViewV and UpV must be normalized and unequal.
-// The triangle is twice the screen area as the quad and thus takes twice
-// the rasterization and shading time.
-// However, the quad has four vertices whereas the tri has 3, so the quad
-// takes more geometry processing time.
+// The triangle is twice the screen area as the quad and thus takes twice the rasterization and shading time.
+// However, the quad has four vertices whereas the tri has 3, so the quad takes more geometry processing time.
+
+// Draw each particle as a screen-aligned triangle with texture.
 void DrawGroupAsTriSprites(ParticleContext_t& P, const pVec& view, const pVec& up, float size_scale = 1.0f, bool draw_tex = false, bool const_size = false,
                            bool const_color = false)
 {
@@ -158,8 +157,8 @@ void DrawGroupAsTriSprites(ParticleContext_t& P, const pVec& view, const pVec& u
     pVec right = Cross(view, up);
     right.normalize();
     pVec nup = Cross(right, view);
-    right *= size_scale;
-    nup *= size_scale;
+    right *= size_scale * 0.5f;
+    nup *= size_scale * 0.5f;
 
     pVec V0 = -(right + nup);
     pVec V1 = V0 + right * 4;
@@ -198,16 +197,12 @@ void DrawGroupAsTriSprites(ParticleContext_t& P, const pVec& view, const pVec& u
     glEnd();
 }
 
-// Draw each particle as a screen-aligned quad with texture.
 // Doesn't make the texture current. Just emits texcoords, if specified.
-// If size_scale is 1 and const_size is true then the textured square
-// will be 2x2 in world space.
+// If size_scale is 1 and const_size is true or the particle size is 1 then the textured square will be 1x1 in world space.
 
 // ViewV and UpV must be normalized and unequal.
-// The triangle is twice the screen area as the quad and thus takes twice
-// the rasterization and shading time.
-// However, the quad has four vertices whereas the tri has 3, so the quad
-// takes more geometry processing time.
+// The triangle is twice the screen area as the quad and thus takes twice the rasterization and shading time.
+// However, the quad has four vertices whereas the tri has 3, so the quad takes more geometry processing time.
 
 // Draw each particle as a screen-aligned quad with texture.
 void DrawGroupAsQuadSprites(ParticleContext_t& P, const pVec& view, const pVec& up, float size_scale = 1.0f, bool draw_tex = false, bool const_size = false,
@@ -233,8 +228,8 @@ void DrawGroupAsQuadSprites(ParticleContext_t& P, const pVec& view, const pVec& 
     pVec right = Cross(view, up);
     right.normalize();
     pVec nup = Cross(right, view);
-    right *= size_scale;
-    nup *= size_scale;
+    right *= size_scale * 0.5f;
+    nup *= size_scale * 0.5f;
 
     pVec V0 = -(right + nup);
     pVec V1 = right - nup;

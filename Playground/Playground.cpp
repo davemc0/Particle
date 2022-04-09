@@ -30,19 +30,19 @@
 
 namespace {
 // Mode controls
-bool CameraMotion = false;
+bool CameraMotion = true;
 bool DrawEffectGeometry = true;
 bool FreezeParticles = false;
 bool FullScreen = false;
 bool ParticleCam = false;
 bool RandomDemo = true;
 bool ShowText = true;
-bool WantEffectSettings = false;
+bool UseEffectSettings = true;
 
 // Rendering params controlled by the effect
 PrimType_e PrimType = PRIM_SPHERE_SPRITE;
 bool WhiteBackground = true;
-bool DepthTest = false;
+bool DepthTest = true;
 bool MotionBlur = false;
 bool SortParticles = false;
 
@@ -61,6 +61,10 @@ EffectsManager Efx(P, 20000);
 #else
 EffectsManager Efx(P, 200000);
 #endif
+
+float blackColor[] = {0, 0, 0, 1};
+float redColor[] = {1, 0, 0, 1};
+float whiteColor[] = {1, 1, 1, 1};
 } // namespace
 
 // Render any geometry necessary to support the effects
@@ -118,18 +122,19 @@ void RenderEffectGeometry()
             pVec vv = Cross(dom->nrm, uu);
             uu *= planeDist;
             vv *= planeDist;
+            float* bgColor = WhiteBackground ? whiteColor : blackColor;
             glBegin(GL_TRIANGLE_FAN);
-            glColor3f(0.6, 0.7, 0.8);
+            glColor4f(0.6, 0.7, 0.8, 1.0);
             glVertex3fv((GLfloat*)&(v = dom->p));
-            glColor3f(1.0, 1.0, 1.0);
+            glColor4fv(bgColor);
             glVertex3fv((GLfloat*)&(v = dom->p - uu - vv));
-            glColor3f(1.0, 1.0, 1.0);
+            glColor4fv(bgColor);
             glVertex3fv((GLfloat*)&(v = dom->p + uu - vv));
-            glColor3f(1.0, 1.0, 1.0);
+            glColor4fv(bgColor);
             glVertex3fv((GLfloat*)&(v = dom->p + uu + vv));
-            glColor3f(1.0, 1.0, 1.0);
+            glColor4fv(bgColor);
             glVertex3fv((GLfloat*)&(v = dom->p - uu + vv));
-            glColor3f(1.0, 1.0, 1.0);
+            glColor4fv(bgColor);
             glVertex3fv((GLfloat*)&(v = dom->p - uu - vv));
             glEnd();
         } else if (dynamic_cast<PDLine*>(domPtr.get())) {
@@ -152,7 +157,7 @@ void RenderEffectGeometry()
 // Call this after choosing an effect to set the render settings to those of this effect
 void ApplyEffectSettings()
 {
-    if (!WantEffectSettings) return;
+    if (!UseEffectSettings) return;
 
     if (!Efx.Demo->getUseRenderingParams()) return; // The effect does not want to give us any rendering params.
 
@@ -161,6 +166,8 @@ void ApplyEffectSettings()
     DepthTest = Efx.Demo->getDepthTest();
     MotionBlur = Efx.Demo->getMotionBlur();
     SortParticles = Efx.Demo->getSortParticles();
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 // Symmetric gaussian centered at origin; no covariance matrix
@@ -278,6 +285,8 @@ void InitOpenGL()
 
     if (glewInit() != GLEW_OK) throw PError_t("No GLEW");
 
+    std::cerr << glGetString(GL_VENDOR) << " " << glGetString(GL_RENDERER) << " " << glGetString(GL_VERSION) << '\n';
+
     // Deprecated: Make the point size attenuate with distance. Modern way is to do this in the geometry shader:
     // The most correct way to do this is to compute the determinant of the upper 3x3 of the
     // ModelView + Viewport matrix. This gives a measure of the change in size from model space
@@ -369,29 +378,33 @@ void Draw()
     // Screen-space stuff
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    glEnable(GL_DEPTH_TEST);
 
-    if (false && MotionBlur) {
+    if (MotionBlur) {
         // This is a cheezy motion blur that dims the old frame contents
         // before rendering the new ones. Requires single-buffering.
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
         glLoadIdentity();
 
+        glDisable(GL_DEPTH_TEST);
         glDrawBuffer(GL_FRONT);
-        glColor4f(0, 0, 0, BlurRate); // Blur rate should be f(frame rate)
+        float* bgColor = WhiteBackground ? whiteColor : blackColor;
+        glColor4f(bgColor[0], bgColor[1], bgColor[2], BlurRate); // Blur rate should be f(frame rate)
         glRectf(-1, -1, 1, 1);
-        if (DepthTest) glClear(GL_DEPTH_BUFFER_BIT);
+        glClear(GL_DEPTH_BUFFER_BIT);
 
         glPopMatrix(); // Restore the projection matrix for normal rendering
         glMatrixMode(GL_MODELVIEW);
     } else {
+        glDrawBuffer(GL_BACK);
         if (WhiteBackground)
             glClearColor(1.0, 1.0, 1.0, 0.0);
         else
             glClearColor(0.0, 0.0, 0.0, 0.0);
-        glClear(GL_COLOR_BUFFER_BIT | (DepthTest ? GL_DEPTH_BUFFER_BIT : 0));
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
 
     // Camera stuff
     pVec Cam, At;
@@ -409,15 +422,16 @@ void Draw()
 
     P.CurrentGroup(Efx.particleHandle);
     if (SortParticles) {
-        pVec Look = DepthTest ? (At - Cam) : (Cam - At);
+        pVec Look = DepthTest ? (At - Cam) : (Cam - At); // XXX
         P.Sort(Cam, Look);
     }
 
     // Draw the particle system
+    glEnable(GL_DEPTH_TEST);
     if (DepthTest)
-        glEnable(GL_DEPTH_TEST);
+        glDepthMask(GL_TRUE); // Do depth writes
     else
-        glDisable(GL_DEPTH_TEST);
+        glDepthMask(GL_FALSE); // No depth writes
 
     switch (PrimType) {
     case PRIM_DISPLAY_LIST:
@@ -429,7 +443,7 @@ void Draw()
     case PRIM_LINE:
         glLineWidth(2.0);
         // DrawGroupAsLines(P, false, Efx.timeStep);
-        DrawGroupAsLines(P, false, -0.25f);
+        DrawGroupAsLines(P, false, -1.f);
         break;
     case PRIM_POINT:
         glDisable(GL_POINT_SPRITE);
@@ -481,8 +495,8 @@ void Draw()
         int cnt = (int)P.GetGroupCount();
         char exCh = (ExecMode == Immediate_Mode) ? 'I' : (ExecMode == Internal_Mode) ? 'N' : 'C';
 
-        sprintf(msg, " %c%c%c%c%c%c%c%c n=%5d iters=%d fps=%02.2f %s %s t=%1.2f", MotionBlur ? 'B' : ' ', FreezeParticles ? 'F' : ' ',
-                WantEffectSettings ? 'A' : ' ', RandomDemo ? 'R' : ' ', DepthTest ? 'D' : ' ', exCh, CameraMotion ? 'M' : ' ', SortParticles ? 'S' : ' ', cnt,
+        sprintf(msg, " %c%c%c%c%c%c%c%c n=%5d iters=%d fps=%02.2f %s %s t=%1.2f", exCh, MotionBlur ? 'M' : ' ', FreezeParticles ? 'F' : ' ',
+                UseEffectSettings ? 'A' : ' ', RandomDemo ? 'R' : ' ', DepthTest ? 'D' : ' ', CameraMotion ? 'C' : ' ', SortParticles ? 'S' : ' ', cnt,
                 Efx.simStepsPerFrame, fps, PrimTypeNames[PrimType], Efx.GetCurEffectName().c_str(), RandomDemoClock.Read());
 
         glColor3f(1, 1, 1);
@@ -491,7 +505,7 @@ void Draw()
         showBitmapMessage(99, 49, msg);
     }
 
-    if (!MotionBlur) glutSwapBuffers();
+    glutSwapBuffers();
 
     if (RandomDemo && RandomDemoClock.Read() > Efx.demoRunSec) {
         RandomDemoClock.Reset();
@@ -512,9 +526,7 @@ void Reshape(int w, int h)
     gluPerspective(40.f, WinWidth / double(WinHeight), 1, 100);
     glMatrixMode(GL_MODELVIEW);
 
-    // Useful for motion blur so background doesn't get ugly.
-    // glClear(GL_COLOR_BUFFER_BIT | (DepthTest ? GL_DEPTH_BUFFER_BIT : 0));
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Useful for motion blur so background doesn't appear ugly at first
 }
 
 void menu(int item)
@@ -557,11 +569,8 @@ void menu(int item)
 
         std::cerr << "Switching to " << ((ExecMode == Immediate_Mode) ? "Immediate" : (ExecMode == Internal_Mode) ? "Internal" : "Compiled") << " mode.\n";
         break;
-    case 'm':
-        MotionBlur = !MotionBlur;
-        if (!MotionBlur) glDrawBuffer(GL_BACK);
-        break;
-    case 'a': WantEffectSettings = !WantEffectSettings; break;
+    case 'm': MotionBlur = !MotionBlur; break;
+    case 'a': UseEffectSettings = !UseEffectSettings; break;
     case 'c': CameraMotion = !CameraMotion; break;
     case 'r': RandomDemo = !RandomDemo; break;
     case 'f':
