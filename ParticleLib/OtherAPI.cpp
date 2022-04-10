@@ -141,6 +141,7 @@ void PContextParticleGroup_t::SetMaxParticles(const size_t max_count)
 {
     if (PS->in_new_list) throw PErrInNewActionList("Can't call SetMaxParticles while in NewActionList.");
     if (max_count < 0) throw PErrParticleGroup("Invalid max_count.");
+    if (PS->pgroup_id < 0 || PS->pgroup_id >= (int)PS->PGroups.size()) throw PErrParticleGroup("Invalid particle group number 9");
 
     // This can kill them and call their death callback.
     PS->PGroups[PS->pgroup_id].SetMaxParticles(max_count);
@@ -229,7 +230,7 @@ size_t PContextParticleGroup_t::GetParticles(const size_t index, const size_t cn
 //
 // WARNING: This function gives the application access to memory allocated and controlled
 // by the Particle API. Don't do anything stupid with this power or you will regret it.
-size_t PContextParticleGroup_t::GetParticlePointer(float*& ptr, size_t& stride, size_t& pos3Ofs, size_t& posB3Ofs, size_t& size3Ofs, size_t& vel3Ofs,
+size_t PContextParticleGroup_t::GetParticlePointer(const float*& ptr, size_t& stride, size_t& pos3Ofs, size_t& posB3Ofs, size_t& size3Ofs, size_t& vel3Ofs,
                                                    size_t& velB3Ofs, size_t& color3Ofs, size_t& alpha1Ofs, size_t& age1Ofs, size_t& up3Ofs, size_t& rvel3Ofs,
                                                    size_t& upB3Ofs, size_t& mass1Ofs, size_t& data1Ofs)
 {

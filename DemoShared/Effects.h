@@ -95,6 +95,18 @@ struct Balloons : public Effect {
 };
 
 // Particles fall in from the top and bounce off panels
+struct Boids : public Effect {
+    pVec goalPoint;
+    float time_since_start;
+
+    Boids(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
+    const std::string GetName() const { return "Boids"; }
+    void DoActions(EffectsManager& Efx);
+    void PerFrame(ExecMode_e EM, EffectsManager& Efx);
+    void StartEffect(EffectsManager& Efx);
+};
+
+// Particles fall in from the top and bounce off panels
 struct BounceToy : public Effect {
     BounceToy(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "BounceToy"; }
