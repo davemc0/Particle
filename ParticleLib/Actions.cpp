@@ -74,8 +74,8 @@ std::string PASort::abrv = "Srt";
 std::string PASort::name = "PASort";
 std::string PASource::abrv = "Src";
 std::string PASource::name = "PASource";
-std::string PASpeedLimit::abrv = "SL";
-std::string PASpeedLimit::name = "PASpeedLimit";
+std::string PASpeedClamp::abrv = "SL";
+std::string PASpeedClamp::name = "PASpeedClamp";
 std::string PATargetColor::abrv = "TC";
 std::string PATargetColor::name = "PATargetColor";
 std::string PATargetRotVelocity::abrv = "TRV";
@@ -147,8 +147,8 @@ void PAAvoid::Exec(const PDTriangle& dom, ParticleGroup& group, ParticleList::it
         else
             S = fofs;
 
-        // Blend S with m.vel.
-        S.normalize();
+        if (S == pVec(0.f)) continue; // It's aimed straight at an edge. S will become NaN.
+        S.normalize();                // Blend S with m.vel.
 
         float vlen = m.vel.length();
         pVec Vn = m.vel / vlen;
@@ -188,7 +188,7 @@ void PAAvoid::Exec(const PDRectangle& dom, ParticleGroup& group, ParticleList::i
         float vpos = dot(offset, dom.s2);
 
         // Did it cross plane outside rectangle?
-        if (upos < 0 || vpos < 0 || upos > 1 || vpos > 1) continue;
+        if (upos <= 0 || vpos <= 0 || upos >= 1 || vpos >= 1) continue;
 
         // A hit! A most palpable hit!
         // Compute distance to the four edges.
@@ -213,8 +213,8 @@ void PAAvoid::Exec(const PDRectangle& dom, ParticleGroup& group, ParticleList::i
         else
             S = gofs;
 
-        // Blend S with m.vel.
-        S.normalize();
+        if (S == pVec(0.f)) continue; // It's aimed straight at an edge. S will become NaN.
+        S.normalize();                // Blend S with m.vel.
 
         float vlen = m.vel.length();
         pVec Vn = m.vel / vlen;
@@ -245,8 +245,7 @@ void PAAvoid::Exec(const PDPlane& dom, ParticleGroup& group, ParticleList::itera
         float t = -distold / dot(dom.nrm, m.vel); // Time to collision
         pVec S = m.vel * t + dom.nrm * distold;   // Vector from projection point to point of impact
 
-        float slen = S.lenSqr();
-        if (slen == 0.0f)
+        if (S == pVec(0.f))
             S = dom.nrm;
         else
             S.normalize();
@@ -1018,7 +1017,6 @@ void PAMove::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Partic
             m.up += m.rvel * dt;
         }
     } else {
-        // Stick with this until we get a more elegant way to use SSE.
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
             Particle_t& m = (*it);
 
@@ -1319,7 +1317,7 @@ void PASource::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Part
 }
 
 // Clamp particle velocities to the given range
-void PASpeedLimit::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
+void PASpeedClamp::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
     float min_sqr = fsqr(min_speed);
     float max_sqr = fsqr(max_speed);

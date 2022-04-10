@@ -289,7 +289,7 @@ public:
     ///
     /// Writing to the returned memory is obviously unsafe. There may be auxiliary data that depend on the current values of the particle data.
     /// You can try it if you want to, but your code may break against future API versions.
-    size_t GetParticlePointer(float*& ptr,       ///< the returned pointer to the particle data
+    size_t GetParticlePointer(const float*& ptr, ///< the returned pointer to the particle data
                               size_t& stride,    ///< the number of floats from one particle's value to the next particle's value
                               size_t& pos3Ofs,   ///< the number of floats from returned ptr to the first particle's position parameter
                               size_t& posB3Ofs,  ///< the number of floats from returned ptr to the first particle's positionB parameter
@@ -683,8 +683,8 @@ public:
     /// Computes each particle's speed (the magnitude of its velocity vector) and if it is less than min_speed or greater than max_speed the
     /// velocity is scaled to within those bounds, while preserving the velocity vector's direction.
     ///
-    /// The vector [0,0,0] is an exception because it has no direction. Such vectors are not modified by SpeedLimit().
-    void SpeedLimit(const float min_speed, const float max_speed = P_MAXFLOAT);
+    /// The vector [0,0,0] is an exception because it has no direction. Such vectors are not modified by SpeedClamp().
+    void SpeedClamp(const float min_speed, const float max_speed);
 
     /// Change color of all particles toward the specified color.
     ///

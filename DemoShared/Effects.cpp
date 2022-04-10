@@ -208,6 +208,64 @@ void Balloons::StartEffect(EffectsManager& Efx)
     SortParticles = false;
 }
 
+void Boids::DoActions(EffectsManager& Efx)
+{
+    ParticleContext_t& P = Efx.P;
+
+    pVec C(Efx.center), Side(0, 4, 0);
+    const float radius = 3.f, minSpeed = 1.f, maxSpeed = 6.f;
+
+    pSourceState S;
+    S.Color(PDLine(pVec(0, 0, 1), pVec(.5, .5, 1)));
+    S.Velocity(PDSphere(pVec(0.f), maxSpeed));
+    S.Size(particleSize);
+    P.Source(particleRate, PDSphere(C, 15.f, 10.f), S);
+
+    // P.Gravity(Efx.GravityVec);
+    P.OrbitPoint(goalPoint, 150.f, 5.f); // Follow goal
+    Render(PDSphere(goalPoint, 0.25f));
+    P.Damping(0.97f, minSpeed, P_MAXFLOAT);
+
+    P.Gravitate(5.f, 2.5f); // Flock centering
+
+    P.MatchVelocity(8.f, 1.5f, radius); // Velocity matching
+
+    P.Gravitate(-8.f, 1.f, radius); // Neighbor collision avoidance
+
+    const float lookAheadTime = 3.f;
+    // P.Avoid(2.f, 1.f, lookAheadTime, Render(PDRectangle(pVec(0,-4,0), pVec(0,0,8), pVec(0, 8, 0))));
+
+    P.SpeedClamp(minSpeed, maxSpeed);
+    P.TargetColor(pVec(0, 0, 0), 1, 0.05f);
+    P.Move(true, false);
+    P.Avoid(2.f, 1.f, lookAheadTime, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
+    P.Sink(false, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
+    P.Sink(false, PDSphere(pVec(0.f), 30.f));
+}
+
+void Boids::PerFrame(ExecMode_e EM, EffectsManager& Efx)
+{
+    time_since_start += Efx.timeStep;
+
+    goalPoint = (fmod(time_since_start, Efx.demoRunSec) > (Efx.demoRunSec * 0.5f)) ? pVec(-10.f, 0, 6.f) : pVec(10.f, 0, 6.f);
+
+    Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
+}
+
+void Boids::StartEffect(EffectsManager& Efx)
+{
+    ParticleContext_t& P = Efx.P;
+    // if (Efx.particleHandle >= 0) P.SetMaxParticles(2000); // XXX How to recover this?
+
+    time_since_start = 0;
+    particleRate = 600;
+    PrimType = PRIM_DISPLAY_LIST;
+    WhiteBackground = true;
+    DepthTest = true;
+    MotionBlur = false;
+    SortParticles = false;
+}
+
 void BounceToy::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
@@ -1046,6 +1104,7 @@ void EffectsManager::MakeEffects()
 {
     Effects.push_back(std::shared_ptr<Effect>(new Atom(*this)));
     Effects.push_back(std::shared_ptr<Effect>(new Balloons(*this)));
+    Effects.push_back(std::shared_ptr<Effect>(new Boids(*this)));
     Effects.push_back(std::shared_ptr<Effect>(new BounceToy(*this)));
     Effects.push_back(std::shared_ptr<Effect>(new Explosion(*this)));
     Effects.push_back(std::shared_ptr<Effect>(new Fireflies(*this)));

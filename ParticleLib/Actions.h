@@ -273,7 +273,7 @@ struct PASource : public PActionBase {
     ACTION_DECLS;
 };
 
-struct PASpeedLimit : public PActionBase {
+struct PASpeedClamp : public PActionBase {
     float min_speed; // Clamp speed to this minimum.
     float max_speed; // Clamp speed to this maximum.
 

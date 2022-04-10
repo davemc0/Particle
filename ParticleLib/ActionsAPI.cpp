@@ -366,9 +366,9 @@ void PContextActions_t::Source(const float particle_rate, const pDomain& dom, co
     PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
-void PContextActions_t::SpeedLimit(const float min_speed, const float max_speed)
+void PContextActions_t::SpeedClamp(const float min_speed, const float max_speed)
 {
-    PASpeedLimit* A = new PASpeedLimit;
+    PASpeedClamp* A = new PASpeedClamp;
 
     A->min_speed = min_speed;
     A->max_speed = max_speed;

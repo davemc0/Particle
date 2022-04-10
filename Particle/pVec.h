@@ -157,6 +157,8 @@ public:
         return *this;
     }
 
+    bool isNan() { return std::isnan(x()) || std::isnan(y()) || std::isnan(z()); }
+
     // Component-wise absolute value
     friend PINLINE pVec Abs(const pVec& a) { return pVec(fabs(a.x()), fabs(a.y()), fabs(a.z())); }
 

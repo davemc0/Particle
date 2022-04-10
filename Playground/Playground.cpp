@@ -357,7 +357,7 @@ void MoveCamera(pVec& Cam, pVec& At)
     P.CurrentGroup(CameraSystem);
     if (CameraMotion) {
         P.Bounce(0, 1, 0, PDBox(pVec(-15, -4, 1), pVec(15, -30, 12)));
-        P.SpeedLimit(CamSpeed, CamSpeed);
+        P.SpeedClamp(CamSpeed, CamSpeed);
         P.Move();
     }
 
@@ -533,12 +533,12 @@ void menu(int item)
     switch (item) {
     case ' ':
         RandomDemoClock.Reset();
-        Efx.ChooseDemo(3, ExecMode); // Explosion
+        Efx.ChooseDemo(4, ExecMode); // Explosion
         ApplyEffectSettings();
         break;
     case GLUT_KEY_UP + 0x1000:
         RandomDemoClock.Reset();
-        Efx.ChooseDemo(13, ExecMode); // Restore
+        Efx.ChooseDemo(14, ExecMode); // Restore
         ApplyEffectSettings();
         break;
     case GLUT_KEY_DOWN + 0x1000:
@@ -714,7 +714,10 @@ int main(int argc, char** argv)
 
     Efx.MakeActionLists(ExecMode);
 
-    Efx.ChooseDemo(-2, ExecMode); // Random
+    do {
+        Efx.ChooseDemo(-2, ExecMode);                // Random
+    } while (Efx.demoNum == 4 || Efx.demoNum == 14); // Don't start with Explosion or Restore
+
     ApplyEffectSettings();
 
     try {

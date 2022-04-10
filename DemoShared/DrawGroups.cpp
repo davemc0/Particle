@@ -21,7 +21,7 @@ void DrawGroupAsLines(ParticleContext_t& P, const bool const_color, const float 
     int cnt = (int)P.GetGroupCount();
     if (cnt < 1) return;
 
-    float* ptr;
+    const float* ptr;
     size_t flstride, pos3Ofs, posB3Ofs, size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs, up3Ofs, rvel3Ofs, upB3Ofs, mass1Ofs, data1Ofs;
 
     cnt = (int)P.GetParticlePointer(ptr, flstride, pos3Ofs, posB3Ofs, size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs, up3Ofs, rvel3Ofs, upB3Ofs,
@@ -70,7 +70,7 @@ void DrawGroupAsDisplayLists(ParticleContext_t& P, int dlist, bool const_color, 
     int cnt = (int)P.GetGroupCount();
     if (cnt < 1) return;
 
-    float* ptr;
+    const float* ptr;
     size_t flstride, pos3Ofs, posB3Ofs, size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs, up3Ofs, rvel3Ofs, upB3Ofs, mass1Ofs, data1Ofs;
 
     cnt = (int)P.GetParticlePointer(ptr, flstride, pos3Ofs, posB3Ofs, size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs, up3Ofs, rvel3Ofs, upB3Ofs,
@@ -283,14 +283,13 @@ void DrawGroupAsQuadSprites(ParticleContext_t& P, const pVec& view, const pVec& 
 }
 
 // Draw as points using vertex arrays
-// To draw as textured point sprites just call
-// glEnable(GL_POINT_SPRITE) before calling this function.
+// To draw as textured point sprites just call glEnable(GL_POINT_SPRITE) before calling this function.
 void DrawGroupAsPoints(ParticleContext_t& P, const bool const_color)
 {
     int cnt = (int)P.GetGroupCount();
     if (cnt < 1) return;
 
-    float* ptr;
+    const float* ptr;
     size_t flstride, pos3Ofs, posB3Ofs, size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs, up3Ofs, rvel3Ofs, upB3Ofs, mass1Ofs, data1Ofs;
 
     cnt = (int)P.GetParticlePointer(ptr, flstride, pos3Ofs, posB3Ofs, size3Ofs, vel3Ofs, velB3Ofs, color3Ofs, alpha1Ofs, age1Ofs, up3Ofs, rvel3Ofs, upB3Ofs,
