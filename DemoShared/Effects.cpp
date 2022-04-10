@@ -234,11 +234,11 @@ void Boids::DoActions(EffectsManager& Efx)
 
     const float lookAheadTime = 3.f;
     // P.Avoid(2.f, 1.f, lookAheadTime, Render(PDRectangle(pVec(0,-4,0), pVec(0,0,8), pVec(0, 8, 0))));
+    P.Avoid(2.f, 1.f, lookAheadTime, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
 
     P.SpeedClamp(minSpeed, maxSpeed);
     P.TargetColor(pVec(0, 0, 0), 1, 0.05f);
     P.Move(true, false);
-    P.Avoid(2.f, 1.f, lookAheadTime, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
     P.Sink(false, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
     P.Sink(false, PDSphere(pVec(0.f), 30.f));
 }
@@ -255,10 +255,14 @@ void Boids::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 void Boids::StartEffect(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
-    // if (Efx.particleHandle >= 0) P.SetMaxParticles(2000); // XXX How to recover this?
+    if (Efx.particleHandle >= 0 && P.GetMaxParticles() > 2000) {
+        size_t pmax = P.GetMaxParticles();
+        P.SetMaxParticles(2000);
+        P.SetMaxParticles(pmax);
+    }
 
     time_since_start = 0;
-    particleRate = 600;
+    particleRate = 10;
     PrimType = PRIM_DISPLAY_LIST;
     WhiteBackground = true;
     DepthTest = true;
