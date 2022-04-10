@@ -790,6 +790,7 @@ void PAGravitate::Execute(ParticleGroup& group, ParticleList::iterator ibegin, P
     float magdt = magnitude * dt;
     float max_radiusSqr = max_radius * max_radius;
 
+#if 1
     if (max_radiusSqr < P_MAXFLOAT) {
         for (ParticleList::iterator it = ibegin; it != iend; it++) {
             Particle_t& m = (*it);
@@ -836,6 +837,28 @@ void PAGravitate::Execute(ParticleGroup& group, ParticleList::iterator ibegin, P
             }
         }
     }
+#else
+    // Cheat by computing centroid of group and accelerating all particles toward it
+    pVec centroid(0.f);
+    for (ParticleList::iterator it = ibegin; it != iend; it++) {
+        Particle_t& m = (*it);
+        centroid += m.pos;
+    }
+    centroid /= (float)(iend - ibegin);
+
+    for (ParticleList::iterator it = ibegin; it != iend; it++) {
+        Particle_t& m = (*it);
+
+        pVec tohim(centroid - m.pos); // tohim = p1 - p0
+        float tohimlenSqr = tohim.lenSqr();
+
+        if (tohimlenSqr < max_radiusSqr) {
+            // Compute force exerted between the two bodies
+            pVec acc(tohim * (magdt / (sqrtf(tohimlenSqr) * (tohimlenSqr + epsilon))));
+            m.vel += acc;
+        }
+    }
+#endif
 }
 
 // Acceleration in a constant direction

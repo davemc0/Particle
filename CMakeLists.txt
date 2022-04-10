@@ -17,9 +17,8 @@ add_subdirectory(${PROJECT_ROOT_DIR}/../DMcTools ${CMAKE_CURRENT_BINARY_DIR}/DMc
 
 add_subdirectory(${PROJECT_ROOT_DIR}/ParticleLib ${CMAKE_CURRENT_BINARY_DIR}/ParticleLib)
 
-add_subdirectory(${PROJECT_ROOT_DIR}/Boids ${CMAKE_CURRENT_BINARY_DIR}/Boids)
+add_subdirectory(${PROJECT_ROOT_DIR}/Benchmark ${CMAKE_CURRENT_BINARY_DIR}/Benchmark)
 add_subdirectory(${PROJECT_ROOT_DIR}/Example ${CMAKE_CURRENT_BINARY_DIR}/Example)
 add_subdirectory(${PROJECT_ROOT_DIR}/Playground ${CMAKE_CURRENT_BINARY_DIR}/Playground)
-add_subdirectory(${PROJECT_ROOT_DIR}/Benchmark ${CMAKE_CURRENT_BINARY_DIR}/Benchmark)
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Playground)
