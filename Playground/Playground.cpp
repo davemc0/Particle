@@ -30,11 +30,9 @@
 
 namespace {
 // Mode controls
-bool CameraMotion = true;
 bool DrawEffectGeometry = true;
 bool FreezeParticles = false;
 bool FullScreen = false;
-bool ParticleCam = false;
 bool RandomDemo = true;
 bool ShowText = true;
 bool UseEffectSettings = true;
@@ -51,7 +49,7 @@ ExecMode_e ExecMode = Internal_Mode; // Execute compiled action lists on host fo
 ParticleContext_t P;
 StatTimer FPSClock(100);
 Timer RandomDemoClock;
-char* FName = NULL;
+char* FName = "sample.jpg";
 float BlurRate = 0.09;
 int DisplayListID = -1;
 int SpotTexID = -1, SphereTexID = -1;
@@ -65,6 +63,65 @@ EffectsManager Efx(P, 200000);
 float blackColor[] = {0, 0, 0, 1};
 float redColor[] = {1, 0, 0, 1};
 float whiteColor[] = {1, 1, 1, 1};
+
+class CamControl {
+public:
+    const float CamSpeed = 3.f;
+    int CameraSystem = -1;
+    bool ParticleCam = false;
+    bool CameraMotion = true;
+
+    void startMotion()
+    {
+        P.CurrentGroup(CameraSystem);
+
+        pVec Cam = pVec(0, -24, Efx.center.z()), Vel;
+        if (P.GetGroupCount() > 0) { // Carry the existing pose forward
+            P.GetParticles(0, 1, (float*)&Cam, false, NULL, (float*)&Vel);
+            P.SetMaxParticles(0);
+            P.SetMaxParticles(1);
+        }
+
+        pSourceState S;
+        S.Velocity(PDSphere(pVec(0, 0, 0), CamSpeed, CamSpeed));
+        P.Vertex(Cam, S);
+    }
+
+    void toggleMotion()
+    {
+        CameraMotion = !CameraMotion;
+        if (CameraMotion) startMotion();
+    }
+
+    void toggleParticleCamera() { ParticleCam = !ParticleCam; }
+
+    void moveCamera(pVec& Cam, pVec& At)
+    {
+        // Use a particle to model the camera pose
+        if (CameraSystem < 0) {
+            CameraSystem = P.GenParticleGroups(1, 1);
+            startMotion();
+        }
+
+        P.CurrentGroup(CameraSystem);
+        if (CameraMotion) {
+            P.Bounce(0, 1, 0, PDBox(pVec(-15, -4, 1), pVec(15, -30, 12)));
+            P.SpeedClamp(CamSpeed, CamSpeed);
+            P.Move();
+        }
+
+        // Make the camera track a particle from the main particle system
+        if (ParticleCam && Efx.particleHandle >= 0) P.CurrentGroup(Efx.particleHandle);
+
+        pVec Vel;
+        P.GetParticles(0, 1, (float*)&Cam, false, NULL, (float*)&Vel);
+
+        //  At=Cam+Vel; // Look in the direction the camera is flying
+        At = Efx.center; // Look at the center of action
+    }
+};
+
+CamControl camCtrl;
 } // namespace
 
 // Render any geometry necessary to support the effects
@@ -265,7 +322,7 @@ static void showBitmapMessage(GLfloat x, GLfloat y, char* message)
     glRasterPos3f(x, y, -1.f);
 
     while (*message) {
-        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, *message);
+        glutBitmapCharacter(GLUT_BITMAP_9_BY_15, *message);
         message++;
     }
 
@@ -340,37 +397,6 @@ void InitOpenGL()
     glEnable(GL_MULTISAMPLE);
 }
 
-void MoveCamera(pVec& Cam, pVec& At)
-{
-    // Use a particle to model the camera pose
-    const float CamSpeed = 3.f;
-    static int CameraSystem = -1;
-    if (CameraSystem < 0) {
-        CameraSystem = P.GenParticleGroups(1, 1);
-        P.CurrentGroup(CameraSystem);
-
-        pSourceState S;
-        S.Velocity(PDSphere(pVec(0, 0, 0), CamSpeed, CamSpeed));
-        P.Vertex(pVec(0, -24, Efx.center.z()), S);
-    }
-
-    P.CurrentGroup(CameraSystem);
-    if (CameraMotion) {
-        P.Bounce(0, 1, 0, PDBox(pVec(-15, -4, 1), pVec(15, -30, 12)));
-        P.SpeedClamp(CamSpeed, CamSpeed);
-        P.Move();
-    }
-
-    // Make the camera track a particle from the main particle system
-    if (ParticleCam) P.CurrentGroup(Efx.particleHandle);
-
-    pVec Vel;
-    P.GetParticles(0, 1, (float*)&Cam, false, NULL, (float*)&Vel);
-
-    //  At=Cam+Vel; // Look in the direction the camera is flying
-    At = Efx.center; // Look at the center of action
-}
-
 void Draw()
 {
     InitOpenGL();
@@ -408,7 +434,7 @@ void Draw()
 
     // Camera stuff
     pVec Cam, At;
-    MoveCamera(Cam, At);
+    camCtrl.moveCamera(Cam, At);
     gluLookAt(Cam.x(), Cam.y(), Cam.z(), At.x(), At.y(), At.z(), 0, 0, 1);
 
     // Scene geometry
@@ -492,8 +518,8 @@ void Draw()
         int cnt = (int)P.GetGroupCount();
         char exCh = (ExecMode == Immediate_Mode) ? 'I' : (ExecMode == Internal_Mode) ? 'N' : 'C';
 
-        sprintf(msg, " %c%c%c%c%c%c%c%c n=%5d iters=%d fps=%02.2f %s %s t=%1.2f", exCh, MotionBlur ? 'M' : ' ', FreezeParticles ? 'F' : ' ',
-                UseEffectSettings ? 'A' : ' ', RandomDemo ? 'R' : ' ', DepthTest ? 'D' : ' ', CameraMotion ? 'C' : ' ', SortParticles ? 'S' : ' ', cnt,
+        sprintf(msg, " %c%c%c%c%c%c%c%c n=%5d iters=%6d fps=%02.2f %s %s t=%1.2f", exCh, MotionBlur ? 'M' : ' ', FreezeParticles ? 'F' : ' ',
+                UseEffectSettings ? 'A' : ' ', RandomDemo ? 'R' : ' ', DepthTest ? 'D' : ' ', camCtrl.CameraMotion ? 'C' : ' ', SortParticles ? 'S' : ' ', cnt,
                 Efx.simStepsPerFrame, fps, PrimTypeNames[PrimType], Efx.GetCurEffectName().c_str(), RandomDemoClock.Read());
 
         glColor3f(1, 1, 1);
@@ -568,7 +594,7 @@ void menu(int item)
         break;
     case 'm': MotionBlur = !MotionBlur; break;
     case 'a': UseEffectSettings = !UseEffectSettings; break;
-    case 'c': CameraMotion = !CameraMotion; break;
+    case 'c': camCtrl.toggleMotion(); break;
     case 'r': RandomDemo = !RandomDemo; break;
     case 'f':
         FullScreen = !FullScreen;
@@ -593,7 +619,7 @@ void menu(int item)
         break;
     case 'g': DrawEffectGeometry = !DrawEffectGeometry; break;
     case 's': SortParticles = !SortParticles; break;
-    case 'w': ParticleCam = !ParticleCam; break;
+    case 'w': camCtrl.toggleParticleCamera(); break;
     case 'z': P.SinkVelocity(true, PDSphere(pVec(0, 0, 0), 0.01)); break;
     case 'x': FreezeParticles = !FreezeParticles; break;
     case '=':
@@ -610,11 +636,11 @@ void menu(int item)
         std::cerr << Efx.maxParticles << std::endl;
         break;
     case '>':
-        BlurRate -= 0.01;
+        BlurRate -= 0.01f;
         if (BlurRate < 0) BlurRate = 0;
         break;
     case '<':
-        BlurRate += 0.01;
+        BlurRate += 0.01f;
         if (BlurRate >= 1) BlurRate = 1;
         break;
     case 'q':
@@ -648,7 +674,6 @@ static void Args(int argc, char** argv)
             Usage(program, "Help:");
         } else if (starg == "-photo") {
             FName = argv[i + 1];
-            Efx.SetPhoto(new uc3Image(FName));
 
             RemoveArgs(argc, argv, i, 2);
         } else {
@@ -705,6 +730,13 @@ int main(int argc, char** argv)
     SRand();
 
     Args(argc, argv);
+    try {
+        Efx.SetPhoto(new uc3Image(FName));
+    }
+    catch (...) {
+        std::cerr << "Failed to load " << FName << '\n';
+    }
+
     GlutSetup(argc, argv);
 
     // Make a particle group

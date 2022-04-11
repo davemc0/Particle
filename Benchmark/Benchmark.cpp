@@ -9,33 +9,30 @@
 
 // The following header files are part of DMcTools.
 #include "Math/Random.h"
+#include "Util/StatTimer.h"
 #include "Util/Timer.h"
 
 #include <iostream>
 #include <string>
 
-static ExecMode_e ExecMode = Internal_Mode;
-static bool SortParticles = false, ShowText = true;
-static int demoNum = 6;
-
-static Timer FPSClock;
-static ParticleContext_t P;
-static EffectsManager Efx(P, 60000);
+namespace {
+const int PRINT_PERIOD = 500;
+ExecMode_e ExecMode = Internal_Mode;
+ParticleContext_t P;
+EffectsManager Efx(P, 500000);
+StatTimer FPSClock(PRINT_PERIOD);
+bool SortParticles = false, ShowText = true;
+int demoNum = 2;
+} // namespace
 
 void Report()
 {
-#define NUM_FRAMES_TO_AVG_FOR_CLOCK 100
-    static double ClockTime = 1.0;
     static int FrameCountForClock = 0;
-    FrameCountForClock++;
-    if (FrameCountForClock >= NUM_FRAMES_TO_AVG_FOR_CLOCK) {
-        ClockTime = FPSClock.Reset();
-        float fps = float(NUM_FRAMES_TO_AVG_FOR_CLOCK) / ClockTime;
+    if (++FrameCountForClock >= PRINT_PERIOD) {
         int cnt = (int)P.GetGroupCount();
 
-        printf("%c%c n=%5d fps=%02.2f %s\n", ExecMode == Immediate_Mode ? 'I' : (ExecMode == Internal_Mode ? 'L' : 'C'), SortParticles ? 'S' : ' ', cnt, fps,
-               Efx.GetCurEffectName().c_str());
-        FPSClock.Start();
+        char exCh = (ExecMode == Immediate_Mode) ? 'I' : (ExecMode == Internal_Mode) ? 'N' : 'C';
+        printf("%c%c n=%5d time=%02.4f %s\n", exCh, SortParticles ? 'S' : ' ', cnt, (float)FPSClock.GetMean(), Efx.GetCurEffectName().c_str());
         FrameCountForClock = 0;
     }
 }
@@ -52,17 +49,15 @@ void RunBenchmarkCache()
 
     Efx.ChooseDemo(demoNum, ExecMode); // Prime it
 
-    FPSClock.Start();
     for (int CacheSize = 1024 * 16; CacheSize < 8 * 1024 * 1024; CacheSize += (16 * 1024)) {
         P.SetWorkingSetSize(CacheSize);
-        FPSClock.Reset();
         for (int i = 0; i < 100; i++) {
             Efx.RunDemoFrame(ExecMode);
             if (SortParticles) P.Sort(pVec(0, -19, 15), pVec(0, 0, 3));
+            FPSClock.Event();
             if (ShowText) Report();
         }
-        double t = FPSClock.Read();
-        printf("%d,%f\n", CacheSize, t);
+        printf("%d,%f\n", CacheSize, (float)FPSClock.GetMean());
     }
 }
 
@@ -76,24 +71,11 @@ void RunBenchmark()
 
     Efx.ChooseDemo(demoNum, ExecMode);
 
-    if (1) {
-        for (int i = 0; i < 1000; i++) {
-            Efx.RunDemoFrame(ExecMode);
-            if (SortParticles) P.Sort(pVec(0, -19, 15), pVec(0, 0, 3));
-            Report();
-        }
-    } else {
-        FPSClock.Reset();
-        while (1) {
-            float t = 0.0f;
-            FPSClock.Start();
-            for (int i = 0; i < 10000000; i++) {
-                float v = pNRandf();
-                t += v;
-            }
-            printf("%f\n", FPSClock.Read());
-            FPSClock.Reset();
-        }
+    for (int i = 0; i < 1000000; i++) {
+        Efx.RunDemoFrame(ExecMode);
+        if (SortParticles) P.Sort(pVec(0, -19, 4), Efx.center);
+        FPSClock.Event();
+        Report();
     }
 }
 
@@ -101,7 +83,7 @@ void RunBenchmark()
 // Generate a particle and ensure that it is within the domain.
 void TestOneDomain(pDomain& Dom)
 {
-    std::cerr << "TestOneDomain()\n";
+    std::cerr << "TestOneDomain(" << typeid(Dom).name() << ")\n";
     const int Loops = 1000000;
     const float EP = 0.0000001;
     int Bad = 0;

@@ -750,34 +750,18 @@ void PAFollow::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Part
     ParticleList::iterator end = iend;
     end--;
 
-    if (max_radiusSqr < P_MAXFLOAT) {
-        for (ParticleList::iterator it = ibegin; it != end; it++) {
-            Particle_t& m = (*it);
-            ParticleList::iterator next = it;
-            next++;
+    for (ParticleList::iterator it = ibegin; it != end; it++) {
+        Particle_t& m = (*it);
+        ParticleList::iterator next = it;
+        next++;
 
-            // Accelerate toward the particle after me in the list.
-            pVec tohim((*next).pos - m.pos); // tohim = p1 - p0
-            float tohimlenSqr = tohim.lenSqr();
+        // Accelerate toward the particle after me in the list.
+        pVec toHim((*next).pos - m.pos); // toHim = p1 - p0
+        float toHimlenSqr = toHim.lenSqr();
 
-            if (tohimlenSqr < max_radiusSqr) {
-                // Compute force exerted between the two bodies
-                m.vel += tohim * (magdt / (sqrtf(tohimlenSqr) * (tohimlenSqr + epsilon)));
-            }
-        }
-    } else {
-        // If not using radius cutoff, avoid the if().
-        for (ParticleList::iterator it = ibegin; it != end; it++) {
-            Particle_t& m = (*it);
-            ParticleList::iterator next = it;
-            next++;
-
-            // Accelerate toward the particle after me in the list.
-            pVec tohim((*next).pos - m.pos); // tohim = p1 - p0
-            float tohimlenSqr = tohim.lenSqr();
-
+        if (toHimlenSqr < max_radiusSqr) {
             // Compute force exerted between the two bodies
-            m.vel += tohim * (magdt / (sqrtf(tohimlenSqr) * (tohimlenSqr + epsilon)));
+            m.vel += toHim * (magdt / (sqrtf(toHimlenSqr) * (toHimlenSqr + epsilon)));
         }
     }
 }
@@ -791,54 +775,28 @@ void PAGravitate::Execute(ParticleGroup& group, ParticleList::iterator ibegin, P
     float max_radiusSqr = max_radius * max_radius;
 
 #if 1
-    if (max_radiusSqr < P_MAXFLOAT) {
-        for (ParticleList::iterator it = ibegin; it != iend; it++) {
-            Particle_t& m = (*it);
+    for (ParticleList::iterator it = ibegin; it != iend; it++) {
+        Particle_t& m = (*it);
 
-            ParticleList::iterator j = it;
-            j++;
+        // Add interactions with other particles
+        for (ParticleList::iterator j = ibegin; j != iend; ++j) {
+            if (it == j) continue;
+            Particle_t& mj = (*j);
 
-            // Add interactions with other particles
-            for (; j != iend; ++j) {
-                Particle_t& mj = (*j);
+            pVec toHim(mj.pos - m.pos); // toHim = p1 - p0
+            float toHimlenSqr = toHim.lenSqr();
 
-                pVec tohim(mj.pos - m.pos); // tohim = p1 - p0
-                float tohimlenSqr = tohim.lenSqr();
-
-                if (tohimlenSqr < max_radiusSqr) {
-                    // Compute force exerted between the two bodies
-                    pVec acc(tohim * (magdt / (sqrtf(tohimlenSqr) * (tohimlenSqr + epsilon))));
-
-                    m.vel += acc;
-                    mj.vel -= acc;
-                }
-            }
-        }
-    } else {
-        // If not using radius cutoff, avoid the if().
-        for (ParticleList::iterator it = ibegin; it != iend; it++) {
-            Particle_t& m = (*it);
-
-            // Add interactions with other particles
-            ParticleList::iterator j = it;
-            ++j;
-
-            for (; j != iend; ++j) {
-                Particle_t& mj = (*j);
-
-                pVec tohim(mj.pos - m.pos); // tohim = p1 - p0
-                float tohimlenSqr = tohim.lenSqr();
-
+            if (toHimlenSqr < max_radiusSqr) {
                 // Compute force exerted between the two bodies
-                pVec acc(tohim * (magdt / (sqrtf(tohimlenSqr) * (tohimlenSqr + epsilon))));
+                pVec acc(toHim * (magdt / (sqrtf(toHimlenSqr) * (toHimlenSqr + epsilon))));
 
                 m.vel += acc;
-                mj.vel -= acc;
             }
         }
     }
 #else
     // Cheat by computing centroid of group and accelerating all particles toward it
+    // TODO: Make this an action or a parameter?
     pVec centroid(0.f);
     for (ParticleList::iterator it = ibegin; it != iend; it++) {
         Particle_t& m = (*it);
@@ -849,12 +807,12 @@ void PAGravitate::Execute(ParticleGroup& group, ParticleList::iterator ibegin, P
     for (ParticleList::iterator it = ibegin; it != iend; it++) {
         Particle_t& m = (*it);
 
-        pVec tohim(centroid - m.pos); // tohim = p1 - p0
-        float tohimlenSqr = tohim.lenSqr();
+        pVec toHim(centroid - m.pos); // toHim = p1 - p0
+        float toHimlenSqr = toHim.lenSqr();
 
-        if (tohimlenSqr < max_radiusSqr) {
+        if (toHimlenSqr < max_radiusSqr) {
             // Compute force exerted between the two bodies
-            pVec acc(tohim * (magdt / (sqrtf(tohimlenSqr) * (tohimlenSqr + epsilon))));
+            pVec acc(toHim * (magdt / (sqrtf(toHimlenSqr) * (toHimlenSqr + epsilon))));
             m.vel += acc;
         }
     }
@@ -913,57 +871,29 @@ void PAMatchVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegi
     float magdt = magnitude * dt;
     float max_radiusSqr = max_radius * max_radius;
 
-    if (max_radiusSqr < P_MAXFLOAT) {
-        for (ParticleList::iterator it = ibegin; it != iend; it++) {
-            Particle_t& m = (*it);
+    for (ParticleList::iterator it = ibegin; it != iend; it++) {
+        Particle_t& m = (*it);
 
-            // Add interactions with other particles
-            ParticleList::iterator j = it;
-            j++;
+        // Add interactions with other particles
+        for (ParticleList::iterator j = ibegin; j != iend; ++j) {
+            if (it == j) continue;
+            Particle_t& mj = (*j);
 
-            // Add interactions with other particles
-            for (; j != iend; ++j) {
-                Particle_t& mj = (*j);
+            pVec toHim(mj.pos - m.pos); // toHim = p1 - p0
+            float toHimlenSqr = toHim.lenSqr();
 
-                pVec tohim(mj.pos - m.pos); // tohim = p1 - p0
-                float tohimlenSqr = tohim.lenSqr();
-
-                if (tohimlenSqr < max_radiusSqr) {
-                    // Compute force exerted between the two bodies
-                    pVec acc(mj.vel * (magdt / (tohimlenSqr + epsilon)));
-
-                    m.vel += acc;
-                    mj.vel -= acc;
-                }
-            }
-        }
-    } else {
-        // If not using radius cutoff, avoid the if().
-        for (ParticleList::iterator it = ibegin; it != iend; it++) {
-            Particle_t& m = (*it);
-
-            // Add interactions with other particles
-            ParticleList::iterator j = it;
-            j++;
-
-            // Add interactions with other particles
-            for (; j != iend; ++j) {
-                Particle_t& mj = (*j);
-
-                pVec tohim(mj.pos - m.pos); // tohim = p1 - p0
-                float tohimlenSqr = tohim.lenSqr();
-
+            if (toHimlenSqr < max_radiusSqr) {
                 // Compute force exerted between the two bodies
-                pVec acc(mj.vel * (magdt / (tohimlenSqr + epsilon)));
+                pVec veltoHim(mj.vel - m.vel);
+                pVec acc(veltoHim * (magdt / (toHimlenSqr + epsilon)));
 
                 m.vel += acc;
-                mj.vel -= acc;
             }
         }
     }
 }
 
-// Match Rotational velocity to near neighbors
+// Match rotational velocity to near neighbors
 void PAMatchRotVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
     PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
@@ -971,51 +901,23 @@ void PAMatchRotVelocity::Execute(ParticleGroup& group, ParticleList::iterator ib
     float magdt = magnitude * dt;
     float max_radiusSqr = max_radius * max_radius;
 
-    if (max_radiusSqr < P_MAXFLOAT) {
-        for (ParticleList::iterator it = ibegin; it != iend; it++) {
-            Particle_t& m = (*it);
+    for (ParticleList::iterator it = ibegin; it != iend; it++) {
+        Particle_t& m = (*it);
 
-            // Add interactions with other particles
-            ParticleList::iterator j = it;
-            j++;
+        // Add interactions with other particles
+        for (ParticleList::iterator j = ibegin; j != iend; ++j) {
+            if (it == j) continue;
+            Particle_t& mj = (*j);
 
-            // Add interactions with other particles
-            for (; j != iend; ++j) {
-                Particle_t& mj = (*j);
+            pVec toHim(mj.pos - m.pos); // toHim = p1 - p0
+            float toHimlenSqr = toHim.lenSqr();
 
-                pVec tohim(mj.pos - m.pos); // tohim = p1 - p0
-                float tohimlenSqr = tohim.lenSqr();
-
-                if (tohimlenSqr < max_radiusSqr) {
-                    // Compute force exerted between the two bodies
-                    pVec acc(mj.rvel * (magdt / (tohimlenSqr + epsilon)));
-
-                    m.rvel += acc;
-                    mj.rvel -= acc;
-                }
-            }
-        }
-    } else {
-        // If not using radius cutoff, avoid the if().
-        for (ParticleList::iterator it = ibegin; it != iend; it++) {
-            Particle_t& m = (*it);
-
-            // Add interactions with other particles
-            ParticleList::iterator j = it;
-            j++;
-
-            // Add interactions with other particles
-            for (; j != iend; ++j) {
-                Particle_t& mj = (*j);
-
-                pVec tohim(mj.pos - m.pos); // tohim = p1 - p0
-                float tohimlenSqr = tohim.lenSqr();
-
+            if (toHimlenSqr < max_radiusSqr) {
                 // Compute force exerted between the two bodies
-                pVec acc(mj.rvel * (magdt / (tohimlenSqr + epsilon)));
+                pVec rveltoHim(mj.rvel - m.rvel);
+                pVec acc(rveltoHim * (magdt / (toHimlenSqr + epsilon)));
 
                 m.rvel += acc;
-                mj.rvel -= acc;
             }
         }
     }
@@ -1055,48 +957,25 @@ void PAOrbitLine::Execute(ParticleGroup& group, ParticleList::iterator ibegin, P
     float magdt = magnitude * dt;
     float max_radiusSqr = fsqr(max_radius);
 
-    if (max_radiusSqr < P_MAXFLOAT) {
-        for (ParticleList::iterator it = ibegin; it != iend; it++) {
-            Particle_t& m = (*it);
+    // If not using radius cutoff, avoid the if().
+    for (ParticleList::iterator it = ibegin; it != iend; it++) {
+        Particle_t& m = (*it);
 
-            // Figure direction to particle from base of line.
-            pVec f = m.pos - p;
+        // Figure direction to particle from base of line.
+        pVec f = m.pos - p;
 
-            // Projection of particle onto line
-            pVec w = axis * dot(f, axis);
+        // Projection of particle onto line
+        pVec w = axis * dot(f, axis);
 
-            // Direction from particle to nearest point on line.
-            pVec into = w - f;
+        // Direction from particle to nearest point on line.
+        pVec into = w - f;
 
-            // Distance to line (force drops as 1/r^2, normalize by 1/r)
-            // Soften by epsilon to avoid tight encounters to infinity
-            float rSqr = into.lenSqr();
+        // Distance to line (force drops as 1/r^2, normalize by 1/r)
+        // Soften by epsilon to avoid tight encounters to infinity
+        float rSqr = into.lenSqr();
 
-            if (rSqr < max_radiusSqr)
-                // Step velocity with acceleration
-                m.vel += into * (magdt / (sqrtf(rSqr) * (rSqr + epsilon)));
-        }
-    } else {
-        // If not using radius cutoff, avoid the if().
-        for (ParticleList::iterator it = ibegin; it != iend; it++) {
-            Particle_t& m = (*it);
-
-            // Figure direction to particle from base of line.
-            pVec f = m.pos - p;
-
-            // Projection of particle onto line
-            pVec w = axis * dot(f, axis);
-
-            // Direction from particle to nearest point on line.
-            pVec into = w - f;
-
-            // Distance to line (force drops as 1/r^2, normalize by 1/r)
-            // Soften by epsilon to avoid tight encounters to infinity
-            float rSqr = into.lenSqr();
-
-            // Step velocity with acceleration
-            m.vel += into * (magdt / (sqrtf(rSqr) * (rSqr + epsilon)));
-        }
+        // Step velocity with acceleration
+        m.vel += into * (magdt / (sqrtf(rSqr) * (rSqr + epsilon)));
     }
 }
 
@@ -1106,35 +985,18 @@ void PAOrbitPoint::Execute(ParticleGroup& group, ParticleList::iterator ibegin, 
     float magdt = magnitude * dt;
     float max_radiusSqr = max_radius * max_radius;
 
-    if (max_radiusSqr < P_MAXFLOAT) {
-        for (ParticleList::iterator it = ibegin; it != iend; it++) {
-            Particle_t& m = (*it);
+    for (ParticleList::iterator it = ibegin; it != iend; it++) {
+        Particle_t& m = (*it);
 
-            // Figure direction from particle to center
-            pVec dir(center - m.pos);
+        // Figure direction from particle to center
+        pVec dir(center - m.pos);
 
-            // Distance to gravity well (force drops as 1/r^2, normalize by 1/r)
-            // Soften by epsilon to avoid tight encounters to infinity
-            float rSqr = dir.lenSqr();
+        // Distance to gravity well (force drops as 1/r^2, normalize by 1/r)
+        // Soften by epsilon to avoid tight encounters to infinity
+        float rSqr = dir.lenSqr();
 
-            // Step velocity with acceleration
-            if (rSqr < max_radiusSqr) m.vel += dir * (magdt / (sqrtf(rSqr) * (rSqr + epsilon)));
-        }
-    } else {
-        // If not using radius cutoff, avoid the if().
-        for (ParticleList::iterator it = ibegin; it != iend; it++) {
-            Particle_t& m = (*it);
-
-            // Figure direction to particle.
-            pVec dir(center - m.pos);
-
-            // Distance to gravity well (force drops as 1/r^2, normalize by 1/r)
-            // Soften by epsilon to avoid tight encounters to infinity
-            float rSqr = dir.lenSqr();
-
-            // Step velocity with acceleration
-            m.vel += dir * (magdt / (sqrtf(rSqr) * (rSqr + epsilon)));
-        }
+        // Step velocity with acceleration
+        if (rSqr < max_radiusSqr) m.vel += dir * (magdt / (sqrtf(rSqr) * (rSqr + epsilon)));
     }
 }
 
