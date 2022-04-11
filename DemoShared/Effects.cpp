@@ -213,7 +213,7 @@ void Boids::DoActions(EffectsManager& Efx)
     ParticleContext_t& P = Efx.P;
 
     pVec C(Efx.center), Side(0, 4, 0);
-    const float radius = 3.f, minSpeed = 1.f, maxSpeed = 6.f;
+    const float radius = 1.5f, minSpeed = 3.f, maxSpeed = 6.f;
 
     pSourceState S;
     S.Color(PDLine(pVec(0, 0, 1), pVec(.5, .5, 1)));
@@ -221,33 +221,33 @@ void Boids::DoActions(EffectsManager& Efx)
     S.Size(particleSize);
     P.Source(particleRate, PDSphere(C, 15.f, 10.f), S);
 
-    // P.Gravity(Efx.GravityVec);
-    P.OrbitPoint(goalPoint, 150.f, 5.f); // Follow goal
+    // P.Gravity(Efx.GravityVec * 0.2f);
+    P.OrbitPoint(goalPoint, 200.f, 5.f); // Follow goal
     Render(PDSphere(goalPoint, 0.25f));
-    P.Damping(0.97f, minSpeed, P_MAXFLOAT);
+    P.Damping(0.98f, minSpeed, P_MAXFLOAT);
 
-    P.Gravitate(5.f, 2.5f); // Flock centering
+    P.Gravitate(0.25f, 0.01f); // Flock centering
 
-    P.MatchVelocity(8.f, 1.5f, radius); // Velocity matching
+    P.MatchVelocity(0.5f, 0.5f, radius); // Velocity matching
 
-    P.Gravitate(-8.f, 1.f, radius); // Neighbor collision avoidance
+    P.Gravitate(-3.f, 0.3f, radius); // Neighbor collision avoidance
 
-    const float lookAheadTime = 3.f;
-    // P.Avoid(2.f, 1.f, lookAheadTime, Render(PDRectangle(pVec(0,-4,0), pVec(0,0,8), pVec(0, 8, 0))));
-    P.Avoid(2.f, 1.f, lookAheadTime, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
+    const float lookAheadTime = 1.5f;
+    P.Avoid(5.f, 0.1f, lookAheadTime, Render(PDRectangle(pVec(0, -8, 2), pVec(0, 0, 8), pVec(0, 16, 0))));
+    P.Avoid(4.f, 0.1f, lookAheadTime, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
 
     P.SpeedClamp(minSpeed, maxSpeed);
-    P.TargetColor(pVec(0, 0, 0), 1, 0.05f);
+    P.TargetColor(pVec(0, 0, 0), 1, 0.04f);
     P.Move(true, false);
     P.Sink(false, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
-    P.Sink(false, PDSphere(pVec(0.f), 30.f));
+    P.Sink(false, PDSphere(pVec(0.f), 40.f));
 }
 
 void Boids::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
     time_since_start += Efx.timeStep;
 
-    goalPoint = (fmod(time_since_start, Efx.demoRunSec) > (Efx.demoRunSec * 0.5f)) ? pVec(-10.f, 0, 6.f) : pVec(10.f, 0, 6.f);
+    goalPoint = (fmod(time_since_start, 2.f * Efx.demoRunSec) > Efx.demoRunSec) ? pVec(-10.f, 0, 6.f) : pVec(10.f, 0, 6.f);
 
     Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
 }
@@ -262,7 +262,7 @@ void Boids::StartEffect(EffectsManager& Efx)
     }
 
     time_since_start = 0;
-    particleRate = 10;
+    particleRate = 100;
     PrimType = PRIM_DISPLAY_LIST;
     WhiteBackground = true;
     DepthTest = true;
@@ -321,11 +321,11 @@ void BounceToy::StartEffect(EffectsManager& Efx)
 void Explosion::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
-    P.Damping(pVec(0.999));
+    P.Damping(pVec(0.999f));
     P.OrbitPoint(Efx.center, 30.f, 1.5);
     P.Explosion(Efx.center, time_since_start * 30.f, 1000.f, 3.f, 0.1);
     P.Move(true, false);
-    P.Sink(false, PDSphere(Efx.center, 50.f));
+    // P.Sink(false, PDSphere(Efx.center, 50.f));
 }
 
 void Explosion::EmitList(EffectsManager& Efx)
@@ -718,7 +718,7 @@ void PhotoShape::StartEffect(EffectsManager& Efx)
             sample2(puc, *Efx.Img, fx, fy);
             f3Pixel p(puc);
             S.Color(p.r(), p.g(), p.b());
-            pVec v = pVec(fx, 0, fy);
+            pVec v = pVec(fx, 0, Efx.Img->h() - fy);
             v /= float(Efx.Img->w());
 
             P.Vertex(v * 6.0f - pVec(3.0f, 0, -0.1f), S);
@@ -810,17 +810,17 @@ void Shower::DoActions(EffectsManager& Efx)
     const float lookAheadTime = 2.f;
 
     if (SteerShape == STEER_SPHERE) {
-        P.Avoid(2.f, 1.f, lookAheadTime, Render(PDSphere(pVec(0, 0, 0), 1.f)));
+        P.Avoid(3.f, 0.1f, lookAheadTime, Render(PDSphere(pVec(0, 0, 0), 1.f)));
     } else if (SteerShape == STEER_TRIANGLE) {
-        P.Avoid(2.f, 1.f, lookAheadTime, Render(PDTriangle(pVec(0, -1, 0.1f), pVec(2, 0, 0.1f), pVec(0, 2, 0.1f))));
+        P.Avoid(3.f, 0.1f, lookAheadTime, Render(PDTriangle(pVec(0, -1, 0.1f), pVec(2, 0, 0.1f), pVec(0, 2, 0.1f))));
     } else if (SteerShape == STEER_RECTANGLE) {
-        P.Avoid(2.f, 1.f, lookAheadTime, Render(PDRectangle(pVec(0, -1, 0.1f), pVec(2, 1, 0), pVec(0, 2, 0))));
+        P.Avoid(3.f, 0.1f, lookAheadTime, Render(PDRectangle(pVec(0, -1, 0.1f), pVec(2, 1, 0), pVec(0, 2, 0))));
     } else if (SteerShape == STEER_PLANE) {
         P.Avoid(10.f, 1.f, lookAheadTime, Render(PDPlane(pVec(0, 0, 0.1f), pVec(0, 0, 1))));
     } else if (SteerShape == STEER_DISC) {
-        P.Avoid(2.f, 1.f, lookAheadTime, Render(PDDisc(pVec(0, 0, 0.1f), pVec(0, 0, 1), 1.f, 0.f)));
+        P.Avoid(3.f, 0.1f, lookAheadTime, Render(PDDisc(pVec(0, 0, 0.1f), pVec(0, 0, 1), 1.f, 0.f)));
     } else if (SteerShape == P_VARYING_INT) {
-        P.Avoid(2.f, 1.f, lookAheadTime, PDVarying());
+        P.Avoid(3.f, 0.1f, lookAheadTime, PDVarying());
     }
 
     P.Move(true, false);
