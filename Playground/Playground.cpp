@@ -75,7 +75,7 @@ public:
     {
         P.CurrentGroup(CameraSystem);
 
-        pVec Cam = pVec(0, -24, Efx.center.z()), Vel;
+        pVec Cam = pVec(0, -27, Efx.center.z()), Vel;
         if (P.GetGroupCount() > 0) { // Carry the existing pose forward
             P.GetParticles(0, 1, (float*)&Cam, false, NULL, (float*)&Vel);
             P.SetMaxParticles(0);
@@ -517,7 +517,7 @@ void Draw()
         int cnt = (int)P.GetGroupCount();
         char exCh = (ExecMode == Immediate_Mode) ? 'I' : (ExecMode == Internal_Mode) ? 'N' : 'C';
 
-        sprintf(msg, " %c%c%c%c%c%c%c%c n=%5d iters=%6d fps=%02.2f %s %s t=%1.2f", exCh, MotionBlur ? 'M' : ' ', FreezeParticles ? 'F' : ' ',
+        sprintf(msg, " %c%c%c%c%c%c%c%c n=%6d iters=%d fps=%02.2f %s %s t=%1.2f", exCh, MotionBlur ? 'M' : ' ', FreezeParticles ? 'F' : ' ',
                 UseEffectSettings ? 'A' : ' ', RandomDemo ? 'R' : ' ', DepthTest ? 'D' : ' ', camCtrl.CameraMotion ? 'C' : ' ', SortParticles ? 'S' : ' ', cnt,
                 Efx.simStepsPerFrame, fps, PrimTypeNames[PrimType], Efx.GetCurEffectName().c_str(), RandomDemoClock.Read());
 

@@ -127,12 +127,12 @@ void Atom::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
     pSourceState S;
-    S.Velocity(PDSphere(pVec(0, 0, 0), 90));
+    S.Velocity(PDSphere(pVec(0, 0, 0), 60));
     S.Color(PDBox(pVec(1, 0, 0), pVec(1, 0, 1)));
     S.Size(particleSize);
     S.StartingAge(0);
 
-    P.Source(particleRate, PDSphere(Efx.center, 6), S);
+    P.Source(particleRate, PDSphere(Efx.center, 4.f, 3.f), S);
     P.OrbitPoint(Efx.center, 100.f);
     P.TargetColor(pVec(0, 1, 0), 1, 0.05);
     P.Move(true, false);
@@ -216,24 +216,24 @@ void Boids::DoActions(EffectsManager& Efx)
     const float radius = 1.5f, minSpeed = 3.f, maxSpeed = 6.f;
 
     pSourceState S;
-    S.Color(PDLine(pVec(0, 0, 1), pVec(.5, .5, 1)));
-    S.Velocity(PDSphere(pVec(0.f), maxSpeed));
+    S.Color(pVec(1.f));
+    S.Velocity(PDSphere(pVec(0.f), 0.f));
     S.Size(particleSize);
-    P.Source(particleRate, PDSphere(C, 15.f, 10.f), S);
+    P.Source(particleRate, PDSphere(pVec(0, 15, 25), 10.f, 0.f), S);
 
     // P.Gravity(Efx.GravityVec * 0.2f);
-    P.OrbitPoint(goalPoint, 250.f, 8.f); // Follow goal
+    P.OrbitPoint(goalPoint, 300.f, 10.f); // Follow goal
     Render(PDSphere(goalPoint, 0.25f));
     P.Damping(0.98f, minSpeed, P_MAXFLOAT);
 
-    P.Gravitate(0.15f, 0.001f); // Flock centering
+    P.Gravitate(0.15f, 0.005f); // Flock centering
 
-    P.MatchVelocity(0.5f, 0.5f, radius); // Velocity matching
+    P.MatchVelocity(0.3f, 0.5f, radius); // Velocity matching
 
-    P.Gravitate(-2.f, 0.1f, radius); // Neighbor collision avoidance
+    P.Gravitate(-1.f, 0.1f, radius); // Neighbor collision avoidance
 
     P.Avoid(5.f, 0.1f, 1.5f, Render(PDRectangle(pVec(0, -8, 2), pVec(0, 0, 8), pVec(0, 16, 0))));
-    P.Avoid(4.f, 0.1f, 1.5f, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
+    P.Avoid(5.f, 0.1f, 1.5f, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
 
     P.SpeedClamp(minSpeed, maxSpeed);
     P.TargetColor(pVec(0, 0, 0), 1, 0.04f);
@@ -254,9 +254,9 @@ void Boids::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 void Boids::StartEffect(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
-    if (Efx.particleHandle >= 0 && P.GetMaxParticles() > 2000) {
+    if (Efx.particleHandle >= 0 && P.GetMaxParticles() > 3000) {
         size_t pmax = P.GetMaxParticles();
-        P.SetMaxParticles(2000);
+        P.SetMaxParticles(3000);
         P.SetMaxParticles(pmax);
     }
 
