@@ -116,8 +116,7 @@ public:
         pVec Vel;
         P.GetParticles(0, 1, (float*)&Cam, false, NULL, (float*)&Vel);
 
-        //  At=Cam+Vel; // Look in the direction the camera is flying
-        At = Efx.center; // Look at the center of action
+        At = ParticleCam ? (Cam + Vel) : Efx.center; // Look at the center of action, the direction the camera is flying, or the centroid
     }
 };
 
