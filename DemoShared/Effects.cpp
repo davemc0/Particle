@@ -222,19 +222,18 @@ void Boids::DoActions(EffectsManager& Efx)
     P.Source(particleRate, PDSphere(C, 15.f, 10.f), S);
 
     // P.Gravity(Efx.GravityVec * 0.2f);
-    P.OrbitPoint(goalPoint, 200.f, 5.f); // Follow goal
+    P.OrbitPoint(goalPoint, 250.f, 8.f); // Follow goal
     Render(PDSphere(goalPoint, 0.25f));
     P.Damping(0.98f, minSpeed, P_MAXFLOAT);
 
-    P.Gravitate(0.25f, 0.01f); // Flock centering
+    P.Gravitate(0.15f, 0.001f); // Flock centering
 
     P.MatchVelocity(0.5f, 0.5f, radius); // Velocity matching
 
-    P.Gravitate(-3.f, 0.3f, radius); // Neighbor collision avoidance
+    P.Gravitate(-2.f, 0.1f, radius); // Neighbor collision avoidance
 
-    const float lookAheadTime = 1.5f;
-    P.Avoid(5.f, 0.1f, lookAheadTime, Render(PDRectangle(pVec(0, -8, 2), pVec(0, 0, 8), pVec(0, 16, 0))));
-    P.Avoid(4.f, 0.1f, lookAheadTime, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
+    P.Avoid(5.f, 0.1f, 1.5f, Render(PDRectangle(pVec(0, -8, 2), pVec(0, 0, 8), pVec(0, 16, 0))));
+    P.Avoid(4.f, 0.1f, 1.5f, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
 
     P.SpeedClamp(minSpeed, maxSpeed);
     P.TargetColor(pVec(0, 0, 0), 1, 0.04f);

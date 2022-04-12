@@ -774,49 +774,21 @@ void PAGravitate::Execute(ParticleGroup& group, ParticleList::iterator ibegin, P
     float magdt = magnitude * dt;
     float max_radiusSqr = max_radius * max_radius;
 
-#if 1
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-
+    std::for_each(std::execution::par_unseq, ibegin, iend, [&](Particle_t& m) {
         // Add interactions with other particles
         for (ParticleList::iterator j = ibegin; j != iend; ++j) {
-            if (it == j) continue;
             Particle_t& mj = (*j);
 
             pVec toHim(mj.pos - m.pos); // toHim = p1 - p0
             float toHimlenSqr = toHim.lenSqr();
-
-            if (toHimlenSqr < max_radiusSqr) {
+            if (toHimlenSqr > 0.f && toHimlenSqr < max_radiusSqr) {
                 // Compute force exerted between the two bodies
                 pVec acc(toHim * (magdt / (sqrtf(toHimlenSqr) * (toHimlenSqr + epsilon))));
 
                 m.vel += acc;
             }
         }
-    }
-#else
-    // Cheat by computing centroid of group and accelerating all particles toward it
-    // TODO: Make this an action or a parameter?
-    pVec centroid(0.f);
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-        centroid += m.pos;
-    }
-    centroid /= (float)(iend - ibegin);
-
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-
-        pVec toHim(centroid - m.pos); // toHim = p1 - p0
-        float toHimlenSqr = toHim.lenSqr();
-
-        if (toHimlenSqr < max_radiusSqr) {
-            // Compute force exerted between the two bodies
-            pVec acc(toHim * (magdt / (sqrtf(toHimlenSqr) * (toHimlenSqr + epsilon))));
-            m.vel += acc;
-        }
-    }
-#endif
+    });
 }
 
 // Acceleration in a constant direction
@@ -871,18 +843,14 @@ void PAMatchVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegi
     float magdt = magnitude * dt;
     float max_radiusSqr = max_radius * max_radius;
 
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-
+    std::for_each(std::execution::par_unseq, ibegin, iend, [&](Particle_t& m) {
         // Add interactions with other particles
         for (ParticleList::iterator j = ibegin; j != iend; ++j) {
-            if (it == j) continue;
             Particle_t& mj = (*j);
 
             pVec toHim(mj.pos - m.pos); // toHim = p1 - p0
             float toHimlenSqr = toHim.lenSqr();
-
-            if (toHimlenSqr < max_radiusSqr) {
+            if (toHimlenSqr > 0.f && toHimlenSqr < max_radiusSqr) {
                 // Compute force exerted between the two bodies
                 pVec veltoHim(mj.vel - m.vel);
                 pVec acc(veltoHim * (magdt / (toHimlenSqr + epsilon)));
@@ -890,7 +858,7 @@ void PAMatchVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegi
                 m.vel += acc;
             }
         }
-    }
+    });
 }
 
 // Match rotational velocity to near neighbors
@@ -901,18 +869,14 @@ void PAMatchRotVelocity::Execute(ParticleGroup& group, ParticleList::iterator ib
     float magdt = magnitude * dt;
     float max_radiusSqr = max_radius * max_radius;
 
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-
+    std::for_each(std::execution::par_unseq, ibegin, iend, [&](Particle_t& m) {
         // Add interactions with other particles
         for (ParticleList::iterator j = ibegin; j != iend; ++j) {
-            if (it == j) continue;
             Particle_t& mj = (*j);
 
             pVec toHim(mj.pos - m.pos); // toHim = p1 - p0
             float toHimlenSqr = toHim.lenSqr();
-
-            if (toHimlenSqr < max_radiusSqr) {
+            if (toHimlenSqr > 0.f && toHimlenSqr < max_radiusSqr) {
                 // Compute force exerted between the two bodies
                 pVec rveltoHim(mj.rvel - m.rvel);
                 pVec acc(rveltoHim * (magdt / (toHimlenSqr + epsilon)));
@@ -920,7 +884,7 @@ void PAMatchRotVelocity::Execute(ParticleGroup& group, ParticleList::iterator ib
                 m.rvel += acc;
             }
         }
-    }
+    });
 }
 
 // Apply the particles' velocities to their positions, and age the particles
