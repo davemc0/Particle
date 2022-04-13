@@ -75,16 +75,8 @@ public:
     {
         P.CurrentGroup(CameraSystem);
 
-        pVec Cam = pVec(0, -27, Efx.center.z()), Vel;
-        if (P.GetGroupCount() > 0) { // Carry the existing pose forward
-            P.GetParticles(0, 1, (float*)&Cam, false, NULL, (float*)&Vel);
-            P.SetMaxParticles(0);
-            P.SetMaxParticles(1);
-        }
-
-        pSourceState S;
-        S.Velocity(PDSphere(pVec(0, 0, 0), CamSpeed, CamSpeed));
-        P.Vertex(Cam, S);
+        if (P.GetGroupCount() <= 0) P.Vertex(pVec(0, -27, Efx.center.z()), pSourceState());
+        P.RandomVelocity(PDSphere(pVec(0, 0, 0), CamSpeed, CamSpeed));
     }
 
     void toggleMotion()
