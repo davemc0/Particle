@@ -20,6 +20,7 @@
 // #define P_EXPOL std::execution::par_unseq
 #define P_EXPOL std::execution::seq
 
+// For some reason most actions are slower with par_unseq. Use the following on the ones that get a speedup.
 // #define P_EXPOLP std::execution::seq
 #define P_EXPOLP std::execution::par_unseq
 
@@ -709,9 +710,9 @@ void PAExplosion::Execute(ParticleGroup& group, ParticleList::iterator ibegin, P
         float DistFromWaveSqr = fsqr(radius - dist);
 
         float Gd = exp(DistFromWaveSqr * inexp) * outexp;
-        pVec amount = dir * (Gd * magdt / (dist * (distSqr + epsilon)));
+        pVec acc(dir * (Gd * magdt / (dist * (distSqr + epsilon))));
 
-        m.vel += amount;
+        m.vel += acc;
     });
 }
 
@@ -751,7 +752,7 @@ void PAGravitate::Execute(ParticleGroup& group, ParticleList::iterator ibegin, P
     PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
 
     float magdt = magnitude * dt;
-    float max_radiusSqr = max_radius * max_radius;
+    float max_radiusSqr = fsqr(max_radius);
 
     std::for_each(P_EXPOLP, ibegin, iend, [&](Particle_t& m) {
         // Add interactions with other particles
@@ -818,7 +819,7 @@ void PAMatchVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegi
     PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
 
     float magdt = magnitude * dt;
-    float max_radiusSqr = max_radius * max_radius;
+    float max_radiusSqr = fsqr(max_radius);
 
     std::for_each(P_EXPOLP, ibegin, iend, [&](Particle_t& m) {
         // Add interactions with other particles
@@ -844,7 +845,7 @@ void PAMatchRotVelocity::Execute(ParticleGroup& group, ParticleList::iterator ib
     PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
 
     float magdt = magnitude * dt;
-    float max_radiusSqr = max_radius * max_radius;
+    float max_radiusSqr = fsqr(max_radius);
 
     std::for_each(P_EXPOLP, ibegin, iend, [&](Particle_t& m) {
         // Add interactions with other particles
@@ -915,7 +916,7 @@ void PAOrbitLine::Execute(ParticleGroup& group, ParticleList::iterator ibegin, P
 void PAOrbitPoint::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
     float magdt = magnitude * dt;
-    float max_radiusSqr = max_radius * max_radius;
+    float max_radiusSqr = fsqr(max_radius);
 
     std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
         // Figure direction from particle to center
@@ -971,7 +972,7 @@ void PARandomRotVelocity::Execute(ParticleGroup& group, ParticleList::iterator i
     std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
         pVec velocity = gen_vel->Generate();
 
-        // Shouldn't multiply by dt because velocities are invariant of dt.
+        // Don't multiply by dt because velocities are invariant of dt.
         m.rvel = velocity;
     });
 }
