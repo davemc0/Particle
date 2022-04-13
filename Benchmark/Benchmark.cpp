@@ -16,7 +16,7 @@
 #include <string>
 
 namespace {
-const int PRINT_PERIOD = 500;
+const int PRINT_PERIOD = 100;
 ExecMode_e ExecMode = Internal_Mode;
 ParticleContext_t P;
 EffectsManager Efx(P, 500000);
@@ -33,6 +33,7 @@ void Report()
 
         char exCh = (ExecMode == Immediate_Mode) ? 'I' : (ExecMode == Internal_Mode) ? 'N' : 'C';
         printf("%c%c n=%5d time=%02.4f %s\n", exCh, SortParticles ? 'S' : ' ', cnt, (float)FPSClock.GetMean(), Efx.GetCurEffectName().c_str());
+        fflush(stdout);
         FrameCountForClock = 0;
     }
 }
@@ -163,6 +164,11 @@ static void Args(int argc, char** argv)
         } else if (starg == "-cache") {
             RunBenchmarkCache();
             RemoveArgs(argc, argv, i);
+        } else if (starg == "-demo") {
+            if (argc <= i + 1) Usage(program, "More args");
+            demoNum = atoi(argv[i + 1]);
+
+            RemoveArgs(argc, argv, i, 2);
         } else if (starg == "-test") {
             TestDomains();
             RemoveArgs(argc, argv, i);

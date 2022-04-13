@@ -308,7 +308,7 @@ void BounceToy::DoActions(EffectsManager& Efx)
 
 void BounceToy::StartEffect(EffectsManager& Efx)
 {
-    particleRate = 600;
+    particleRate = 60000;
     PrimType = PRIM_LINE;
     WhiteBackground = true;
     DepthTest = true;

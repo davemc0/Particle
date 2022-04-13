@@ -15,6 +15,14 @@
 #include <sstream>
 #include <string>
 
+// Remove these if not C++17.
+// #define P_EXPOL std::execution::par
+// #define P_EXPOL std::execution::par_unseq
+#define P_EXPOL std::execution::seq
+
+// #define P_EXPOLP std::execution::seq
+#define P_EXPOLP std::execution::par_unseq
+
 namespace PAPI {
 
 std::string PActionBase::name = "PActionBase";
@@ -99,9 +107,7 @@ void PAAvoid::Exec(const PDTriangle& dom, ParticleGroup& group, ParticleList::it
     pVec fn = f;
     fn.normalize();
 
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-
+    std::for_each(P_EXPOLP, ibegin, iend, [&](Particle_t& m) {
         // See if particle's current and look_ahead positions cross plane.
         // If not, couldn't hit, so keep going.
         pVec pnext = m.pos + m.vel * look_ahead;
@@ -111,7 +117,7 @@ void PAAvoid::Exec(const PDTriangle& dom, ParticleGroup& group, ParticleList::it
         float distold = dot(m.pos, dom.nrm) + dom.D;
         float distnew = dot(pnext, dom.nrm) + dom.D;
 
-        if (pSameSign(distold, distnew)) continue;
+        if (pSameSign(distold, distnew)) return;
 
         float nv = dot(dom.nrm, m.vel);
         float t = -distold / nv; // Time until hit
@@ -125,7 +131,7 @@ void PAAvoid::Exec(const PDTriangle& dom, ParticleGroup& group, ParticleList::it
         float vpos = dot(offset, dom.s2);
 
         // Did it cross plane outside triangle?
-        if (upos < 0 || vpos < 0 || (upos + vpos) > 1) continue;
+        if (upos < 0 || vpos < 0 || (upos + vpos) > 1) return;
 
         // A hit! A most palpable hit!
         // Compute distance to the three edges.
@@ -147,24 +153,22 @@ void PAAvoid::Exec(const PDTriangle& dom, ParticleGroup& group, ParticleList::it
         else
             S = fofs;
 
-        if (S == pVec(0.f)) continue; // It's aimed straight at an edge. S will become NaN.
-        S.normalize();                // Blend S with m.vel.
+        if (S == pVec(0.f)) return; // It's aimed straight at an edge. S will become NaN.
+        S.normalize();              // Blend S with m.vel.
 
         float vlen = m.vel.length();
         pVec Vn = m.vel / vlen;
 
         pVec dir = (S * (magdt / (fsqr(t) + epsilon))) + Vn;
         m.vel = dir * (vlen / dir.length()); // Speed of m.vel, but in direction dir.
-    }
+    });
 }
 
 void PAAvoid::Exec(const PDRectangle& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
     float magdt = magnitude * dt;
 
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-
+    std::for_each(P_EXPOLP, ibegin, iend, [&](Particle_t& m) {
         // See if particle's current and look_ahead positions cross plane.
         // If not, couldn't hit, so keep going.
         pVec pnext = m.pos + m.vel * look_ahead;
@@ -174,7 +178,7 @@ void PAAvoid::Exec(const PDRectangle& dom, ParticleGroup& group, ParticleList::i
         float distold = dot(m.pos, dom.nrm) + dom.D;
         float distnew = dot(pnext, dom.nrm) + dom.D;
 
-        if (pSameSign(distold, distnew)) continue;
+        if (pSameSign(distold, distnew)) return;
 
         float nv = dot(dom.nrm, m.vel);
         float t = -distold / nv;
@@ -188,7 +192,7 @@ void PAAvoid::Exec(const PDRectangle& dom, ParticleGroup& group, ParticleList::i
         float vpos = dot(offset, dom.s2);
 
         // Did it cross plane outside rectangle?
-        if (upos <= 0 || vpos <= 0 || upos >= 1 || vpos >= 1) continue;
+        if (upos <= 0 || vpos <= 0 || upos >= 1 || vpos >= 1) return;
 
         // A hit! A most palpable hit!
         // Compute distance to the four edges.
@@ -213,24 +217,22 @@ void PAAvoid::Exec(const PDRectangle& dom, ParticleGroup& group, ParticleList::i
         else
             S = gofs;
 
-        if (S == pVec(0.f)) continue; // It's aimed straight at an edge. S will become NaN.
-        S.normalize();                // Blend S with m.vel.
+        if (S == pVec(0.f)) return; // It's aimed straight at an edge. S will become NaN.
+        S.normalize();              // Blend S with m.vel.
 
         float vlen = m.vel.length();
         pVec Vn = m.vel / vlen;
 
         pVec dir = (S * (magdt / (fsqr(t) + epsilon))) + Vn;
         m.vel = dir * (vlen / dir.length()); // Speed of m.vel, but in direction dir.
-    }
+    });
 }
 
 void PAAvoid::Exec(const PDPlane& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
     float magdt = magnitude * dt;
 
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-
+    std::for_each(P_EXPOLP, ibegin, iend, [&](Particle_t& m) {
         // See if particle's current and look_ahead positions cross plane.
         // If not, couldn't hit, so keep going.
         pVec pnext = m.pos + m.vel * look_ahead;
@@ -240,7 +242,7 @@ void PAAvoid::Exec(const PDPlane& dom, ParticleGroup& group, ParticleList::itera
         float distold = dot(m.pos, dom.nrm) + dom.D;
         float distnew = dot(pnext, dom.nrm) + dom.D;
 
-        if (pSameSign(distold, distnew)) continue;
+        if (pSameSign(distold, distnew)) return;
 
         float t = -distold / dot(dom.nrm, m.vel); // Time to collision
         pVec S = m.vel * t + dom.nrm * distold;   // Vector from projection point to point of impact
@@ -256,7 +258,7 @@ void PAAvoid::Exec(const PDPlane& dom, ParticleGroup& group, ParticleList::itera
 
         pVec dir = (S * (magdt / (fsqr(t) + epsilon))) + Vn;
         m.vel = dir * (vlen / dir.length()); // Speed of m.vel, but in direction dir.
-    }
+    });
 }
 
 // Only works for points on the OUTSIDE of the sphere. Ignores inner radius.
@@ -264,9 +266,7 @@ void PAAvoid::Exec(const PDSphere& dom, ParticleGroup& group, ParticleList::iter
 {
     float magdt = magnitude * dt;
 
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-
+    std::for_each(P_EXPOLP, ibegin, iend, [&](Particle_t& m) {
         // First do a ray-sphere intersection test and see if it's soon enough.
         // Can I do this faster without t?
         float vlen = m.vel.length();
@@ -276,11 +276,11 @@ void PAAvoid::Exec(const PDSphere& dom, ParticleGroup& group, ParticleList::iter
         float v = dot(L, Vn);
 
         float disc = dom.radOutSqr - dot(L, L) + fsqr(v);
-        if (disc < 0) continue; // I'm not heading toward it.
+        if (disc < 0) return; // I'm not heading toward it.
 
         // Compute length for second rejection test.
         float t = v - sqrtf(disc);
-        if (t < 0 || t > (vlen * look_ahead)) continue;
+        if (t < 0 || t > (vlen * look_ahead)) return;
 
         // Get a vector to safety.
         pVec C = Cross(Vn, L);
@@ -289,16 +289,14 @@ void PAAvoid::Exec(const PDSphere& dom, ParticleGroup& group, ParticleList::iter
 
         pVec dir = (S * (magdt / (fsqr(t) + epsilon))) + Vn;
         m.vel = dir * (vlen / dir.length()); // Speed of m.vel, but in direction dir.
-    }
+    });
 }
 
 void PAAvoid::Exec(const PDDisc& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
     float magdt = magnitude * dt;
 
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-
+    std::for_each(P_EXPOLP, ibegin, iend, [&](Particle_t& m) {
         // See if particle's current and look_ahead positions cross plane.
         // If not, couldn't hit, so keep going.
         pVec pnext = m.pos + m.vel * look_ahead;
@@ -308,7 +306,7 @@ void PAAvoid::Exec(const PDDisc& dom, ParticleGroup& group, ParticleList::iterat
         float distold = dot(m.pos, dom.nrm) + dom.D;
         float distnew = dot(pnext, dom.nrm) + dom.D;
 
-        if (pSameSign(distold, distnew)) continue;
+        if (pSameSign(distold, distnew)) return;
 
         float nv = dot(dom.nrm, m.vel);
         float t = -distold / nv;
@@ -320,7 +318,7 @@ void PAAvoid::Exec(const PDDisc& dom, ParticleGroup& group, ParticleList::iterat
 
         // Are we going to hit the disc ring? If so, always turn to the OUTSIDE of the ring.
         // Could do inside of ring, too, if we took sqrts, found the closer direction, and flipped offset if needed.
-        if (radSqr < dom.radInSqr || radSqr > dom.radOutSqr) continue;
+        if (radSqr < dom.radInSqr || radSqr > dom.radOutSqr) return;
 
         // Blend S with m.vel.
         pVec S = offset;
@@ -331,7 +329,7 @@ void PAAvoid::Exec(const PDDisc& dom, ParticleGroup& group, ParticleList::iterat
 
         pVec dir = (S * (magdt / (fsqr(t) + epsilon))) + Vn;
         m.vel = dir * (vlen / dir.length()); // Speed of m.vel, but in direction dir.
-    }
+    });
 }
 
 void PAAvoid::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
@@ -365,9 +363,7 @@ void PAAvoid::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Parti
 // the whole velocity in the outward direction for the whole time step.
 void PABounce::Exec(const PDTriangle& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
         // See if particle's current and look_ahead positions cross plane.
         // If not, couldn't hit, so keep going.
         pVec pnext = m.pos + m.vel * dt;
@@ -377,7 +373,7 @@ void PABounce::Exec(const PDTriangle& dom, ParticleGroup& group, ParticleList::i
         float distold = dot(m.pos, dom.nrm) + dom.D;
         float distnew = dot(pnext, dom.nrm) + dom.D;
 
-        if (pSameSign(distold, distnew)) continue;
+        if (pSameSign(distold, distnew)) return;
 
         float nv = dot(dom.nrm, m.vel);
         float t = -distold / nv; // Time until hit
@@ -391,7 +387,7 @@ void PABounce::Exec(const PDTriangle& dom, ParticleGroup& group, ParticleList::i
         float vpos = dot(offset, dom.s2);
 
         // Did it cross plane outside triangle?
-        if (upos < 0 || vpos < 0 || (upos + vpos) > 1) continue;
+        if (upos < 0 || vpos < 0 || (upos + vpos) > 1) return;
 
         // A hit! A most palpable hit!
         // Compute tangential and normal components of velocity
@@ -401,14 +397,12 @@ void PABounce::Exec(const PDTriangle& dom, ParticleGroup& group, ParticleList::i
         // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
         float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
         m.vel = vt * fric - vn * resilience;
-    }
+    });
 }
 
 void PABounce::Exec(const PDRectangle& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
         // See if particle's current and pnext positions cross plane.
         // If not, couldn't hit, so keep going.
         pVec pnext = m.pos + m.vel * dt;
@@ -418,7 +412,7 @@ void PABounce::Exec(const PDRectangle& dom, ParticleGroup& group, ParticleList::
         float distold = dot(m.pos, dom.nrm) + dom.D;
         float distnew = dot(pnext, dom.nrm) + dom.D;
 
-        if (pSameSign(distold, distnew)) continue;
+        if (pSameSign(distold, distnew)) return;
 
         float nv = dot(dom.nrm, m.vel);
         float t = -distold / nv; // Time until hit
@@ -432,7 +426,7 @@ void PABounce::Exec(const PDRectangle& dom, ParticleGroup& group, ParticleList::
         float vpos = dot(offset, dom.s2);
 
         // Did it cross plane outside rectangle?
-        if (upos < 0 || upos > 1 || vpos < 0 || vpos > 1) continue;
+        if (upos < 0 || upos > 1 || vpos < 0 || vpos > 1) return;
 
         // A hit! A most palpable hit!
         // Compute tangential and normal components of velocity
@@ -442,20 +436,18 @@ void PABounce::Exec(const PDRectangle& dom, ParticleGroup& group, ParticleList::
         // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
         float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
         m.vel = vt * fric - vn * resilience;
-    }
+    });
 }
 
 void PABounce::Exec(const PDBox& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
         // See if particle's current and pnext positions cross boundary. If not, skip it.
         pVec pnext = m.pos + m.vel * dt;
 
         bool oldIn = dom.Within(m.pos);
         bool newIn = dom.Within(pnext);
-        if (oldIn == newIn) continue;
+        if (oldIn == newIn) return;
 
         pVec vn(0.f), vt(m.vel);
         if (oldIn) { // Bounce off the inside
@@ -472,14 +464,12 @@ void PABounce::Exec(const PDBox& dom, ParticleGroup& group, ParticleList::iterat
         // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
         float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
         m.vel = vt * fric - vn * resilience;
-    }
+    });
 }
 
 void PABounce::Exec(const PDPlane& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
         // See if particle's current and look_ahead positions cross plane.
         // If not, couldn't hit, so keep going.
         pVec pnext = m.pos + m.vel * dt;
@@ -489,7 +479,7 @@ void PABounce::Exec(const PDPlane& dom, ParticleGroup& group, ParticleList::iter
         float distold = dot(m.pos, dom.nrm) + dom.D;
         float distnew = dot(pnext, dom.nrm) + dom.D;
 
-        if (pSameSign(distold, distnew)) continue;
+        if (pSameSign(distold, distnew)) return;
 
         float nv = dot(dom.nrm, m.vel);
         float t = -distold / nv; // Time until hit
@@ -502,7 +492,7 @@ void PABounce::Exec(const PDPlane& dom, ParticleGroup& group, ParticleList::iter
         // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
         float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
         m.vel = vt * fric - vn * resilience;
-    }
+    });
 }
 
 void PABounce::Exec(const PDSphere& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
@@ -512,9 +502,7 @@ void PABounce::Exec(const PDSphere& dom, ParticleGroup& group, ParticleList::ite
     float dtinv = 1.0f / dt;
 
     // Bounce particles off the inside or outside of the sphere
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
         // See if particle's next position is on the opposite side of the domain. If so, bounce it.
         pVec pnext = m.pos + m.vel * dt;
 
@@ -522,7 +510,7 @@ void PABounce::Exec(const PDSphere& dom, ParticleGroup& group, ParticleList::ite
             // We are bouncing off the inside of the sphere.
             if (dom.Within(pnext))
                 // Still inside. Do nothing.
-                continue;
+                return;
 
             // Trying to go outside. Bounce back in.
 
@@ -549,7 +537,7 @@ void PABounce::Exec(const PDSphere& dom, ParticleGroup& group, ParticleList::ite
             pVec pthree = m.pos + m.vel * dt;
             if (dom.Within(pthree)) {
                 // Still inside. We're good.
-                continue;
+                return;
             } else {
                 // Since the tangent plane is outside the sphere, reflecting the velocity vector about it won't necessarily bring it inside the sphere.
                 pVec toctr = dom.ctr - pthree;
@@ -559,7 +547,7 @@ void PABounce::Exec(const PDSphere& dom, ParticleGroup& group, ParticleList::ite
             }
         } else {
             // We are bouncing off the outside of the sphere.
-            if (!dom.Within(pnext)) continue;
+            if (!dom.Within(pnext)) return;
 
             // Trying to go inside. Bounce back out.
 
@@ -579,14 +567,12 @@ void PABounce::Exec(const PDSphere& dom, ParticleGroup& group, ParticleList::ite
             float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
             m.vel = vt * fric - vn * resilience;
         }
-    }
+    });
 }
 
 void PABounce::Exec(const PDDisc& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
         // See if particle's current and look_ahead positions cross plane.
         // If not, couldn't hit, so keep going.
         pVec pnext = m.pos + m.vel * dt;
@@ -596,7 +582,7 @@ void PABounce::Exec(const PDDisc& dom, ParticleGroup& group, ParticleList::itera
         float distold = dot(m.pos, dom.nrm) + dom.D;
         float distnew = dot(pnext, dom.nrm) + dom.D;
 
-        if (pSameSign(distold, distnew)) continue;
+        if (pSameSign(distold, distnew)) return;
 
         float NdotV = dot(dom.nrm, m.vel);
         float t = -distold / NdotV; // Time until hit
@@ -607,7 +593,7 @@ void PABounce::Exec(const PDDisc& dom, ParticleGroup& group, ParticleList::itera
         float radSqr = offset.lenSqr();
 
         // Are we going to hit the disc ring?
-        if (radSqr < dom.radInSqr || radSqr > dom.radOutSqr) continue;
+        if (radSqr < dom.radInSqr || radSqr > dom.radOutSqr) return;
 
         // A hit! A most palpable hit!
         // Compute tangential and normal components of velocity
@@ -617,7 +603,7 @@ void PABounce::Exec(const PDDisc& dom, ParticleGroup& group, ParticleList::itera
         // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
         float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
         m.vel = vt * fric - vn * resilience;
-    }
+    });
 }
 
 void PABounce::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
@@ -653,6 +639,7 @@ void PACallback::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Pa
 {
     if (callbackFunc == NULL) return;
 
+    // TODO: Can we parallelize this? Should we let the app specify whether we can?
     for (ParticleList::iterator it = ibegin; it != iend; it++) {
         Particle_t& m = (*it);
         (*callbackFunc)(m, Data, dt);
@@ -663,23 +650,18 @@ void PACallback::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Pa
 void PACopyVertexB::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
     if (copy_pos && copy_vel) {
-        for (ParticleList::iterator it = ibegin; it != iend; it++) {
-            Particle_t& m = (*it);
+        std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
             m.posB = m.pos;
             m.upB = m.up;
             m.velB = m.vel;
-        }
+        });
     } else if (copy_pos) {
-        for (ParticleList::iterator it = ibegin; it != iend; it++) {
-            Particle_t& m = (*it);
+        std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
             m.posB = m.pos;
             m.upB = m.up;
-        }
+        });
     } else if (copy_vel) {
-        for (ParticleList::iterator it = ibegin; it != iend; it++) {
-            Particle_t& m = (*it);
-            m.velB = m.vel;
-        }
+        std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { m.velB = m.vel; });
     }
 }
 
@@ -690,12 +672,11 @@ void PADamping::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Par
     pVec one = pVec(1, 1, 1);
     pVec scale(one - ((one - damping) * dt));
 
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
         float vSqr = m.vel.lenSqr();
 
         if (vSqr >= vlowSqr && vSqr <= vhighSqr) { m.vel = CompMult(m.vel, scale); }
-    }
+    });
 }
 
 // Dampen rotational velocities
@@ -705,12 +686,11 @@ void PARotDamping::Execute(ParticleGroup& group, ParticleList::iterator ibegin, 
     pVec one = pVec(1, 1, 1);
     pVec scale(one - ((one - damping) * dt));
 
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
         float vSqr = m.rvel.lenSqr();
 
         if (vSqr >= vlowSqr && vSqr <= vhighSqr) { m.rvel = CompMult(m.rvel, scale); }
-    }
+    });
 }
 
 // Exert force on each particle away from explosion center
@@ -721,9 +701,7 @@ void PAExplosion::Execute(ParticleGroup& group, ParticleList::iterator ibegin, P
     float inexp = -0.5f * fsqr(oneOverSigma);
     float outexp = P_ONEOVERSQRT2PI * oneOverSigma;
 
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
         // Figure direction to particle.
         pVec dir(m.pos - center);
         float distSqr = dir.lenSqr();
@@ -734,7 +712,7 @@ void PAExplosion::Execute(ParticleGroup& group, ParticleList::iterator ibegin, P
         pVec amount = dir * (Gd * magdt / (dist * (distSqr + epsilon)));
 
         m.vel += amount;
-    }
+    });
 }
 
 // Follow the next particle in the list
@@ -750,6 +728,7 @@ void PAFollow::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Part
     ParticleList::iterator end = iend;
     end--;
 
+    // TODO: Parallelize this
     for (ParticleList::iterator it = ibegin; it != end; it++) {
         Particle_t& m = (*it);
         ParticleList::iterator next = it;
@@ -774,7 +753,7 @@ void PAGravitate::Execute(ParticleGroup& group, ParticleList::iterator ibegin, P
     float magdt = magnitude * dt;
     float max_radiusSqr = max_radius * max_radius;
 
-    std::for_each(std::execution::par_unseq, ibegin, iend, [&](Particle_t& m) {
+    std::for_each(P_EXPOLP, ibegin, iend, [&](Particle_t& m) {
         // Add interactions with other particles
         for (ParticleList::iterator j = ibegin; j != iend; ++j) {
             Particle_t& mj = (*j);
@@ -796,26 +775,23 @@ void PAGravity::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Par
 {
     pVec ddir(direction * dt);
 
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
         // Step velocity with acceleration
         m.vel += ddir;
-    }
+    });
 }
 
 // For particles in the domain of influence, accelerate them with a domain.
 void PAJet::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
         if (dom->Within(m.pos)) {
             pVec accel = acc->Generate();
 
             // Step velocity with acceleration
             m.vel += accel * dt;
         }
-    }
+    });
 }
 
 // Get rid of older particles
@@ -824,6 +800,7 @@ void PAKillOld::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Par
     PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
 
     // Must traverse list carefully so Remove will work
+    // TODO: Parallelize this. Perhaps use a partition primitive.
     for (ParticleList::iterator it = ibegin; it != iend;) {
         Particle_t& m = (*it);
 
@@ -843,7 +820,7 @@ void PAMatchVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegi
     float magdt = magnitude * dt;
     float max_radiusSqr = max_radius * max_radius;
 
-    std::for_each(std::execution::par_unseq, ibegin, iend, [&](Particle_t& m) {
+    std::for_each(P_EXPOLP, ibegin, iend, [&](Particle_t& m) {
         // Add interactions with other particles
         for (ParticleList::iterator j = ibegin; j != iend; ++j) {
             Particle_t& mj = (*j);
@@ -869,7 +846,7 @@ void PAMatchRotVelocity::Execute(ParticleGroup& group, ParticleList::iterator ib
     float magdt = magnitude * dt;
     float max_radiusSqr = max_radius * max_radius;
 
-    std::for_each(std::execution::par_unseq, ibegin, iend, [&](Particle_t& m) {
+    std::for_each(P_EXPOLP, ibegin, iend, [&](Particle_t& m) {
         // Add interactions with other particles
         for (ParticleList::iterator j = ibegin; j != iend; ++j) {
             Particle_t& mj = (*j);
@@ -891,27 +868,21 @@ void PAMatchRotVelocity::Execute(ParticleGroup& group, ParticleList::iterator ib
 void PAMove::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
     if (move_velocity && move_rotational_velocity) {
-        for (ParticleList::iterator it = ibegin; it != iend; it++) {
-            Particle_t& m = (*it);
-
+        std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
             m.age += dt;
             m.pos += m.vel * dt;
             m.up += m.rvel * dt;
-        }
+        });
     } else if (move_rotational_velocity) {
-        for (ParticleList::iterator it = ibegin; it != iend; it++) {
-            Particle_t& m = (*it);
-
+        std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
             m.age += dt;
             m.up += m.rvel * dt;
-        }
+        });
     } else {
-        for (ParticleList::iterator it = ibegin; it != iend; it++) {
-            Particle_t& m = (*it);
-
+        std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
             m.age += dt;
             m.pos += m.vel * dt;
-        }
+        });
     }
 }
 
@@ -921,10 +892,7 @@ void PAOrbitLine::Execute(ParticleGroup& group, ParticleList::iterator ibegin, P
     float magdt = magnitude * dt;
     float max_radiusSqr = fsqr(max_radius);
 
-    // If not using radius cutoff, avoid the if().
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
         // Figure direction to particle from base of line.
         pVec f = m.pos - p;
 
@@ -939,8 +907,8 @@ void PAOrbitLine::Execute(ParticleGroup& group, ParticleList::iterator ibegin, P
         float rSqr = into.lenSqr();
 
         // Step velocity with acceleration
-        m.vel += into * (magdt / (sqrtf(rSqr) * (rSqr + epsilon)));
-    }
+        if (rSqr < max_radiusSqr) m.vel += into * (magdt / (sqrtf(rSqr) * (rSqr + epsilon)));
+    });
 }
 
 // Accelerate particles towards a point
@@ -949,9 +917,7 @@ void PAOrbitPoint::Execute(ParticleGroup& group, ParticleList::iterator ibegin, 
     float magdt = magnitude * dt;
     float max_radiusSqr = max_radius * max_radius;
 
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
         // Figure direction from particle to center
         pVec dir(center - m.pos);
 
@@ -961,63 +927,53 @@ void PAOrbitPoint::Execute(ParticleGroup& group, ParticleList::iterator ibegin, 
 
         // Step velocity with acceleration
         if (rSqr < max_radiusSqr) m.vel += dir * (magdt / (sqrtf(rSqr) * (rSqr + epsilon)));
-    }
+    });
 }
 
 // Accelerate in random direction each time step
 void PARandomAccel::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
         pVec accel = gen_acc->Generate();
 
-        // Dt will affect this by making a higher probability of
-        // being near the original velocity after unit time. Smaller
-        // dt approach a normal distribution instead of a square wave.
+        // Dt will affect this by making a higher probability of being near the original velocity after unit time.
+        // Smaller dt approach a normal distribution instead of a square wave.
         m.vel += accel * dt;
-    }
+    });
 }
 
 // Immediately displace position randomly
 void PARandomDisplace::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
         pVec disp = gen_disp->Generate();
 
-        // Dt will affect this by making a higher probability of
-        // being near the original position after unit time. Smaller
-        // dt approach a normal distribution instead of a square wave.
+        // Dt will affect this by making a higher probability of being near the original position after unit time.
+        // Smaller dt approach a normal distribution instead of a square wave.
         m.pos += disp * dt;
-    }
+    });
 }
 
 // Immediately assign a random velocity
 void PARandomVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
         pVec velocity = gen_vel->Generate();
 
-        // Shouldn't multiply by dt because velocities are invariant of dt.
+        // Don't multiply by dt because velocities are invariant of dt.
         m.vel = velocity;
-    }
+    });
 }
 
 // Immediately assign a random rotational velocity
 void PARandomRotVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
         pVec velocity = gen_vel->Generate();
 
         // Shouldn't multiply by dt because velocities are invariant of dt.
         m.rvel = velocity;
-    }
+    });
 }
 
 #if 0
@@ -1051,9 +1007,7 @@ static inline void Restore(pVec& vel, const pVec& posB, const pVec& pos, const f
 void PARestore::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
     if (time_left <= 0) {
-        for (ParticleList::iterator it = ibegin; it != iend; it++) {
-            Particle_t& m = (*it);
-
+        std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
             // Already constrained; keep it there.
             if (restore_velocity) {
                 m.pos = m.posB;
@@ -1063,19 +1017,17 @@ void PARestore::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Par
                 m.up = m.upB;
                 m.rvel = pVec(0.0f, 0.0f, 0.0f);
             }
-        }
+        });
     } else {
         float t = time_left;
         float dtSqr = fsqr(dt);
         float ttInv6dt = dt * 6.0f / fsqr(t);
         float tttInv3dtSqr = dtSqr * 3.0f / (t * t * t);
 
-        for (ParticleList::iterator it = ibegin; it != iend; it++) {
-            Particle_t& m = (*it);
-
+        std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
             if (restore_velocity) Restore(m.vel, m.posB, m.pos, t, dtSqr, ttInv6dt, tttInv3dtSqr);
             if (restore_rvelocity) Restore(m.rvel, m.upB, m.up, t, dtSqr, ttInv6dt, tttInv3dtSqr);
-        }
+        });
     }
 }
 
@@ -1085,6 +1037,7 @@ void PASink::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Partic
     PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
 
     // Must traverse list carefully so Remove will work
+    // TODO: Parallelize this!
     for (ParticleList::iterator it = ibegin; it != iend;) {
         Particle_t& m = (*it);
 
@@ -1103,6 +1056,7 @@ void PASinkVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegin
     PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
 
     // Must traverse list carefully so Remove will work
+    // TODO: Parallelize this!
     for (ParticleList::iterator it = ibegin; it != iend;) {
         Particle_t& m = (*it);
 
@@ -1123,14 +1077,13 @@ void PASort::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Partic
     float Scale = front_to_back ? -1.0f : 1.0f;
 
     // First compute projection of particle onto view vector
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
         pVec ToP = m.pos - Eye;
         m.tmp0 = dot(ToP, Look) * Scale;
         if (clamp_negative && m.tmp0 < 0) m.tmp0 = 0.0f;
-    }
+    });
 
-    std::sort(std::execution::par_unseq, ibegin, iend);
+    std::sort(P_EXPOL, ibegin, iend);
 }
 
 // Randomly add particles to the system
@@ -1171,8 +1124,7 @@ void PASpeedClamp::Execute(ParticleGroup& group, ParticleList::iterator ibegin, 
     float min_sqr = fsqr(min_speed);
     float max_sqr = fsqr(max_speed);
 
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
         float sSqr = m.vel.lenSqr();
         if (sSqr < min_sqr && sSqr) {
             float s = sqrtf(sSqr);
@@ -1181,7 +1133,7 @@ void PASpeedClamp::Execute(ParticleGroup& group, ParticleList::iterator ibegin, 
             float s = sqrtf(sSqr);
             m.vel *= (max_speed / s);
         }
-    }
+    });
 }
 
 // Change color of all particles toward the specified color
@@ -1189,11 +1141,10 @@ void PATargetColor::Execute(ParticleGroup& group, ParticleList::iterator ibegin,
 {
     float scaleFac = scale * dt;
 
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
         m.color += (color - m.color) * scaleFac;
         m.alpha += (alpha - m.alpha) * scaleFac;
-    }
+    });
 }
 
 // Change sizes of all particles toward the specified size
@@ -1201,11 +1152,10 @@ void PATargetSize::Execute(ParticleGroup& group, ParticleList::iterator ibegin, 
 {
     pVec scaleFac = scale * dt;
 
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
         pVec dif = size - m.size;
         m.size += CompMult(dif, scaleFac);
-    }
+    });
 }
 
 // Change velocity of all particles toward the specified velocity
@@ -1213,10 +1163,7 @@ void PATargetVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibeg
 {
     float scaleFac = scale * dt;
 
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-        m.vel += (velocity - m.vel) * scaleFac;
-    }
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { m.vel += (velocity - m.vel) * scaleFac; });
 }
 
 // Change velocity of all particles toward the specified velocity
@@ -1224,10 +1171,7 @@ void PATargetRotVelocity::Execute(ParticleGroup& group, ParticleList::iterator i
 {
     float scaleFac = scale * dt;
 
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-        m.rvel += (velocity - m.rvel) * scaleFac;
-    }
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { m.rvel += (velocity - m.rvel) * scaleFac; });
 }
 
 void PAVortex::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
@@ -1239,9 +1183,7 @@ void PAVortex::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Part
     axisN.normalize();
 
     // This one just rotates a particle around the axis. Amount is based on radius, magnitude, and mass.
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
         // Direction to particle from base of line.
         pVec tipToPar = m.pos - tip;
 
@@ -1262,7 +1204,7 @@ void PAVortex::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Part
 
         if (rSqr >= max_radiusSqr || axisScale < 0.0f || alongAxis > 1.0f) {
             // m.color = pVec(0,0,1);
-            continue;
+            return;
         }
 
         float r = sqrtf(rSqr);
@@ -1274,7 +1216,7 @@ void PAVortex::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Part
             pVec AccelIn = parToAxis * (inSpeed * dtOverMass);
             m.vel += AccelIn;
             // m.color = pVec(0,1,0);
-            continue;
+            return;
         }
 
         // Particles inside the cone have their velocity totally replaced right now. :(
@@ -1286,6 +1228,6 @@ void PAVortex::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Part
         pVec RotDir = Cross(axisN, parToAxis);
         pVec AccelAround = RotDir * (aroundSpeed * dtOverMass);
         m.vel = AccelUp + AccelAround; // NOT += because we want to stop its inward travel.
-    }
+    });
 }
 }; // namespace PAPI
