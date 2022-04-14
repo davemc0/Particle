@@ -274,9 +274,9 @@ void BounceToy::DoActions(EffectsManager& Efx)
     ParticleContext_t& P = Efx.P;
 
     // Friction: 0 means don't slow its tangential velocity. Bigger than 0 means do.
-    // Cutoff: If less than cutoff, don't apply friction.
+    // FricMinTanVel: If tangential velocity magnitude less than FricMinTanVel, don't apply friction.
     // Resilience: Scale normal velocity by this. Bigger is bouncier.
-    const float Fric = 0.f, Res = 0.80f, Cutoff = 999.f;
+    const float Fric = 0.f, Res = 0.80f, FricMinTanVel = 999.f;
 
     pVec C(Efx.center), Side(0, 4, 0);
 
@@ -288,16 +288,16 @@ void BounceToy::DoActions(EffectsManager& Efx)
 
     P.Gravity(Efx.GravityVec);
 
-    P.Bounce(Fric, Res, Cutoff, Render(PDRectangle(C + pVec(-4, -2, 6), pVec(4, 0, 1), Side)));
-    P.Bounce(Fric, Res, Cutoff, Render(PDRectangle(C + pVec(4, -2, 8), pVec(4, 0, -3), Side)));
-    P.Bounce(Fric, Res, Cutoff, Render(PDRectangle(C + pVec(-1, -2, 6), pVec(2, 0, -2), Side)));
-    P.Bounce(Fric, Res, Cutoff, Render(PDRectangle(C + pVec(1, -2, 2), pVec(4, 0, 2), Side)));
-    P.Bounce(Fric, Res, Cutoff, Render(PDRectangle(C + pVec(-6, -2, 6), pVec(3, 0, -5), Side)));
-    P.Bounce(Fric, Res, Cutoff, Render(PDRectangle(C + pVec(6, -2, 2), pVec(5, 0, 3), Side)));
-    P.Bounce(Fric, Res, Cutoff, Render(PDRectangle(C + pVec(4, -2, -1), pVec(5, 0, 1.5), Side)));
-    P.Bounce(Fric, Res, Cutoff, Render(PDRectangle(C + pVec(-3, -2, -1), pVec(5, 0, -1), Side)));
+    P.Bounce(Fric, Res, FricMinTanVel, Render(PDRectangle(C + pVec(-4, -2, 6), pVec(4, 0, 1), Side)));
+    P.Bounce(Fric, Res, FricMinTanVel, Render(PDRectangle(C + pVec(4, -2, 8), pVec(4, 0, -3), Side)));
+    P.Bounce(Fric, Res, FricMinTanVel, Render(PDRectangle(C + pVec(-1, -2, 6), pVec(2, 0, -2), Side)));
+    P.Bounce(Fric, Res, FricMinTanVel, Render(PDRectangle(C + pVec(1, -2, 2), pVec(4, 0, 2), Side)));
+    P.Bounce(Fric, Res, FricMinTanVel, Render(PDRectangle(C + pVec(-6, -2, 6), pVec(3, 0, -5), Side)));
+    P.Bounce(Fric, Res, FricMinTanVel, Render(PDRectangle(C + pVec(6, -2, 2), pVec(5, 0, 3), Side)));
+    P.Bounce(Fric, Res, FricMinTanVel, Render(PDRectangle(C + pVec(4, -2, -1), pVec(5, 0, 1.5), Side)));
+    P.Bounce(Fric, Res, FricMinTanVel, Render(PDRectangle(C + pVec(-3, -2, -1), pVec(5, 0, -1), Side)));
     P.Bounce(0.05f, Res, 0, Render(PDRectangle(C + pVec(-8, -2, -4.1), pVec(14, 0, 2), Side)));
-    P.Bounce(Fric, Res, Cutoff, Render(PDRectangle(C + pVec(-10, -2, 5), pVec(4, 0, 5), Side)));
+    P.Bounce(Fric, Res, FricMinTanVel, Render(PDRectangle(C + pVec(-10, -2, 5), pVec(4, 0, 5), Side)));
 
     P.Jet(Render(PDBox(C + pVec(-10, -2, -6), C + pVec(-8, 2, -1))), PDPoint(pVec(0.0, 0.0, 100.f)));
     P.TargetColor(pVec(0, 0, 1), 1, 0.04);

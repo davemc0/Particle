@@ -72,9 +72,9 @@ struct PAAvoid : public PActionBase {
 
 struct PABounce : public PActionBase {
     std::shared_ptr<pDomain> position; // Bounce region
-    float oneMinusFriction;            // Friction tangent to surface
+    float friction;                    // Friction tangent to surface
     float resilience;                  // Resilence perpendicular to surface
-    float cutoffSqr;                   // cutoff velocity; friction applies iff v > cutoff
+    float fric_min_vel;                // fric_min_vel velocity; friction applies iff v > fric_min_vel
 
     ACTION_DECLS;
 
@@ -108,17 +108,17 @@ struct PACopyVertexB : public PActionBase {
 };
 
 struct PADamping : public PActionBase {
-    pVec damping;  // Damping constant applied to velocity
-    float vlowSqr; // Low and high cutoff velocities
-    float vhighSqr;
+    pVec damping; // Damping constant applied to velocity
+    float vlow;   // Apply damping only if velocity is within vlow and vhigh
+    float vhigh;
 
     ACTION_DECLS;
 };
 
 struct PARotDamping : public PActionBase {
-    pVec damping;  // Damping constant applied to velocity
-    float vlowSqr; // Low and high cutoff velocities
-    float vhighSqr;
+    pVec damping; // Damping constant applied to velocity
+    float vlow;   // Apply damping only if velocity is within vlow and vhigh
+    float vhigh;
 
     ACTION_DECLS;
 };

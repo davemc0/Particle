@@ -25,14 +25,14 @@ void PContextActions_t::Avoid(const float magnitude, const float epsilon, const 
     PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
-void PContextActions_t::Bounce(const float friction, const float resilience, const float cutoff, const pDomain& dom)
+void PContextActions_t::Bounce(const float friction, const float resilience, const float fric_min_vel, const pDomain& dom)
 {
     PABounce* A = new PABounce;
 
     A->position = dom.copy();
-    A->oneMinusFriction = 1.0f - friction;
+    A->friction = friction;
     A->resilience = resilience;
-    A->cutoffSqr = fsqr(cutoff);
+    A->fric_min_vel = fric_min_vel;
 
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
@@ -73,8 +73,8 @@ void PContextActions_t::Damping(const pVec& damping, const float vlow, const flo
     PADamping* A = new PADamping;
 
     A->damping = damping;
-    A->vlowSqr = fsqr(vlow);
-    A->vhighSqr = fsqr(vhigh);
+    A->vlow = vlow;
+    A->vhigh = vhigh;
 
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
@@ -87,8 +87,8 @@ void PContextActions_t::RotDamping(const pVec& damping, const float vlow, const 
     PARotDamping* A = new PARotDamping;
 
     A->damping = damping;
-    A->vlowSqr = fsqr(vlow);
-    A->vhighSqr = fsqr(vhigh);
+    A->vlow = vlow;
+    A->vhigh = vhigh;
 
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
@@ -105,8 +105,6 @@ void PContextActions_t::Explosion(const pVec& center, const float radius, const 
     A->magnitude = magnitude;
     A->stdev = stdev;
     A->epsilon = epsilon;
-
-    if (A->epsilon < 0.0f) A->epsilon = P_EPS;
 
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
@@ -227,7 +225,6 @@ void PContextActions_t::OrbitLine(const pVec& p, const pVec& axis, const float m
 
     A->p = p;
     A->axis = axis;
-    A->axis.normalize();
     A->magnitude = magnitude;
     A->epsilon = epsilon;
     A->max_radius = max_radius;
@@ -466,11 +463,11 @@ void PContextActions_t::Vertex(const pVec& pos, const pSourceState& SrcSt, const
 void PContextActions_t::Vortex(const pVec& center,            ///< tip of the vortex
                                const pVec& axis,              ///< the ray along the center of the vortex
                                const float tightnessExponent, ///< like a Phong exponent that gives a curve to the vortex silhouette; 1.8 is good.
-                               const float max_radius,  ///< defines the infinite cylinder of influence of this action. No particle further than max_radius from
-                                                        ///< the axis is affected.
-                               const float inSpeed,     ///< inward acceleration of particles outside the vortex
-                               const float upSpeed,     ///< vertical acceleration of particles inside the vortex. Can be negative to counteract gravity.
-                               const float aroundSpeed) ///< acceleration around vortex of particles inside the vortex
+                               const float max_radius,        ///< defines the infinite cylinder of influence of this action.
+                                                              ///< No particle further than max_radius from the axis is affected.
+                               const float inSpeed,           ///< inward acceleration of particles outside the vortex
+                               const float upSpeed,           ///< vertical acceleration of particles inside the vortex. Can be negative to counteract gravity.
+                               const float aroundSpeed)       ///< acceleration around vortex of particles inside the vortex
 {
     PAVortex* A = new PAVortex;
 

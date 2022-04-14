@@ -154,22 +154,22 @@ void PAAvoid::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Parti
 // the whole velocity in the outward direction for the whole time step.
 void PABounce::Exec(const PDTriangle& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PABounceTriangle_Impl(m, dt, dom, oneMinusFriction, resilience, cutoffSqr); });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PABounceTriangle_Impl(m, dt, dom, friction, resilience, fric_min_vel); });
 }
 
 void PABounce::Exec(const PDRectangle& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PABounceRectangle_Impl(m, dt, dom, oneMinusFriction, resilience, cutoffSqr); });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PABounceRectangle_Impl(m, dt, dom, friction, resilience, fric_min_vel); });
 }
 
 void PABounce::Exec(const PDBox& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PABounceBox_Impl(m, dt, dom, oneMinusFriction, resilience, cutoffSqr); });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PABounceBox_Impl(m, dt, dom, friction, resilience, fric_min_vel); });
 }
 
 void PABounce::Exec(const PDPlane& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PABouncePlane_Impl(m, dt, dom, oneMinusFriction, resilience, cutoffSqr); });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PABouncePlane_Impl(m, dt, dom, friction, resilience, fric_min_vel); });
 }
 
 void PABounce::Exec(const PDSphere& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
@@ -177,12 +177,12 @@ void PABounce::Exec(const PDSphere& dom, ParticleGroup& group, ParticleList::ite
     PASSERT(dom.radIn == 0.0f, "Bouncing doesn't work on thick shells. radIn must be 0.");
 
     float dtinv = 1.0f / dt;
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PABounceSphere_Impl(m, dt, dom, oneMinusFriction, resilience, cutoffSqr); });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PABounceSphere_Impl(m, dt, dom, friction, resilience, fric_min_vel); });
 }
 
 void PABounce::Exec(const PDDisc& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PABounceDisc_Impl(m, dt, dom, oneMinusFriction, resilience, cutoffSqr); });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PABounceDisc_Impl(m, dt, dom, friction, resilience, fric_min_vel); });
 }
 
 void PABounce::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
@@ -228,70 +228,25 @@ void PACallback::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Pa
 // Set the secondary position and velocity from current.
 void PACopyVertexB::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    if (copy_pos && copy_vel) {
-        std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-            m.posB = m.pos;
-            m.upB = m.up;
-            m.velB = m.vel;
-        });
-    } else if (copy_pos) {
-        std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-            m.posB = m.pos;
-            m.upB = m.up;
-        });
-    } else if (copy_vel) {
-        std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { m.velB = m.vel; });
-    }
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PACopyVertexB_Impl(m, dt, copy_pos, copy_vel); });
 }
 
 // Dampen velocities
 void PADamping::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    // This is important if dt is != 1.
-    pVec one = pVec(1, 1, 1);
-    pVec scale(one - ((one - damping) * dt));
-
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-        float vSqr = m.vel.lenSqr();
-
-        if (vSqr >= vlowSqr && vSqr <= vhighSqr) { m.vel = CompMult(m.vel, scale); }
-    });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PADamping_Impl(m, dt, damping, vlow, vhigh); });
 }
 
 // Dampen rotational velocities
 void PARotDamping::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    // This is important if dt is != 1.
-    pVec one = pVec(1, 1, 1);
-    pVec scale(one - ((one - damping) * dt));
-
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-        float vSqr = m.rvel.lenSqr();
-
-        if (vSqr >= vlowSqr && vSqr <= vhighSqr) { m.rvel = CompMult(m.rvel, scale); }
-    });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PARotDamping_Impl(m, dt, damping, vlow, vhigh); });
 }
 
 // Exert force on each particle away from explosion center
 void PAExplosion::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    float magdt = magnitude * dt;
-    float oneOverSigma = 1.0f / stdev;
-    float inexp = -0.5f * fsqr(oneOverSigma);
-    float outexp = P_ONEOVERSQRT2PI * oneOverSigma;
-
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-        // Figure direction to particle.
-        pVec dir(m.pos - center);
-        float distSqr = dir.lenSqr();
-        float dist = sqrtf(distSqr);
-        float DistFromWaveSqr = fsqr(radius - dist);
-
-        float Gd = exp(DistFromWaveSqr * inexp) * outexp;
-        pVec acc(dir * (Gd * magdt / (dist * (distSqr + epsilon))));
-
-        m.vel += acc;
-    });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PAExplosion_Impl(m, dt, center, radius, magnitude, stdev, epsilon); });
 }
 
 // Follow the next particle in the list
@@ -352,21 +307,13 @@ void PAGravitate::Execute(ParticleGroup& group, ParticleList::iterator ibegin, P
 // Acceleration in a constant direction
 void PAGravity::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    pVec ddir(direction * dt);
-
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { m.vel += ddir; });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PAGravity_Impl(m, dt, direction); });
 }
 
 // For particles in the domain of influence, accelerate them with a domain.
 void PAJet::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-        if (dom->Within(m.pos)) {
-            pVec accel = acc->Generate();
-
-            m.vel += accel * dt;
-        }
-    });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PAJet_Impl(m, dt, dom, acc); });
 }
 
 // Get rid of older particles
@@ -442,166 +389,49 @@ void PAMatchRotVelocity::Execute(ParticleGroup& group, ParticleList::iterator ib
 // Apply the particles' velocities to their positions, and age the particles
 void PAMove::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    if (move_velocity && move_rotational_velocity) {
-        std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-            m.age += dt;
-            m.pos += m.vel * dt;
-            m.up += m.rvel * dt;
-        });
-    } else if (move_rotational_velocity) {
-        std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-            m.age += dt;
-            m.up += m.rvel * dt;
-        });
-    } else {
-        std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-            m.age += dt;
-            m.pos += m.vel * dt;
-        });
-    }
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PAMove_Impl(m, dt, move_velocity, move_rotational_velocity); });
 }
 
 // Accelerate particles towards a line
 void PAOrbitLine::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    float magdt = magnitude * dt;
-    float max_radiusSqr = fsqr(max_radius);
-
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-        // Figure direction to particle from base of line.
-        pVec f = m.pos - p;
-
-        // Projection of particle onto line
-        pVec w = axis * dot(f, axis);
-
-        // Direction from particle to nearest point on line.
-        pVec into = w - f;
-
-        // Distance to line (force drops as 1/r^2, normalize by 1/r)
-        // Soften by epsilon to avoid tight encounters to infinity
-        float rSqr = into.lenSqr();
-
-        if (rSqr < max_radiusSqr) m.vel += into * (magdt / (sqrtf(rSqr) * (rSqr + epsilon)));
-    });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PAOrbitLine_Impl(m, dt, p, axis, magnitude, epsilon, max_radius); });
 }
 
 // Accelerate particles towards a point
 void PAOrbitPoint::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    float magdt = magnitude * dt;
-    float max_radiusSqr = fsqr(max_radius);
-
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-        // Figure direction from particle to center
-        pVec dir(center - m.pos);
-
-        // Distance to gravity well (force drops as 1/r^2, normalize by 1/r)
-        // Soften by epsilon to avoid tight encounters to infinity
-        float rSqr = dir.lenSqr();
-
-        if (rSqr < max_radiusSqr) m.vel += dir * (magdt / (sqrtf(rSqr) * (rSqr + epsilon)));
-    });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PAOrbitPoint_Impl(m, dt, center, magnitude, epsilon, max_radius); });
 }
 
 // Accelerate in random direction each time step
 void PARandomAccel::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-        pVec accel = gen_acc->Generate();
-
-        // Dt will affect this by making a higher probability of being near the original velocity after unit time.
-        // Smaller dt approach a normal distribution instead of a square wave.
-        m.vel += accel * dt;
-    });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PARandomAccel_Impl(m, dt, gen_acc); });
 }
 
 // Immediately displace position randomly
 void PARandomDisplace::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-        pVec disp = gen_disp->Generate();
-
-        // Dt will affect this by making a higher probability of being near the original position after unit time.
-        // Smaller dt approach a normal distribution instead of a square wave.
-        m.pos += disp * dt;
-    });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PARandomDisplace_Impl(m, dt, gen_disp); });
 }
 
 // Immediately assign a random velocity
 void PARandomVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-        pVec velocity = gen_vel->Generate();
-
-        // Don't multiply by dt because velocities are invariant of dt.
-        m.vel = velocity;
-    });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PARandomVelocity_Impl(m, dt, gen_vel); });
 }
 
 // Immediately assign a random rotational velocity
 void PARandomRotVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-        pVec velocity = gen_vel->Generate();
-
-        // Don't multiply by dt because velocities are invariant of dt.
-        m.rvel = velocity;
-    });
-}
-
-#if 0
-    // Produce coefficients of a velocity function v(t)=at^2 + bt + c
-    // satisfying initial x(0)=x0,v(0)=v0 and desired x(t)=x1,v(t)=v1,
-    // where x = x(0) + integral(v(T),0,t)
-    static inline void _pconstrain(float x0, float v0, float x1, float v1,
-        float t, float *a, float *b, float *c)
-    {
-        *c = v0;
-        *b = 2 * (-t*v1 - 2*t*v0 + 3*x1 - 3*x0) / (t * t);
-        *a = 3 * (t*v1 + t*v0 - 2*x1 + 2*x0) / (t * t * t);
-    }
-
-    // Solve for a desired-behavior velocity function in each axis
-    // _pconstrain(m.pos.x(), m.vel.x(), m.posB.x(), 0., timeLeft, &a, &b, &c);
-
-    // Figure new velocity at next timestep
-    // m.vel.x() = a * dtSqr + b * dt + c;
-#endif
-
-// Figure new velocity at next timestep
-static inline void Restore(pVec& vel, const pVec& posB, const pVec& pos, const float t, const float dtSqr, const float ttInv6dt, const float tttInv3dtSqr)
-{
-    pVec b = (vel * -0.6667f * t + posB - pos) * ttInv6dt;
-    pVec a = (vel * t - posB - posB + pos + pos) * tttInv3dtSqr;
-    vel += a + b;
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PARandomRotVelocity_Impl(m, dt, gen_vel); });
 }
 
 // Over time, restore particles to initial positions
 void PARestore::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    if (time_left <= 0) {
-        std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-            // Already constrained; keep it there.
-            if (restore_velocity) {
-                m.pos = m.posB;
-                m.vel = pVec(0.0f, 0.0f, 0.0f);
-            }
-            if (restore_rvelocity) {
-                m.up = m.upB;
-                m.rvel = pVec(0.0f, 0.0f, 0.0f);
-            }
-        });
-    } else {
-        float t = time_left;
-        float dtSqr = fsqr(dt);
-        float ttInv6dt = dt * 6.0f / fsqr(t);
-        float tttInv3dtSqr = dtSqr * 3.0f / (t * t * t);
-
-        std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-            if (restore_velocity) Restore(m.vel, m.posB, m.pos, t, dtSqr, ttInv6dt, tttInv3dtSqr);
-            if (restore_rvelocity) Restore(m.rvel, m.upB, m.up, t, dtSqr, ttInv6dt, tttInv3dtSqr);
-        });
-    }
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PARestore_Impl(m, dt, time_left, restore_velocity, restore_rvelocity); });
 }
 
 // Kill particles with positions on wrong side of the specified domain
@@ -694,113 +524,35 @@ void PASource::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Part
 // Clamp particle velocities to the given range
 void PASpeedClamp::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    float min_sqr = fsqr(min_speed);
-    float max_sqr = fsqr(max_speed);
-
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-        float sSqr = m.vel.lenSqr();
-        if (sSqr < min_sqr && sSqr) {
-            float s = sqrtf(sSqr);
-            m.vel *= (min_speed / s);
-        } else if (sSqr > max_sqr) {
-            float s = sqrtf(sSqr);
-            m.vel *= (max_speed / s);
-        }
-    });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PASpeedClamp_Impl(m, dt, min_speed, max_speed); });
 }
 
 // Change color of all particles toward the specified color
 void PATargetColor::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    float scaleFac = scale * dt;
-
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-        m.color += (color - m.color) * scaleFac;
-        m.alpha += (alpha - m.alpha) * scaleFac;
-    });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PATargetColor_Impl(m, dt, color, alpha, scale); });
 }
 
 // Change sizes of all particles toward the specified size
 void PATargetSize::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    pVec scaleFac = scale * dt;
-
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-        pVec dif = size - m.size;
-        m.size += CompMult(dif, scaleFac);
-    });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PATargetSize_Impl(m, dt, size, scale); });
 }
 
 // Change velocity of all particles toward the specified velocity
 void PATargetVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    float scaleFac = scale * dt;
-
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { m.vel += (velocity - m.vel) * scaleFac; });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PATargetVelocity_Impl(m, dt, velocity, scale); });
 }
 
 // Change velocity of all particles toward the specified velocity
 void PATargetRotVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    float scaleFac = scale * dt;
-
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { m.rvel += (velocity - m.rvel) * scaleFac; });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PATargetRotVelocity_Impl(m, dt, velocity, scale); });
 }
 
 void PAVortex::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    float max_radiusSqr = fsqr(max_radius);
-    float axisLength = axis.length();
-    float axisLengthInv = 1.0f / axisLength;
-    pVec axisN = axis;
-    axisN.normalize();
-
-    // This one just rotates a particle around the axis. Amount is based on radius, magnitude, and mass.
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-        // Direction to particle from base of line.
-        pVec tipToPar = m.pos - tip;
-
-        // Projection of particle onto line
-        float axisScale = dot(tipToPar, axisN);
-        pVec parOnAxis = axisN * axisScale;
-
-        // Distance to axis
-        float alongAxis = axisScale * axisLengthInv;
-
-        // How much to scale the vortex's force by as a function of how far up the axis the particle is.
-        float alongAxisPow = powf(alongAxis, tightnessExponent);
-        float silhouetteSqr = fsqr(alongAxisPow * max_radius);
-
-        // Direction from particle to nearest point on line.
-        pVec parToAxis = parOnAxis - tipToPar;
-        float rSqr = parToAxis.lenSqr();
-
-        if (rSqr >= max_radiusSqr || axisScale < 0.0f || alongAxis > 1.0f) {
-            // m.color = pVec(0,0,1);
-            return;
-        }
-
-        float r = sqrtf(rSqr);
-        parToAxis /= r;
-        float dtOverMass = dt / m.mass;
-
-        if (rSqr >= silhouetteSqr) {
-            // Accelerate toward axis. Force is NOT affected by 1/r^2.
-            pVec AccelIn = parToAxis * (inSpeed * dtOverMass);
-            m.vel += AccelIn;
-            // m.color = pVec(0,1,0);
-            return;
-        }
-
-        // Particles inside the cone have their velocity totally replaced right now. :(
-        // m.color = pVec(1,0,0);
-        // Accelerate up or down to simulate gravity or something
-        pVec AccelUp = axisN * (upSpeed * dtOverMass);
-
-        // Accelerate around axis by constructing orthogonal vector frame of axis, parToAxis, and RotDir.
-        pVec RotDir = Cross(axisN, parToAxis);
-        pVec AccelAround = RotDir * (aroundSpeed * dtOverMass);
-        m.vel = AccelUp + AccelAround; // NOT += because we want to stop its inward travel.
-    });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PAVortex_Impl(m, dt, tip, axis, tightnessExponent, max_radius, inSpeed, upSpeed, aroundSpeed); });
 }
 }; // namespace PAPI
