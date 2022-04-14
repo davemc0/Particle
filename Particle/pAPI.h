@@ -393,7 +393,7 @@ public:
     /// Particles are tested to see whether they will pass from being outside the specified domain to being inside it if the next Move()
     /// action were to occur now. If they would pass through the surface of the domain, they are instead bounced off it. That is, their
     /// velocity vector is decomposed into components normal to the surface and tangent to the surface. The direction of the normal component
-    /// is reversed, and friction, resilience and cutoff are applied to the components. They are then recomposed into a new velocity heading
+    /// is reversed, and friction, resilience and fric_min_vel are applied to the components. They are then recomposed into a new velocity heading
     /// away from the surface.
     ///
     /// Since particles are tested to see whether they would pass through the domain if Move() were called now, it is best to have Bounce()
@@ -409,11 +409,11 @@ public:
     /// Bounce() doesn't work correctly with small time step sizes for particles sliding along a surface. The friction and resilience parameters
     /// should not be scaled by dt, since a bounce happens instantaneously. On the other hand, they should be scaled by dt because particles
     /// sliding along a surface will hit more often if dt is smaller. Adjust these parameters manually when you change dt.
-    void Bounce(float friction,         ///< The tangential component of the outgoing velocity vector is scaled by (1 - friction).
-                const float resilience, ///< The normal component of the outgoing velocity vector is scaled by resilience.
-                const float cutoff,     ///< Only apply friction if the outgoing tangential velocity is greater than cutoff. This can allow particles to glide
-                                        ///< smoothly along a surface without sticking.
-                const pDomain& dom      ///< Bounce off the surface of this domain.
+    void Bounce(float friction,           ///< The tangential component of the outgoing velocity vector is scaled by (1 - friction).
+                const float resilience,   ///< The normal component of the outgoing velocity vector is scaled by resilience.
+                const float fric_min_vel, ///< Only apply friction if the outgoing tangential velocity is greater than fric_min_vel.
+                                          ///< This can allow particles to glide smoothly along a surface without sticking.
+                const pDomain& dom        ///< Bounce off the surface of this domain.
     );
 
     /// Call an arbitrary user-provided function on each particle in the group.

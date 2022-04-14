@@ -13,6 +13,12 @@
 ///
 /// This approach should also enable CUDA kernels to easily express and compute one particle per thread.
 
+// Classes of nonstraightforward cases:
+// Actions that kill particles
+// Actions that use domains (maybe not difficult)
+// Actions that refer to other particles
+// Actions that call out
+
 #ifndef implactions_h
 #define implactions_h
 
@@ -24,6 +30,7 @@ using namespace PAPI;
 PINLINE void PAAvoidTriangle_Impl(Particle_t& m, const float dt, const PDTriangle& dom, const float look_ahead, const float magnitude, const float epsilon)
 {
     float magdt = magnitude * dt;
+    // ^^^ Above values do not vary per particle.
 
     const pVec& u = dom.u;
     const pVec& v = dom.v;
@@ -58,8 +65,7 @@ PINLINE void PAAvoidTriangle_Impl(Particle_t& m, const float dt, const PDTriangl
     // Did it cross plane outside triangle?
     if (upos <= 0 || vpos <= 0 || (upos + vpos) >= 1) return;
 
-    // A hit! A most palpable hit!
-    // Compute distance to the three edges.
+    // A hit, a very palpable hit. Compute distance to the three edges
     pVec uofs = (dom.uNrm * dot(dom.uNrm, offset)) - offset;
     float udistSqr = uofs.lenSqr();
     pVec vofs = (dom.vNrm * dot(dom.vNrm, offset)) - offset;
@@ -117,8 +123,7 @@ PINLINE void PAAvoidRectangle_Impl(Particle_t& m, const float dt, const PDRectan
     // Did it cross plane outside rectangle?
     if (upos <= 0 || vpos <= 0 || upos >= 1 || vpos >= 1) return;
 
-    // A hit! A most palpable hit!
-    // Compute distance to the four edges.
+    // A hit, a very palpable hit. Compute distance to the four edges
     pVec uofs = (dom.uNrm * dot(dom.uNrm, offset)) - offset;
     float udistSqr = uofs.lenSqr();
     pVec vofs = (dom.vNrm * dot(dom.vNrm, offset)) - offset;
@@ -165,6 +170,7 @@ PINLINE void PAAvoidPlane_Impl(Particle_t& m, const float dt, const PDPlane& dom
 
     if (pSameSign(distold, distnew)) return;
 
+    // A hit, a very palpable hit.
     float t = -distold / dot(dom.nrm, m.vel); // Time to collision
     pVec S = m.vel * t + dom.nrm * distold;   // Vector from projection point to point of impact
 
@@ -181,7 +187,7 @@ PINLINE void PAAvoidPlane_Impl(Particle_t& m, const float dt, const PDPlane& dom
     m.vel = dir * (vlen / dir.length()); // Speed of m.vel, but in direction dir.
 }
 
-// Only works for points on the OUTSIDE of the sphere. Ignores inner radius.
+// TODO: Only works for points on the OUTSIDE of the sphere. Ignores inner radius.
 PINLINE void PAAvoidSphere_Impl(Particle_t& m, const float dt, const PDSphere& dom, const float look_ahead, const float magnitude, const float epsilon)
 {
     float magdt = magnitude * dt;
@@ -195,11 +201,11 @@ PINLINE void PAAvoidSphere_Impl(Particle_t& m, const float dt, const PDSphere& d
     pVec L = dom.ctr - m.pos;
     float v = dot(L, Vn);
 
-    float disc = dom.radOutSqr - dot(L, L) + fsqr(v);
-    if (disc < 0) return; // I'm not heading toward it.
+    float dscr = dom.radOutSqr - dot(L, L) + fsqr(v);
+    if (dscr < 0) return; // A hit, a very palpable hit.
 
     // Compute length for second rejection test.
-    float t = v - sqrtf(disc);
+    float t = v - sqrtf(dscr);
     if (t < 0 || t > (vlen * look_ahead)) return;
 
     // Get a vector to safety.
@@ -257,9 +263,12 @@ PINLINE void PAAvoidDisc_Impl(Particle_t& m, const float dt, const PDDisc& dom, 
 // This approach uses the actual hit location and hit time to determine whether we actually hit.
 // But it doesn't bounce from the actual location or time. It reverses the velocity immediately, applying
 // the whole velocity in the outward direction for the whole time step.
-PINLINE void PABounceTriangle_Impl(Particle_t& m, const float dt, const PDTriangle& dom, const float oneMinusFriction, const float resilience,
-                                   const float cutoffSqr)
+PINLINE void PABounceTriangle_Impl(Particle_t& m, const float dt, const PDTriangle& dom, const float friction, const float resilience, const float fric_min_vel)
 {
+    float oneMinusFriction = 1.f - friction;
+    float FricMinTanVelSqr = fsqr(fric_min_vel);
+    // ^^^ Above values do not vary per particle.
+
     // See if particle's current and pnext positions cross boundary. If not, skip it.
     pVec pnext = m.pos + m.vel * dt;
 
@@ -284,19 +293,21 @@ PINLINE void PABounceTriangle_Impl(Particle_t& m, const float dt, const PDTriang
     // Did it cross plane outside triangle?
     if (upos < 0 || vpos < 0 || (upos + vpos) > 1) return;
 
-    // A hit! A most palpable hit!
-    // Compute tangential and normal components of velocity
+    // A hit, a very palpable hit. Compute tangential and normal components of velocity
     pVec vn = dom.nrm * nv; // Normal Vn = (V.N)N
     pVec vt = m.vel - vn;   // Tangent Vt = V - Vn
 
-    // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
-    float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
+    // Compute new velocity, applying resilience and, unless tangential velocity < fric_min_vel, friction
+    float fric = (vt.lenSqr() <= FricMinTanVelSqr) ? 1.f : oneMinusFriction;
     m.vel = vt * fric - vn * resilience;
 }
 
-PINLINE void PABounceRectangle_Impl(Particle_t& m, const float dt, const PDRectangle& dom, const float oneMinusFriction, const float resilience,
-                                    const float cutoffSqr)
+PINLINE void PABounceRectangle_Impl(Particle_t& m, const float dt, const PDRectangle& dom, const float friction, const float resilience, const float fric_min_vel)
 {
+    float oneMinusFriction = 1.f - friction;
+    float FricMinTanVelSqr = fsqr(fric_min_vel);
+    // ^^^ Above values do not vary per particle.
+
     // See if particle's current and pnext positions cross boundary. If not, skip it.
     pVec pnext = m.pos + m.vel * dt;
 
@@ -321,18 +332,21 @@ PINLINE void PABounceRectangle_Impl(Particle_t& m, const float dt, const PDRecta
     // Did it cross plane outside rectangle?
     if (upos < 0 || upos > 1 || vpos < 0 || vpos > 1) return;
 
-    // A hit! A most palpable hit!
-    // Compute tangential and normal components of velocity
+    // A hit, a very palpable hit. Compute tangential and normal components of velocity
     pVec vn = dom.nrm * nv; // Normal Vn = (V.N)N
     pVec vt = m.vel - vn;   // Tangent Vt = V - Vn
 
-    // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
-    float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
+    // Compute new velocity, applying resilience and, unless tangential velocity < fric_min_vel, friction
+    float fric = (vt.lenSqr() <= FricMinTanVelSqr) ? 1.f : oneMinusFriction;
     m.vel = vt * fric - vn * resilience;
 }
 
-PINLINE void PABounceBox_Impl(Particle_t& m, const float dt, const PDBox& dom, const float oneMinusFriction, const float resilience, const float cutoffSqr)
+PINLINE void PABounceBox_Impl(Particle_t& m, const float dt, const PDBox& dom, const float friction, const float resilience, const float fric_min_vel)
 {
+    float oneMinusFriction = 1.f - friction;
+    float FricMinTanVelSqr = fsqr(fric_min_vel);
+    // ^^^ Above values do not vary per particle.
+
     // See if particle's current and pnext positions cross boundary. If not, skip it.
     pVec pnext = m.pos + m.vel * dt;
 
@@ -352,13 +366,17 @@ PINLINE void PABounceBox_Impl(Particle_t& m, const float dt, const PDBox& dom, c
         if (pnext.z() > dom.p0.z() || pnext.z() < dom.p1.z()) { std::swap(vn.z(), vt.z()); }
     }
 
-    // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
-    float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
+    // Compute new velocity, applying resilience and, unless tangential velocity < fric_min_vel, friction
+    float fric = (vt.lenSqr() <= FricMinTanVelSqr) ? 1.f : oneMinusFriction;
     m.vel = vt * fric - vn * resilience;
 }
 
-PINLINE void PABouncePlane_Impl(Particle_t& m, const float dt, const PDPlane& dom, const float oneMinusFriction, const float resilience, const float cutoffSqr)
+PINLINE void PABouncePlane_Impl(Particle_t& m, const float dt, const PDPlane& dom, const float friction, const float resilience, const float fric_min_vel)
 {
+    float oneMinusFriction = 1.f - friction;
+    float FricMinTanVelSqr = fsqr(fric_min_vel);
+    // ^^^ Above values do not vary per particle.
+
     // See if particle's current and pnext positions cross boundary. If not, skip it.
     pVec pnext = m.pos + m.vel * dt;
 
@@ -372,28 +390,27 @@ PINLINE void PABouncePlane_Impl(Particle_t& m, const float dt, const PDPlane& do
     float nv = dot(dom.nrm, m.vel);
     float t = -distold / nv; // Time until hit
 
-    // A hit! A most palpable hit!
-    // Compute tangential and normal components of velocity
+    // A hit, a very palpable hit. Compute tangential and normal components of velocity
     pVec vn = dom.nrm * nv; // Normal Vn = (V.N)N
     pVec vt = m.vel - vn;   // Tangent Vt = V - Vn
 
-    // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
-    float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
+    // Compute new velocity, applying resilience and, unless tangential velocity < fric_min_vel, friction
+    float fric = (vt.lenSqr() <= FricMinTanVelSqr) ? 1.f : oneMinusFriction;
     m.vel = vt * fric - vn * resilience;
 }
 
-PINLINE void PABounceSphere_Impl(Particle_t& m, const float dt, const PDSphere& dom, const float oneMinusFriction, const float resilience, const float cutoffSqr)
+PINLINE void PABounceSphere_Impl(Particle_t& m, const float dt, const PDSphere& dom, const float friction, const float resilience, const float fric_min_vel)
 {
+    float oneMinusFriction = 1.f - friction;
+    float FricMinTanVelSqr = fsqr(fric_min_vel);
     float dtinv = 1.0f / dt;
     // ^^^ Above values do not vary per particle.
 
     // See if particle's current and pnext positions cross boundary. If not, skip it.
     pVec pnext = m.pos + m.vel * dt;
 
-    if (dom.Within(m.pos)) { // We are bouncing off the inside of the sphere.
-        if (dom.Within(pnext))
-            // Still inside. Do nothing.
-            return;
+    if (dom.Within(m.pos)) {           // We are bouncing off the inside of the sphere.
+        if (dom.Within(pnext)) return; // Still inside. Do nothing.
 
         // Trying to go outside. Bounce back in.
 
@@ -411,22 +428,20 @@ PINLINE void PABounceSphere_Impl(Particle_t& m, const float dt, const PDSphere& 
         // Reverse normal component of velocity
         if (nmag < 0) vn = -vn; // Don't reverse if it's already heading inward
 
-        // Compute new velocity heading out:
-        // Don't apply friction if tangential velocity < cutoff
-        float tanscale = (vt.lenSqr() <= cutoffSqr) ? 1.0f : oneMinusFriction;
-        m.vel = vt * tanscale + vn * resilience;
+        // Compute new velocity, applying resilience and, unless tangential velocity < fric_min_vel, friction
+        float fric = (vt.lenSqr() <= FricMinTanVelSqr) ? 1.f : oneMinusFriction;
+        m.vel = vt * fric + vn * resilience;
 
         // Now see where the point will end up. Make sure we fixed it to stay inside.
         pVec pthree = m.pos + m.vel * dt;
         if (dom.Within(pthree)) {
-            // Still inside. We're good.
-            return;
+            return; // Still inside. We're good.
         } else {
             // Since the tangent plane is outside the sphere, reflecting the velocity vector about it won't necessarily bring it inside the sphere.
             pVec toctr = dom.ctr - pthree;
             float dist = toctr.length();
-            pVec pwish = dom.ctr - toctr * (0.999f * dom.radOut / dist); // Pwish is a point just inside the sphere
-            m.vel = (pwish - m.pos) * dtinv;                             // Compute a velocity to get us to pwish.
+            pVec pwish = dom.ctr - toctr * (0.999f * dom.radOut / dist); // Pwish is a point just inside the sphere.
+            m.vel = (pwish - m.pos) * dtinv;                             // Compute a velocity to get us to pwish on this timestep
         }
     } else { // We are bouncing off the outside of the sphere.
         if (!dom.Within(pnext)) return;
@@ -434,25 +449,28 @@ PINLINE void PABounceSphere_Impl(Particle_t& m, const float dt, const PDSphere& 
         // Trying to go inside. Bounce back out.
 
         // Outward-pointing normal to surface. This isn't computed quite right;
-        // should extrapolate particle position to surface with ray-sphere intersection
+        // should extrapolate particle position to surface using ray-sphere intersection
         pVec n = m.pos - dom.ctr;
         n.normalize();
 
         float NdotV = dot(n, m.vel);
 
-        // A hit! A most palpable hit!
-        // Compute tangential and normal components of velocity
+        // A hit, a very palpable hit. Compute tangential and normal components of velocity
         pVec vn = n * NdotV;  // Normal Vn = (V.N)N
         pVec vt = m.vel - vn; // Tangent Vt = V - Vn
 
-        // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
-        float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
+        // Compute new velocity, applying resilience and, unless tangential velocity < fric_min_vel, friction
+        float fric = (vt.lenSqr() <= FricMinTanVelSqr) ? 1.f : oneMinusFriction;
         m.vel = vt * fric - vn * resilience;
     }
 }
 
-PINLINE void PABounceDisc_Impl(Particle_t& m, const float dt, const PDDisc& dom, const float oneMinusFriction, const float resilience, const float cutoffSqr)
+PINLINE void PABounceDisc_Impl(Particle_t& m, const float dt, const PDDisc& dom, const float friction, const float resilience, const float fric_min_vel)
 {
+    float oneMinusFriction = 1.f - friction;
+    float FricMinTanVelSqr = fsqr(fric_min_vel);
+    // ^^^ Above values do not vary per particle.
+
     // See if particle's current and pnext positions cross boundary. If not, skip it.
     pVec pnext = m.pos + m.vel * dt;
 
@@ -474,13 +492,12 @@ PINLINE void PABounceDisc_Impl(Particle_t& m, const float dt, const PDDisc& dom,
     // Are we going to hit the disc ring?
     if (radSqr < dom.radInSqr || radSqr > dom.radOutSqr) return;
 
-    // A hit! A most palpable hit!
-    // Compute tangential and normal components of velocity
+    // A hit, a very palpable hit. Compute tangential and normal components of velocity
     pVec vn = dom.nrm * NdotV; // Normal Vn = (V.N)N
     pVec vt = m.vel - vn;      // Tangent Vt = V - Vn
 
-    // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
-    float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
+    // Compute new velocity, applying resilience and, unless tangential velocity < fric_min_vel, friction
+    float fric = (vt.lenSqr() <= FricMinTanVelSqr) ? 1.f : oneMinusFriction;
     m.vel = vt * fric - vn * resilience;
 }
 
@@ -500,11 +517,11 @@ PINLINE void PACopyVertexB_Impl(Particle_t& m, const float dt, const bool copy_p
 }
 
 // Dampen velocities
-PINLINE void PADamping_Impl(Particle_t& m, const float dt, const pVec damping, const float vlowSqr, const float vhighSqr)
+PINLINE void PADamping_Impl(Particle_t& m, const float dt, const pVec damping, const float vlow, const float vhigh)
 {
-    // This is important if dt is != 1.
-    pVec one = pVec(1, 1, 1);
-    pVec scale(one - ((one - damping) * dt));
+    pVec scale(pVec(1.f) - ((pVec(1.f) - damping) * dt)); // This is important if dt is != 1.
+    float vlowSqr = fsqr(vlow);
+    float vhighSqr = fsqr(vhigh);
     // ^^^ Above values do not vary per particle.
 
     float vSqr = m.vel.lenSqr();
@@ -513,11 +530,11 @@ PINLINE void PADamping_Impl(Particle_t& m, const float dt, const pVec damping, c
 }
 
 // Dampen rotational velocities
-PINLINE void PARotDamping_Impl(Particle_t& m, const float dt, const pVec damping, const float vlowSqr, const float vhighSqr)
+PINLINE void PARotDamping_Impl(Particle_t& m, const float dt, const pVec damping, const float vlow, const float vhigh)
 {
-    // This is important if dt is != 1.
-    pVec one = pVec(1, 1, 1);
-    pVec scale(one - ((one - damping) * dt));
+    pVec scale(pVec(1.f) - ((pVec(1.f) - damping) * dt)); // This is important if dt is != 1.
+    float vlowSqr = fsqr(vlow);
+    float vhighSqr = fsqr(vhigh);
     // ^^^ Above values do not vary per particle.
 
     float vSqr = m.rvel.lenSqr();
@@ -674,13 +691,15 @@ PINLINE void PAOrbitLine_Impl(Particle_t& m, const float dt, const pVec p, const
 {
     float magdt = magnitude * dt;
     float max_radiusSqr = fsqr(max_radius);
+    pVec axisNrm(axis);
+    axisNrm.normalize(); // Do we need this? Should we make it user responsibilty?
     // ^^^ Above values do not vary per particle.
 
     // Figure direction to particle from base of line.
     pVec f = m.pos - p;
 
     // Projection of particle onto line
-    pVec w = axis * dot(f, axis);
+    pVec w = axisNrm * dot(f, axisNrm);
 
     // Direction from particle to nearest point on line.
     pVec into = w - f;
@@ -863,7 +882,6 @@ PINLINE void PASpeedClamp_Impl(Particle_t& m, const float dt, const float min_sp
 }
 
 // Change color of all particles toward the specified color
-
 PINLINE void PATargetColor_Impl(Particle_t& m, const float dt, const pVec color, const float alpha, const float scale)
 {
     float scaleFac = scale * dt;
