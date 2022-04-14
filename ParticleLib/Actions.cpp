@@ -6,6 +6,7 @@
 
 #include "Actions.h"
 
+#include "ImplActions.h"
 #include "PInternalState.h"
 
 #include <algorithm>
@@ -98,239 +99,28 @@ std::string PAVortex::name = "PAVortex";
 
 void PAAvoid::Exec(const PDTriangle& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    float magdt = magnitude * dt;
-
-    const pVec& u = dom.u;
-    const pVec& v = dom.v;
-
-    // F is the third (non-basis) triangle edge.
-    pVec f = v - u;
-    pVec fn = f;
-    fn.normalize();
-
-    std::for_each(P_EXPOLP, ibegin, iend, [&](Particle_t& m) {
-        // See if particle's current and look_ahead positions cross plane.
-        // If not, couldn't hit, so keep going.
-        pVec pnext = m.pos + m.vel * look_ahead;
-
-        // Nrm stores the plane normal (the a,b,c of the plane eqn).
-        // Old and new distances: dist(p,plane) = n * p + d
-        float distold = dot(m.pos, dom.nrm) + dom.D;
-        float distnew = dot(pnext, dom.nrm) + dom.D;
-
-        if (pSameSign(distold, distnew)) return;
-
-        float nv = dot(dom.nrm, m.vel);
-        float t = -distold / nv; // Time until hit
-
-        pVec phit = m.pos + m.vel * t; // Actual intersection point
-        pVec offset = phit - dom.p;    // Offset from origin in plane
-
-        // Dot product with basis vectors of old frame
-        // in terms of new frame gives position in uv frame.
-        float upos = dot(offset, dom.s1);
-        float vpos = dot(offset, dom.s2);
-
-        // Did it cross plane outside triangle?
-        if (upos < 0 || vpos < 0 || (upos + vpos) > 1) return;
-
-        // A hit! A most palpable hit!
-        // Compute distance to the three edges.
-        pVec uofs = (dom.uNrm * dot(dom.uNrm, offset)) - offset;
-        float udistSqr = uofs.lenSqr();
-        pVec vofs = (dom.vNrm * dot(dom.vNrm, offset)) - offset;
-        float vdistSqr = vofs.lenSqr();
-
-        pVec foffset = offset - u;
-        pVec fofs = (fn * dot(fn, foffset)) - foffset;
-        float fdistSqr = fofs.lenSqr();
-
-        // S is the safety vector toward the closest point on boundary.
-        pVec S;
-        if (udistSqr <= vdistSqr && udistSqr <= fdistSqr)
-            S = uofs;
-        else if (vdistSqr <= fdistSqr)
-            S = vofs;
-        else
-            S = fofs;
-
-        if (S == pVec(0.f)) return; // It's aimed straight at an edge. S will become NaN.
-        S.normalize();              // Blend S with m.vel.
-
-        float vlen = m.vel.length();
-        pVec Vn = m.vel / vlen;
-
-        pVec dir = (S * (magdt / (fsqr(t) + epsilon))) + Vn;
-        m.vel = dir * (vlen / dir.length()); // Speed of m.vel, but in direction dir.
-    });
+    std::for_each(P_EXPOLP, ibegin, iend, [&](Particle_t& m) { PAAvoidTriangle_Impl(m, dt, dom, look_ahead, magnitude, epsilon); });
 }
 
 void PAAvoid::Exec(const PDRectangle& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    float magdt = magnitude * dt;
-
-    std::for_each(P_EXPOLP, ibegin, iend, [&](Particle_t& m) {
-        // See if particle's current and look_ahead positions cross plane.
-        // If not, couldn't hit, so keep going.
-        pVec pnext = m.pos + m.vel * look_ahead;
-
-        // Nrm stores the plane normal (the a,b,c of the plane eqn).
-        // Old and new distances: dist(p,plane) = n * p + d
-        float distold = dot(m.pos, dom.nrm) + dom.D;
-        float distnew = dot(pnext, dom.nrm) + dom.D;
-
-        if (pSameSign(distold, distnew)) return;
-
-        float nv = dot(dom.nrm, m.vel);
-        float t = -distold / nv;
-
-        pVec phit = m.pos + m.vel * t; // Actual intersection point
-        pVec offset = phit - dom.p;    // Offset from origin in plane
-
-        // Dot product with basis vectors of old frame
-        // in terms of new frame gives position in uv frame.
-        float upos = dot(offset, dom.s1);
-        float vpos = dot(offset, dom.s2);
-
-        // Did it cross plane outside rectangle?
-        if (upos <= 0 || vpos <= 0 || upos >= 1 || vpos >= 1) return;
-
-        // A hit! A most palpable hit!
-        // Compute distance to the four edges.
-        pVec uofs = (dom.uNrm * dot(dom.uNrm, offset)) - offset;
-        float udistSqr = uofs.lenSqr();
-        pVec vofs = (dom.vNrm * dot(dom.vNrm, offset)) - offset;
-        float vdistSqr = vofs.lenSqr();
-
-        pVec foffset = (dom.u + dom.v) - offset;
-        pVec fofs = foffset - (dom.uNrm * dot(dom.uNrm, foffset));
-        float fdistSqr = fofs.lenSqr();
-        pVec gofs = foffset - (dom.vNrm * dot(dom.vNrm, foffset));
-        float gdistSqr = gofs.lenSqr();
-
-        pVec S; // Vector from point of impact to safety
-        if (udistSqr <= vdistSqr && udistSqr <= fdistSqr && udistSqr <= gdistSqr)
-            S = uofs;
-        else if (vdistSqr <= fdistSqr && vdistSqr <= gdistSqr)
-            S = vofs;
-        else if (fdistSqr <= gdistSqr)
-            S = fofs;
-        else
-            S = gofs;
-
-        if (S == pVec(0.f)) return; // It's aimed straight at an edge. S will become NaN.
-        S.normalize();              // Blend S with m.vel.
-
-        float vlen = m.vel.length();
-        pVec Vn = m.vel / vlen;
-
-        pVec dir = (S * (magdt / (fsqr(t) + epsilon))) + Vn;
-        m.vel = dir * (vlen / dir.length()); // Speed of m.vel, but in direction dir.
-    });
+    std::for_each(P_EXPOLP, ibegin, iend, [&](Particle_t& m) { PAAvoidRectangle_Impl(m, dt, dom, look_ahead, magnitude, epsilon); });
 }
 
 void PAAvoid::Exec(const PDPlane& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    float magdt = magnitude * dt;
-
-    std::for_each(P_EXPOLP, ibegin, iend, [&](Particle_t& m) {
-        // See if particle's current and look_ahead positions cross plane.
-        // If not, couldn't hit, so keep going.
-        pVec pnext = m.pos + m.vel * look_ahead;
-
-        // Nrm stores the plane normal (the a,b,c of the plane eqn).
-        // Old and new distances: dist(p,plane) = n * p + d
-        float distold = dot(m.pos, dom.nrm) + dom.D;
-        float distnew = dot(pnext, dom.nrm) + dom.D;
-
-        if (pSameSign(distold, distnew)) return;
-
-        float t = -distold / dot(dom.nrm, m.vel); // Time to collision
-        pVec S = m.vel * t + dom.nrm * distold;   // Vector from projection point to point of impact
-
-        if (S == pVec(0.f))
-            S = dom.nrm;
-        else
-            S.normalize();
-
-        // Blend S with m.vel.
-        float vlen = m.vel.length();
-        pVec Vn = m.vel / vlen;
-
-        pVec dir = (S * (magdt / (fsqr(t) + epsilon))) + Vn;
-        m.vel = dir * (vlen / dir.length()); // Speed of m.vel, but in direction dir.
-    });
+    std::for_each(P_EXPOLP, ibegin, iend, [&](Particle_t& m) { PAAvoidPlane_Impl(m, dt, dom, look_ahead, magnitude, epsilon); });
 }
 
 // Only works for points on the OUTSIDE of the sphere. Ignores inner radius.
 void PAAvoid::Exec(const PDSphere& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    float magdt = magnitude * dt;
-
-    std::for_each(P_EXPOLP, ibegin, iend, [&](Particle_t& m) {
-        // First do a ray-sphere intersection test and see if it's soon enough.
-        // Can I do this faster without t?
-        float vlen = m.vel.length();
-        pVec Vn = m.vel / vlen;
-
-        pVec L = dom.ctr - m.pos;
-        float v = dot(L, Vn);
-
-        float disc = dom.radOutSqr - dot(L, L) + fsqr(v);
-        if (disc < 0) return; // I'm not heading toward it.
-
-        // Compute length for second rejection test.
-        float t = v - sqrtf(disc);
-        if (t < 0 || t > (vlen * look_ahead)) return;
-
-        // Get a vector to safety.
-        pVec C = Cross(Vn, L);
-        C.normalize();
-        pVec S = Cross(Vn, C);
-
-        pVec dir = (S * (magdt / (fsqr(t) + epsilon))) + Vn;
-        m.vel = dir * (vlen / dir.length()); // Speed of m.vel, but in direction dir.
-    });
+    std::for_each(P_EXPOLP, ibegin, iend, [&](Particle_t& m) { PAAvoidSphere_Impl(m, dt, dom, look_ahead, magnitude, epsilon); });
 }
 
 void PAAvoid::Exec(const PDDisc& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    float magdt = magnitude * dt;
-
-    std::for_each(P_EXPOLP, ibegin, iend, [&](Particle_t& m) {
-        // See if particle's current and look_ahead positions cross plane.
-        // If not, couldn't hit, so keep going.
-        pVec pnext = m.pos + m.vel * look_ahead;
-
-        // Nrm stores the plane normal (the a,b,c of the plane eqn).
-        // Old and new distances: dist(p,plane) = n * p + d
-        float distold = dot(m.pos, dom.nrm) + dom.D;
-        float distnew = dot(pnext, dom.nrm) + dom.D;
-
-        if (pSameSign(distold, distnew)) return;
-
-        float nv = dot(dom.nrm, m.vel);
-        float t = -distold / nv;
-
-        pVec phit = m.pos + m.vel * t; // Actual intersection point
-        pVec offset = phit - dom.p;    // Offset from origin in plane
-
-        float radSqr = offset.lenSqr();
-
-        // Are we going to hit the disc ring? If so, always turn to the OUTSIDE of the ring.
-        // Could do inside of ring, too, if we took sqrts, found the closer direction, and flipped offset if needed.
-        if (radSqr < dom.radInSqr || radSqr > dom.radOutSqr) return;
-
-        // Blend S with m.vel.
-        pVec S = offset;
-        S /= sqrtf(radSqr);
-
-        float vlen = m.vel.length();
-        pVec Vn = m.vel / vlen;
-
-        pVec dir = (S * (magdt / (fsqr(t) + epsilon))) + Vn;
-        m.vel = dir * (vlen / dir.length()); // Speed of m.vel, but in direction dir.
-    });
+    std::for_each(P_EXPOLP, ibegin, iend, [&](Particle_t& m) { PAAvoidDisc_Impl(m, dt, dom, look_ahead, magnitude, epsilon); });
 }
 
 void PAAvoid::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
@@ -364,136 +154,22 @@ void PAAvoid::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Parti
 // the whole velocity in the outward direction for the whole time step.
 void PABounce::Exec(const PDTriangle& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-        // See if particle's current and look_ahead positions cross plane.
-        // If not, couldn't hit, so keep going.
-        pVec pnext = m.pos + m.vel * dt;
-
-        // Nrm stores the plane normal (the a,b,c of the plane eqn).
-        // Old and new distances: dist(p,plane) = n * p + d
-        float distold = dot(m.pos, dom.nrm) + dom.D;
-        float distnew = dot(pnext, dom.nrm) + dom.D;
-
-        if (pSameSign(distold, distnew)) return;
-
-        float nv = dot(dom.nrm, m.vel);
-        float t = -distold / nv; // Time until hit
-
-        pVec phit = m.pos + m.vel * t; // Actual intersection point
-        pVec offset = phit - dom.p;    // Offset from origin in plane
-
-        // Dot product with basis vectors of old frame
-        // in terms of new frame gives position in uv frame.
-        float upos = dot(offset, dom.s1);
-        float vpos = dot(offset, dom.s2);
-
-        // Did it cross plane outside triangle?
-        if (upos < 0 || vpos < 0 || (upos + vpos) > 1) return;
-
-        // A hit! A most palpable hit!
-        // Compute tangential and normal components of velocity
-        pVec vn = dom.nrm * nv; // Normal Vn = (V.N)N
-        pVec vt = m.vel - vn;   // Tangent Vt = V - Vn
-
-        // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
-        float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
-        m.vel = vt * fric - vn * resilience;
-    });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PABounceTriangle_Impl(m, dt, dom, oneMinusFriction, resilience, cutoffSqr); });
 }
 
 void PABounce::Exec(const PDRectangle& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-        // See if particle's current and pnext positions cross plane.
-        // If not, couldn't hit, so keep going.
-        pVec pnext = m.pos + m.vel * dt;
-
-        // Nrm stores the plane normal (the a,b,c of the plane eqn).
-        // Old and new distances: dist(p,plane) = n * p + d
-        float distold = dot(m.pos, dom.nrm) + dom.D;
-        float distnew = dot(pnext, dom.nrm) + dom.D;
-
-        if (pSameSign(distold, distnew)) return;
-
-        float nv = dot(dom.nrm, m.vel);
-        float t = -distold / nv; // Time until hit
-
-        pVec phit = m.pos + m.vel * t; // Actual intersection point
-        pVec offset = phit - dom.p;    // Offset from origin in plane
-
-        // Dot product with basis vectors of old frame
-        // in terms of new frame gives position in uv frame.
-        float upos = dot(offset, dom.s1);
-        float vpos = dot(offset, dom.s2);
-
-        // Did it cross plane outside rectangle?
-        if (upos < 0 || upos > 1 || vpos < 0 || vpos > 1) return;
-
-        // A hit! A most palpable hit!
-        // Compute tangential and normal components of velocity
-        pVec vn = dom.nrm * nv; // Normal Vn = (V.N)N
-        pVec vt = m.vel - vn;   // Tangent Vt = V - Vn
-
-        // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
-        float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
-        m.vel = vt * fric - vn * resilience;
-    });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PABounceRectangle_Impl(m, dt, dom, oneMinusFriction, resilience, cutoffSqr); });
 }
 
 void PABounce::Exec(const PDBox& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-        // See if particle's current and pnext positions cross boundary. If not, skip it.
-        pVec pnext = m.pos + m.vel * dt;
-
-        bool oldIn = dom.Within(m.pos);
-        bool newIn = dom.Within(pnext);
-        if (oldIn == newIn) return;
-
-        pVec vn(0.f), vt(m.vel);
-        if (oldIn) { // Bounce off the inside
-            // Does it handle bouncing off two walls on the same time step?
-            if (pnext.x() < dom.p0.x() || pnext.x() > dom.p1.x()) { std::swap(vn.x(), vt.x()); }
-            if (pnext.y() < dom.p0.y() || pnext.y() > dom.p1.y()) { std::swap(vn.y(), vt.y()); }
-            if (pnext.z() < dom.p0.z() || pnext.z() > dom.p1.z()) { std::swap(vn.z(), vt.z()); }
-        } else { // Bounce off the outside
-            if (pnext.x() > dom.p0.x() || pnext.x() < dom.p1.x()) { std::swap(vn.x(), vt.x()); }
-            if (pnext.y() > dom.p0.y() || pnext.y() < dom.p1.y()) { std::swap(vn.y(), vt.y()); }
-            if (pnext.z() > dom.p0.z() || pnext.z() < dom.p1.z()) { std::swap(vn.z(), vt.z()); }
-        }
-
-        // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
-        float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
-        m.vel = vt * fric - vn * resilience;
-    });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PABounceBox_Impl(m, dt, dom, oneMinusFriction, resilience, cutoffSqr); });
 }
 
 void PABounce::Exec(const PDPlane& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-        // See if particle's current and look_ahead positions cross plane.
-        // If not, couldn't hit, so keep going.
-        pVec pnext = m.pos + m.vel * dt;
-
-        // Nrm stores the plane normal (the a,b,c of the plane eqn).
-        // Old and new distances: dist(p,plane) = n * p + d
-        float distold = dot(m.pos, dom.nrm) + dom.D;
-        float distnew = dot(pnext, dom.nrm) + dom.D;
-
-        if (pSameSign(distold, distnew)) return;
-
-        float nv = dot(dom.nrm, m.vel);
-        float t = -distold / nv; // Time until hit
-
-        // A hit! A most palpable hit!
-        // Compute tangential and normal components of velocity
-        pVec vn = dom.nrm * nv; // Normal Vn = (V.N)N
-        pVec vt = m.vel - vn;   // Tangent Vt = V - Vn
-
-        // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
-        float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
-        m.vel = vt * fric - vn * resilience;
-    });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PABouncePlane_Impl(m, dt, dom, oneMinusFriction, resilience, cutoffSqr); });
 }
 
 void PABounce::Exec(const PDSphere& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
@@ -501,110 +177,12 @@ void PABounce::Exec(const PDSphere& dom, ParticleGroup& group, ParticleList::ite
     PASSERT(dom.radIn == 0.0f, "Bouncing doesn't work on thick shells. radIn must be 0.");
 
     float dtinv = 1.0f / dt;
-
-    // Bounce particles off the inside or outside of the sphere
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-        // See if particle's next position is on the opposite side of the domain. If so, bounce it.
-        pVec pnext = m.pos + m.vel * dt;
-
-        if (dom.Within(m.pos)) {
-            // We are bouncing off the inside of the sphere.
-            if (dom.Within(pnext))
-                // Still inside. Do nothing.
-                return;
-
-            // Trying to go outside. Bounce back in.
-
-            // Inward-pointing normal to surface. This isn't computed quite right;
-            // should extrapolate particle position to surface.
-            pVec n = dom.ctr - m.pos;
-            n.normalize();
-
-            // Compute tangential and normal components of velocity
-            float nmag = dot(m.vel, n);
-
-            pVec vn = n * nmag;   // Velocity in Normal dir  Vn = (V.N)N
-            pVec vt = m.vel - vn; // Velocity in Tangent dir Vt = V - Vn
-
-            // Reverse normal component of velocity
-            if (nmag < 0) vn = -vn; // Don't reverse if it's already heading inward
-
-            // Compute new velocity heading out:
-            // Don't apply friction if tangential velocity < cutoff
-            float tanscale = (vt.lenSqr() <= cutoffSqr) ? 1.0f : oneMinusFriction;
-            m.vel = vt * tanscale + vn * resilience;
-
-            // Now see where the point will end up. Make sure we fixed it to stay inside.
-            pVec pthree = m.pos + m.vel * dt;
-            if (dom.Within(pthree)) {
-                // Still inside. We're good.
-                return;
-            } else {
-                // Since the tangent plane is outside the sphere, reflecting the velocity vector about it won't necessarily bring it inside the sphere.
-                pVec toctr = dom.ctr - pthree;
-                float dist = toctr.length();
-                pVec pwish = dom.ctr - toctr * (0.999f * dom.radOut / dist); // Pwish is a point just inside the sphere
-                m.vel = (pwish - m.pos) * dtinv;                             // Compute a velocity to get us to pwish.
-            }
-        } else {
-            // We are bouncing off the outside of the sphere.
-            if (!dom.Within(pnext)) return;
-
-            // Trying to go inside. Bounce back out.
-
-            // Outward-pointing normal to surface. This isn't computed quite right;
-            // should extrapolate particle position to surface with ray-sphere intersection
-            pVec n = m.pos - dom.ctr;
-            n.normalize();
-
-            float NdotV = dot(n, m.vel);
-
-            // A hit! A most palpable hit!
-            // Compute tangential and normal components of velocity
-            pVec vn = n * NdotV;  // Normal Vn = (V.N)N
-            pVec vt = m.vel - vn; // Tangent Vt = V - Vn
-
-            // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
-            float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
-            m.vel = vt * fric - vn * resilience;
-        }
-    });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PABounceSphere_Impl(m, dt, dom, oneMinusFriction, resilience, cutoffSqr); });
 }
 
 void PABounce::Exec(const PDDisc& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-        // See if particle's current and look_ahead positions cross plane.
-        // If not, couldn't hit, so keep going.
-        pVec pnext = m.pos + m.vel * dt;
-
-        // Nrm stores the plane normal (the a,b,c of the plane eqn).
-        // Old and new distances: dist(p,plane) = n * p + d
-        float distold = dot(m.pos, dom.nrm) + dom.D;
-        float distnew = dot(pnext, dom.nrm) + dom.D;
-
-        if (pSameSign(distold, distnew)) return;
-
-        float NdotV = dot(dom.nrm, m.vel);
-        float t = -distold / NdotV; // Time until hit
-
-        pVec phit = m.pos + m.vel * t; // Actual intersection point
-        pVec offset = phit - dom.p;    // Offset from origin in plane
-
-        float radSqr = offset.lenSqr();
-
-        // Are we going to hit the disc ring?
-        if (radSqr < dom.radInSqr || radSqr > dom.radOutSqr) return;
-
-        // A hit! A most palpable hit!
-        // Compute tangential and normal components of velocity
-        pVec vn = dom.nrm * NdotV; // Normal Vn = (V.N)N
-        pVec vt = m.vel - vn;      // Tangent Vt = V - Vn
-
-        // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
-        float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
-        m.vel = vt * fric - vn * resilience;
-    });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PABounceDisc_Impl(m, dt, dom, oneMinusFriction, resilience, cutoffSqr); });
 }
 
 void PABounce::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
@@ -776,10 +354,7 @@ void PAGravity::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Par
 {
     pVec ddir(direction * dt);
 
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-        // Step velocity with acceleration
-        m.vel += ddir;
-    });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { m.vel += ddir; });
 }
 
 // For particles in the domain of influence, accelerate them with a domain.
@@ -789,7 +364,6 @@ void PAJet::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Particl
         if (dom->Within(m.pos)) {
             pVec accel = acc->Generate();
 
-            // Step velocity with acceleration
             m.vel += accel * dt;
         }
     });
@@ -907,7 +481,6 @@ void PAOrbitLine::Execute(ParticleGroup& group, ParticleList::iterator ibegin, P
         // Soften by epsilon to avoid tight encounters to infinity
         float rSqr = into.lenSqr();
 
-        // Step velocity with acceleration
         if (rSqr < max_radiusSqr) m.vel += into * (magdt / (sqrtf(rSqr) * (rSqr + epsilon)));
     });
 }
@@ -926,7 +499,6 @@ void PAOrbitPoint::Execute(ParticleGroup& group, ParticleList::iterator ibegin, 
         // Soften by epsilon to avoid tight encounters to infinity
         float rSqr = dir.lenSqr();
 
-        // Step velocity with acceleration
         if (rSqr < max_radiusSqr) m.vel += dir * (magdt / (sqrtf(rSqr) * (rSqr + epsilon)));
     });
 }

@@ -21,7 +21,7 @@
 
 using namespace PAPI;
 
-PINLINE void PAAvoidTriangle_Impl(Particle_t& m, float dt, PDTriangle& dom, float look_ahead, float magnitude, float epsilon)
+PINLINE void PAAvoidTriangle_Impl(Particle_t& m, const float dt, const PDTriangle& dom, const float look_ahead, const float magnitude, const float epsilon)
 {
     float magdt = magnitude * dt;
 
@@ -32,9 +32,9 @@ PINLINE void PAAvoidTriangle_Impl(Particle_t& m, float dt, PDTriangle& dom, floa
     pVec f = v - u;
     pVec fn = f;
     fn.normalize();
+    // ^^^ Above values do not vary per particle.
 
-    // See if particle's current and look_ahead positions cross plane.
-    // If not, couldn't hit, so keep going.
+    // See if particle's current and pnext positions cross boundary. If not, skip it.
     pVec pnext = m.pos + m.vel * look_ahead;
 
     // Nrm stores the plane normal (the a,b,c of the plane eqn).
@@ -56,7 +56,7 @@ PINLINE void PAAvoidTriangle_Impl(Particle_t& m, float dt, PDTriangle& dom, floa
     float vpos = dot(offset, dom.s2);
 
     // Did it cross plane outside triangle?
-    if (upos < 0 || vpos < 0 || (upos + vpos) > 1) return;
+    if (upos <= 0 || vpos <= 0 || (upos + vpos) >= 1) return;
 
     // A hit! A most palpable hit!
     // Compute distance to the three edges.
@@ -88,12 +88,12 @@ PINLINE void PAAvoidTriangle_Impl(Particle_t& m, float dt, PDTriangle& dom, floa
     m.vel = dir * (vlen / dir.length()); // Speed of m.vel, but in direction dir.
 }
 
-PINLINE void PAAvoidRectangle_Impl(Particle_t& m, float dt, PDRectangle& dom, float look_ahead, float magnitude, float epsilon)
+PINLINE void PAAvoidRectangle_Impl(Particle_t& m, const float dt, const PDRectangle& dom, const float look_ahead, const float magnitude, const float epsilon)
 {
     float magdt = magnitude * dt;
+    // ^^^ Above values do not vary per particle.
 
-    // See if particle's current and look_ahead positions cross plane.
-    // If not, couldn't hit, so keep going.
+    // See if particle's current and pnext positions cross boundary. If not, skip it.
     pVec pnext = m.pos + m.vel * look_ahead;
 
     // Nrm stores the plane normal (the a,b,c of the plane eqn).
@@ -150,12 +150,12 @@ PINLINE void PAAvoidRectangle_Impl(Particle_t& m, float dt, PDRectangle& dom, fl
     m.vel = dir * (vlen / dir.length()); // Speed of m.vel, but in direction dir.
 }
 
-PINLINE void PAAvoidPlane_Impl(Particle_t& m, float dt, PDPlane& dom, float look_ahead, float magnitude, float epsilon)
+PINLINE void PAAvoidPlane_Impl(Particle_t& m, const float dt, const PDPlane& dom, const float look_ahead, const float magnitude, const float epsilon)
 {
     float magdt = magnitude * dt;
+    // ^^^ Above values do not vary per particle.
 
-    // See if particle's current and look_ahead positions cross plane.
-    // If not, couldn't hit, so keep going.
+    // See if particle's current and pnext positions cross boundary. If not, skip it.
     pVec pnext = m.pos + m.vel * look_ahead;
 
     // Nrm stores the plane normal (the a,b,c of the plane eqn).
@@ -182,9 +182,10 @@ PINLINE void PAAvoidPlane_Impl(Particle_t& m, float dt, PDPlane& dom, float look
 }
 
 // Only works for points on the OUTSIDE of the sphere. Ignores inner radius.
-PINLINE void PAAvoidSphere_Impl(Particle_t& m, float dt, PDSphere& dom, float look_ahead, float magnitude, float epsilon)
+PINLINE void PAAvoidSphere_Impl(Particle_t& m, const float dt, const PDSphere& dom, const float look_ahead, const float magnitude, const float epsilon)
 {
     float magdt = magnitude * dt;
+    // ^^^ Above values do not vary per particle.
 
     // First do a ray-sphere intersection test and see if it's soon enough.
     // Can I do this faster without t?
@@ -210,12 +211,12 @@ PINLINE void PAAvoidSphere_Impl(Particle_t& m, float dt, PDSphere& dom, float lo
     m.vel = dir * (vlen / dir.length()); // Speed of m.vel, but in direction dir.
 }
 
-PINLINE void PAAvoidDisc_Impl(Particle_t& m, float dt, PDDisc& dom, float look_ahead, float magnitude, float epsilon)
+PINLINE void PAAvoidDisc_Impl(Particle_t& m, const float dt, const PDDisc& dom, const float look_ahead, const float magnitude, const float epsilon)
 {
     float magdt = magnitude * dt;
+    // ^^^ Above values do not vary per particle.
 
-    // See if particle's current and look_ahead positions cross plane.
-    // If not, couldn't hit, so keep going.
+    // See if particle's current and pnext positions cross boundary. If not, skip it.
     pVec pnext = m.pos + m.vel * look_ahead;
 
     // Nrm stores the plane normal (the a,b,c of the plane eqn).
@@ -248,29 +249,6 @@ PINLINE void PAAvoidDisc_Impl(Particle_t& m, float dt, PDDisc& dom, float look_a
     m.vel = dir * (vlen / dir.length()); // Speed of m.vel, but in direction dir.
 }
 
-PINLINE void PAAvoid_Impl(Particle_t& m, float dt, pDomain position, float look_ahead, float magnitude, float epsilon)
-{
-    switch (position.Which) {
-    // case PDUnion_e: PAAvoidUnion_Impl(m, dt, position.PDUnion_V, look_ahead, magnitude, epsilon); break;
-    // case PDPoint_e: PAAvoidPoint_Impl(m, dt, position.PDPoint_V, look_ahead, magnitude, epsilon); break;
-    // case PDLine_e: PAAvoidLine_Impl(m, dt, position.PDLine_V, look_ahead, magnitude, epsilon); break;
-    case PDTriangle_e: PAAvoidTriangle_Impl(m, dt, position.PDTriangle_V, look_ahead, magnitude, epsilon); break;
-    case PDRectangle_e: PAAvoidRectangle_Impl(m, dt, position.PDRectangle_V, look_ahead, magnitude, epsilon); break;
-    case PDDisc_e: PAAvoidDisc_Impl(m, dt, position.PDDisc_V, look_ahead, magnitude, epsilon); break;
-    case PDPlane_e: PAAvoidPlane_Impl(m, dt, position.PDPlane_V, look_ahead, magnitude, epsilon); break;
-    // case PDBox_e: PAAvoidBox_Impl(m, dt, position.PDBox_V, look_ahead, magnitude, epsilon); break;
-    // case PDCylinder_e: PAAvoidCylinder_Impl(m, dt, position.PDCylinder_V, look_ahead, magnitude, epsilon); break;
-    // case PDCone_e: PAAvoidCone_Impl(m, dt, position.PDCone_V, look_ahead, magnitude, epsilon); break;
-    case PDSphere_e: PAAvoidSphere_Impl(m, dt, position.PDSphere_V, look_ahead, magnitude, epsilon); break;
-    // case PDBlob_e: PAAvoidBlob_Impl(m, dt, position.PDBlob_V, look_ahead, magnitude, epsilon); break;
-    default:
-#ifndef __CUDACC__
-        throw PErrNotImplemented(std::string("Avoid not implemented for domain ") + std::string(typeid(position).name()));
-#endif
-        break;
-    }
-}
-
 // Bounce() doesn't work correctly with small time step sizes for particles sliding along a surface.
 // The friction and resilience parameters should not be scaled by dt, since a bounce happens instantaneously.
 // On the other hand, they should be scaled by dt because particles sliding along a surface will hit more
@@ -279,10 +257,10 @@ PINLINE void PAAvoid_Impl(Particle_t& m, float dt, pDomain position, float look_
 // This approach uses the actual hit location and hit time to determine whether we actually hit.
 // But it doesn't bounce from the actual location or time. It reverses the velocity immediately, applying
 // the whole velocity in the outward direction for the whole time step.
-void PABounce::Exec(const PDTriangle& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
+PINLINE void PABounceTriangle_Impl(Particle_t& m, const float dt, const PDTriangle& dom, const float oneMinusFriction, const float resilience,
+                                   const float cutoffSqr)
 {
-    // See if particle's current and look_ahead positions cross plane.
-    // If not, couldn't hit, so keep going.
+    // See if particle's current and pnext positions cross boundary. If not, skip it.
     pVec pnext = m.pos + m.vel * dt;
 
     // Nrm stores the plane normal (the a,b,c of the plane eqn).
@@ -314,13 +292,12 @@ void PABounce::Exec(const PDTriangle& dom, ParticleGroup& group, ParticleList::i
     // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
     float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
     m.vel = vt * fric - vn * resilience;
-});
 }
 
-PINLINE void PABounceRectangle_Impl(Particle_t& m, float dt, PDRectangle& dom, float oneMinusFriction, float resilience, float cutoffSqr)
+PINLINE void PABounceRectangle_Impl(Particle_t& m, const float dt, const PDRectangle& dom, const float oneMinusFriction, const float resilience,
+                                    const float cutoffSqr)
 {
-    // See if particle's current and pnext positions cross plane.
-    // If not, couldn't hit, so keep going.
+    // See if particle's current and pnext positions cross boundary. If not, skip it.
     pVec pnext = m.pos + m.vel * dt;
 
     // Nrm stores the plane normal (the a,b,c of the plane eqn).
@@ -352,41 +329,37 @@ PINLINE void PABounceRectangle_Impl(Particle_t& m, float dt, PDRectangle& dom, f
     // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
     float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
     m.vel = vt * fric - vn * resilience;
-});
 }
 
-void PABounce::Exec(const PDBox& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
+PINLINE void PABounceBox_Impl(Particle_t& m, const float dt, const PDBox& dom, const float oneMinusFriction, const float resilience, const float cutoffSqr)
 {
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-        // See if particle's current and pnext positions cross boundary. If not, skip it.
-        pVec pnext = m.pos + m.vel * dt;
+    // See if particle's current and pnext positions cross boundary. If not, skip it.
+    pVec pnext = m.pos + m.vel * dt;
 
-        bool oldIn = dom.Within(m.pos);
-        bool newIn = dom.Within(pnext);
-        if (oldIn == newIn) return;
+    bool oldIn = dom.Within(m.pos);
+    bool newIn = dom.Within(pnext);
+    if (oldIn == newIn) return;
 
-        pVec vn(0.f), vt(m.vel);
-        if (oldIn) { // Bounce off the inside
-            // Does it handle bouncing off two walls on the same time step?
-            if (pnext.x() < dom.p0.x() || pnext.x() > dom.p1.x()) { std::swap(vn.x(), vt.x()); }
-            if (pnext.y() < dom.p0.y() || pnext.y() > dom.p1.y()) { std::swap(vn.y(), vt.y()); }
-            if (pnext.z() < dom.p0.z() || pnext.z() > dom.p1.z()) { std::swap(vn.z(), vt.z()); }
-        } else { // Bounce off the outside
-            if (pnext.x() > dom.p0.x() || pnext.x() < dom.p1.x()) { std::swap(vn.x(), vt.x()); }
-            if (pnext.y() > dom.p0.y() || pnext.y() < dom.p1.y()) { std::swap(vn.y(), vt.y()); }
-            if (pnext.z() > dom.p0.z() || pnext.z() < dom.p1.z()) { std::swap(vn.z(), vt.z()); }
-        }
+    pVec vn(0.f), vt(m.vel);
+    if (oldIn) { // Bounce off the inside
+        // Does it handle bouncing off two walls on the same time step?
+        if (pnext.x() < dom.p0.x() || pnext.x() > dom.p1.x()) { std::swap(vn.x(), vt.x()); }
+        if (pnext.y() < dom.p0.y() || pnext.y() > dom.p1.y()) { std::swap(vn.y(), vt.y()); }
+        if (pnext.z() < dom.p0.z() || pnext.z() > dom.p1.z()) { std::swap(vn.z(), vt.z()); }
+    } else { // Bounce off the outside
+        if (pnext.x() > dom.p0.x() || pnext.x() < dom.p1.x()) { std::swap(vn.x(), vt.x()); }
+        if (pnext.y() > dom.p0.y() || pnext.y() < dom.p1.y()) { std::swap(vn.y(), vt.y()); }
+        if (pnext.z() > dom.p0.z() || pnext.z() < dom.p1.z()) { std::swap(vn.z(), vt.z()); }
+    }
 
-        // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
-        float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
-        m.vel = vt * fric - vn * resilience;
-    });
+    // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
+    float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
+    m.vel = vt * fric - vn * resilience;
 }
 
-PINLINE void PABouncePlane_Impl(Particle_t& m, float dt, PDPlane& dom, float oneMinusFriction, float resilience, float cutoffSqr)
+PINLINE void PABouncePlane_Impl(Particle_t& m, const float dt, const PDPlane& dom, const float oneMinusFriction, const float resilience, const float cutoffSqr)
 {
-    // See if particle's current and look_ahead positions cross plane.
-    // If not, couldn't hit, so keep going.
+    // See if particle's current and pnext positions cross boundary. If not, skip it.
     pVec pnext = m.pos + m.vel * dt;
 
     // Nrm stores the plane normal (the a,b,c of the plane eqn).
@@ -407,20 +380,17 @@ PINLINE void PABouncePlane_Impl(Particle_t& m, float dt, PDPlane& dom, float one
     // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
     float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
     m.vel = vt * fric - vn * resilience;
-});
 }
 
-PINLINE void PABounceSphere_Impl(Particle_t& m, float dt, PDSphere& dom, float oneMinusFriction, float resilience, float cutoffSqr)
+PINLINE void PABounceSphere_Impl(Particle_t& m, const float dt, const PDSphere& dom, const float oneMinusFriction, const float resilience, const float cutoffSqr)
 {
     float dtinv = 1.0f / dt;
+    // ^^^ Above values do not vary per particle.
 
-    // Bounce particles off the inside or outside of the sphere
-
-    // See if particle's next position is on the opposite side of the domain. If so, bounce it.
+    // See if particle's current and pnext positions cross boundary. If not, skip it.
     pVec pnext = m.pos + m.vel * dt;
 
-    if (dom.Within(m.pos)) {
-        // We are bouncing off the inside of the sphere.
+    if (dom.Within(m.pos)) { // We are bouncing off the inside of the sphere.
         if (dom.Within(pnext))
             // Still inside. Do nothing.
             return;
@@ -458,8 +428,7 @@ PINLINE void PABounceSphere_Impl(Particle_t& m, float dt, PDSphere& dom, float o
             pVec pwish = dom.ctr - toctr * (0.999f * dom.radOut / dist); // Pwish is a point just inside the sphere
             m.vel = (pwish - m.pos) * dtinv;                             // Compute a velocity to get us to pwish.
         }
-    } else {
-        // We are bouncing off the outside of the sphere.
+    } else { // We are bouncing off the outside of the sphere.
         if (!dom.Within(pnext)) return;
 
         // Trying to go inside. Bounce back out.
@@ -482,10 +451,9 @@ PINLINE void PABounceSphere_Impl(Particle_t& m, float dt, PDSphere& dom, float o
     }
 }
 
-PINLINE void PABounceDisc_Impl(Particle_t& m, float dt, PDDisc& dom, float oneMinusFriction, float resilience, float cutoffSqr)
+PINLINE void PABounceDisc_Impl(Particle_t& m, const float dt, const PDDisc& dom, const float oneMinusFriction, const float resilience, const float cutoffSqr)
 {
-    // See if particle's current and look_ahead positions cross plane.
-    // If not, couldn't hit, so keep going.
+    // See if particle's current and pnext positions cross boundary. If not, skip it.
     pVec pnext = m.pos + m.vel * dt;
 
     // Nrm stores the plane normal (the a,b,c of the plane eqn).
@@ -514,56 +482,10 @@ PINLINE void PABounceDisc_Impl(Particle_t& m, float dt, PDDisc& dom, float oneMi
     // Compute new velocity, applying resilience and, unless tangential velocity < cutoff, friction
     float fric = (vt.lenSqr() <= cutoffSqr) ? 1.f : oneMinusFriction;
     m.vel = vt * fric - vn * resilience;
-});
 }
 
-PINLINE void PABounce_Impl(Particle_t& m, float dt, pDomain position, float oneMinusFriction, float resilience, float cutoffSqr)
-{
-    switch (position.Which) {
-    // case PDUnion_e: PABounceUnion_Impl(m, dt, position.PDUnion_V, oneMinusFriction, resilience, cutoffSqr); break;
-    // case PDPoint_e: PABouncePoint_Impl(m, dt, position.PDPoint_V, oneMinusFriction, resilience, cutoffSqr); break;
-    // case PDLine_e: PABounceLine_Impl(m, dt, position.PDLine_V, oneMinusFriction, resilience, cutoffSqr); break;
-    case PDTriangle_e: PABounceTriangle_Impl(m, dt, position.PDTriangle_V, oneMinusFriction, resilience, cutoffSqr); break;
-    case PDRectangle_e: PABounceRectangle_Impl(m, dt, position.PDRectangle_V, oneMinusFriction, resilience, cutoffSqr); break;
-    case PDDisc_e: PABounceDisc_Impl(m, dt, position.PDDisc_V, oneMinusFriction, resilience, cutoffSqr); break;
-    case PDPlane_e: PABouncePlane_Impl(m, dt, position.PDPlane_V, oneMinusFriction, resilience, cutoffSqr); break;
-    // case PDBox_e: PABounceBox_Impl(m, dt, position.PDBox_V, oneMinusFriction, resilience, cutoffSqr); break;
-    // case PDCylinder_e: PABounceCylinder_Impl(m, dt, position.PDCylinder_V, oneMinusFriction, resilience, cutoffSqr); break;
-    // case PDCone_e: PABounceCone_Impl(m, dt, position.PDCone_V, oneMinusFriction, resilience, cutoffSqr); break;
-    case PDSphere_e: PABounceSphere_Impl(m, dt, position.PDSphere_V, oneMinusFriction, resilience, cutoffSqr); break;
-    // case PDBlob_e: PABounceBlob_Impl(m, dt, position.PDBlob_V, oneMinusFriction, resilience, cutoffSqr); break;
-    default:
-#ifndef __CUDACC__
-        throw PErrNotImplemented(std::string("Bounce not implemented for domain ") + std::string(typeid(position).name()));
-#endif
-        break;
-    }
-}
-
-// An action list within an action list
-PINLINE void PACallActionList_Impl(Particle_t& m, float dt //,
-                                                           // Int action_list_num
-)
-{
-    // XXX Type something here.
-}
-
-PINLINE void PACallback_Impl(Particle_t& m, float dt //,
-                                                     // P_PARTICLE_CALLBACK callback,
-                                                     // pdata_t Data
-)
-{
-    if (callbackFunc == NULL) return;
-
-    // TODO: Can we parallelize this? Should we let the app specify whether we can?
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-        (*callbackFunc)(m, Data, dt);
-    }
-}
-
-// Set the secondary position and velocity from current.
-PINLINE void PACopyVertexB_Impl(Particle_t& m, float dt, bool copy_pos, bool copy_vel)
+// Set the secondary position and velocity from current
+PINLINE void PACopyVertexB_Impl(Particle_t& m, const float dt, const bool copy_pos, const bool copy_vel)
 {
     if (copy_pos && copy_vel) {
         m.posB = m.pos;
@@ -578,11 +500,12 @@ PINLINE void PACopyVertexB_Impl(Particle_t& m, float dt, bool copy_pos, bool cop
 }
 
 // Dampen velocities
-PINLINE void PADamping_Impl(Particle_t& m, float dt, pVec damping, float vlowSqr, float vhighSqr)
+PINLINE void PADamping_Impl(Particle_t& m, const float dt, const pVec damping, const float vlowSqr, const float vhighSqr)
 {
     // This is important if dt is != 1.
     pVec one = pVec(1, 1, 1);
     pVec scale(one - ((one - damping) * dt));
+    // ^^^ Above values do not vary per particle.
 
     float vSqr = m.vel.lenSqr();
 
@@ -590,11 +513,12 @@ PINLINE void PADamping_Impl(Particle_t& m, float dt, pVec damping, float vlowSqr
 }
 
 // Dampen rotational velocities
-PINLINE void PARotDamping_Impl(Particle_t& m, float dt, pVec damping, float vlowSqr, float vhighSqr)
+PINLINE void PARotDamping_Impl(Particle_t& m, const float dt, const pVec damping, const float vlowSqr, const float vhighSqr)
 {
     // This is important if dt is != 1.
     pVec one = pVec(1, 1, 1);
     pVec scale(one - ((one - damping) * dt));
+    // ^^^ Above values do not vary per particle.
 
     float vSqr = m.rvel.lenSqr();
 
@@ -602,12 +526,13 @@ PINLINE void PARotDamping_Impl(Particle_t& m, float dt, pVec damping, float vlow
 }
 
 // Exert force on each particle away from explosion center
-PINLINE void PAExplosion_Impl(Particle_t& m, float dt, pVec center, float radius, float magnitude, float stdev, float epsilon)
+PINLINE void PAExplosion_Impl(Particle_t& m, const float dt, const pVec center, const float radius, const float magnitude, const float stdev, const float epsilon)
 {
     float magdt = magnitude * dt;
     float oneOverSigma = 1.0f / stdev;
     float inexp = -0.5f * fsqr(oneOverSigma);
     float outexp = P_ONEOVERSQRT2PI * oneOverSigma;
+    // ^^^ Above values do not vary per particle.
 
     // Figure direction to particle.
     pVec dir(m.pos - center);
@@ -620,10 +545,9 @@ PINLINE void PAExplosion_Impl(Particle_t& m, float dt, pVec center, float radius
 
     m.vel += acc;
 }
-}
 
 // Follow the next particle in the list
-PINLINE void PAFollow_Impl(Particle_t& m, float dt, float magnitude, float epsilon, float max_radius)
+PINLINE void PAFollow_Impl(Particle_t& m, const float dt, const float magnitude, const float epsilon, const float max_radius)
 {
 #if 0
  // XXX Need to do something special in the caller to get the other particle.
@@ -640,7 +564,7 @@ PINLINE void PAFollow_Impl(Particle_t& m, float dt, float magnitude, float epsil
 }
 
 // Inter-particle gravitation
-PINLINE void PAGravitate_Impl(Particle_t& m, float dt, float magnitude, float epsilon, float max_radius)
+PINLINE void PAGravitate_Impl(Particle_t& m, const float dt, const float magnitude, const float epsilon, const float max_radius)
 {
 #if 0
  // XXX Need access to all the particles.
@@ -664,34 +588,32 @@ PINLINE void PAGravitate_Impl(Particle_t& m, float dt, float magnitude, float ep
 }
 
 // Acceleration in a constant direction
-PINLINE void PAGravity_Impl(Particle_t& m, float dt, pVec direction)
+PINLINE void PAGravity_Impl(Particle_t& m, const float dt, const pVec direction)
 {
     pVec ddir(direction * dt);
 
-    std::for_each(
-        P_EXPOL, ibegin, iend,
-        [&](Particle_t& m) {
-            // Step velocity with acceleration
-            m.vel += ddir;
-        }
+    m.vel += ddir;
+}
 
-        // For particles in the domain of influence, accelerate them with a domain.
-        PINLINE void PAJet_Impl(Particle_t & m, float dt, pDomain dom, pDomain acc) {
-            if (dom.Within(m.pos)) {
-                pVec accel = acc.Generate();
+// For particles in the domain of influence, accelerate them with a domain.
+PINLINE void PAJet_Impl(Particle_t& m, const float dt, const std::shared_ptr<pDomain> dom, const std::shared_ptr<pDomain> acc)
+{
+    if (dom->Within(m.pos)) {
+        pVec accel = acc->Generate();
 
-                // Step velocity with acceleration
-                m.vel += accel * dt;
-            }
-        }
+        m.vel += accel * dt;
+    }
+}
 
-        // Get rid of older particles
-        PINLINE void PAKillOld_Impl(Particle_t & m, float dt, float age_limit, bool kill_less_than) {
-            if (!((m.age < age_limit) ^ kill_less_than)) { m.tmp0 = 1.0f; }
-        }
+// Get rid of older particles
+PINLINE void PAKillOld_Impl(Particle_t& m, const float dt, const float age_limit, const bool kill_less_than)
+{
+    if (!((m.age < age_limit) ^ kill_less_than)) { m.tmp0 = 1.0f; }
+}
 
-        // Match velocity to near neighbors
-        PINLINE void PAMatchVelocity_Impl(Particle_t & m, float dt, float magnitude, float epsilon, float max_radius) {
+// Match velocity to near neighbors
+PINLINE void PAMatchVelocity_Impl(Particle_t& m, const float dt, const float magnitude, const float epsilon, const float max_radius)
+{
 #if 0
  // XXX Need to handle N squared here.
  float magdt = magnitude * dt;
@@ -712,10 +634,11 @@ PINLINE void PAGravity_Impl(Particle_t& m, float dt, pVec direction)
  }
  }
 #endif
-        }
+}
 
-        // Match Rotational velocity to near neighbors
-        PINLINE void PAMatchRotVelocity_Impl(Particle_t & m, float dt, float magnitude, float epsilon, float max_radius) {
+// Match Rotational velocity to near neighbors
+PINLINE void PAMatchRotVelocity_Impl(Particle_t& m, const float dt, const float magnitude, const float epsilon, const float max_radius)
+{
 #if 0
  // XXX Need to handle N squared here.
  float magdt = magnitude * dt;
@@ -736,43 +659,45 @@ PINLINE void PAGravity_Impl(Particle_t& m, float dt, pVec direction)
  }
  }
 #endif
-        }
-
-        // Apply the particles' velocities to their positions, and age the particles
-        PINLINE void PAMove_Impl(Particle_t & m, float dt, bool move_velocity, bool move_rotational_velocity) {
-            m.age += dt;
-            if (move_rotational_velocity) { m.up += m.rvel * dt; }
-            if (move_velocity) { m.pos += m.vel * dt; }
-        }
-
-        // Accelerate particles towards a line
-        PINLINE void PAOrbitLine_Impl(Particle_t & m, float dt, pVec p, pVec axis, float magnitude, float epsilon, float max_radius) {
-            float magdt = magnitude * dt;
-            float max_radiusSqr = fsqr(max_radius);
-
-            // Figure direction to particle from base of line.
-            pVec f = m.pos - p;
-
-            // Projection of particle onto line
-            pVec w = axis * dot(f, axis);
-
-            // Direction from particle to nearest point on line.
-            pVec into = w - f;
-
-            // Distance to line (force drops as 1/r^2, normalize by 1/r)
-            // Soften by epsilon to avoid tight encounters to infinity
-            float rSqr = into.lenSqr();
-
-            // Step velocity with acceleration
-            if (rSqr < max_radiusSqr) m.vel += into * (magdt / (sqrtf(rSqr) * (rSqr + epsilon)));
-        });
 }
 
-// Accelerate particles towards a point
-PINLINE void PAOrbitPoint_Impl(Particle_t& m, float dt, pVec center, float magnitude, float epsilon, float max_radius)
+// Apply the particles' velocities to their positions, and age the particles
+PINLINE void PAMove_Impl(Particle_t& m, const float dt, const bool move_velocity, const bool move_rotational_velocity)
+{
+    m.age += dt;
+    if (move_rotational_velocity) { m.up += m.rvel * dt; }
+    if (move_velocity) { m.pos += m.vel * dt; }
+}
+
+// Accelerate particles towards a line
+PINLINE void PAOrbitLine_Impl(Particle_t& m, const float dt, const pVec p, const pVec axis, const float magnitude, const float epsilon, const float max_radius)
 {
     float magdt = magnitude * dt;
     float max_radiusSqr = fsqr(max_radius);
+    // ^^^ Above values do not vary per particle.
+
+    // Figure direction to particle from base of line.
+    pVec f = m.pos - p;
+
+    // Projection of particle onto line
+    pVec w = axis * dot(f, axis);
+
+    // Direction from particle to nearest point on line.
+    pVec into = w - f;
+
+    // Distance to line (force drops as 1/r^2, normalize by 1/r)
+    // Soften by epsilon to avoid tight encounters to infinity
+    float rSqr = into.lenSqr();
+
+    if (rSqr < max_radiusSqr) m.vel += into * (magdt / (sqrtf(rSqr) * (rSqr + epsilon)));
+}
+
+// Accelerate particles towards a point
+PINLINE void PAOrbitPoint_Impl(Particle_t& m, const float dt, const pVec center, const float magnitude, const float epsilon, const float max_radius)
+{
+    float magdt = magnitude * dt;
+    float max_radiusSqr = fsqr(max_radius);
+    // ^^^ Above values do not vary per particle.
 
     // Figure direction from particle to center
     pVec dir(center - m.pos);
@@ -781,14 +706,13 @@ PINLINE void PAOrbitPoint_Impl(Particle_t& m, float dt, pVec center, float magni
     // Soften by epsilon to avoid tight encounters to infinity
     float rSqr = dir.lenSqr();
 
-    // Step velocity with acceleration
     if (rSqr < max_radiusSqr) m.vel += dir * (magdt / (sqrtf(rSqr) * (rSqr + epsilon)));
 }
 
 // Accelerate in random direction each time step
-PINLINE void PARandomAccel_Impl(Particle_t& m, float dt, pDomain gen_acc)
+PINLINE void PARandomAccel_Impl(Particle_t& m, const float dt, const std::shared_ptr<pDomain> gen_acc)
 {
-    pVec accel = gen_acc.Generate();
+    pVec accel = gen_acc->Generate();
 
     // Dt will affect this by making a higher probability of being near the original velocity after unit time.
     // Smaller dt approach a normal distribution instead of a square wave.
@@ -796,9 +720,9 @@ PINLINE void PARandomAccel_Impl(Particle_t& m, float dt, pDomain gen_acc)
 }
 
 // Immediately displace position randomly
-PINLINE void PARandomDisplace_Impl(Particle_t& m, float dt, pDomain gen_disp)
+PINLINE void PARandomDisplace_Impl(Particle_t& m, const float dt, const std::shared_ptr<pDomain> gen_disp)
 {
-    pVec disp = gen_disp.Generate();
+    pVec disp = gen_disp->Generate();
 
     // Dt will affect this by making a higher probability of being near the original position after unit time.
     // Smaller dt approach a normal distribution instead of a square wave.
@@ -806,19 +730,19 @@ PINLINE void PARandomDisplace_Impl(Particle_t& m, float dt, pDomain gen_disp)
 }
 
 // Immediately assign a random velocity
-PINLINE void PARandomVelocity_Impl(Particle_t& m, float dt, pDomain gen_vel)
+PINLINE void PARandomVelocity_Impl(Particle_t& m, const float dt, const std::shared_ptr<pDomain> gen_vel)
 {
-    pVec velocity = gen_vel.Generate();
+    pVec velocity = gen_vel->Generate();
 
     // Don't multiply by dt because velocities are invariant of dt.
     m.vel = velocity;
 }
 
 // Immediately assign a random rotational velocity
-PINLINE void PARandomRotVelocity_Impl(Particle_t& m, float dt, pDomain gen_vel)
+PINLINE void PARandomRotVelocity_Impl(Particle_t& m, const float dt, const std::shared_ptr<pDomain> gen_vel)
 
 {
-    pVec velocity = gen_vel.Generate();
+    pVec velocity = gen_vel->Generate();
 
     // Don't multiply by dt because velocities are invariant of dt.
     m.rvel = velocity;
@@ -833,7 +757,7 @@ PINLINE void Restore(pVec& vel, const pVec& posB, const pVec& pos, const float t
 }
 
 // Over time, restore particles to initial positions
-PINLINE void PARestore_Impl(Particle_t& m, float dt, float time_left, bool restore_velocity, bool restore_rvelocity)
+PINLINE void PARestore_Impl(Particle_t& m, const float dt, const float time_left, const bool restore_velocity, const bool restore_rvelocity)
 {
     if (time_left <= 0) {
         // Already constrained; keep it there.
@@ -857,21 +781,21 @@ PINLINE void PARestore_Impl(Particle_t& m, float dt, float time_left, bool resto
 }
 
 // Kill particles with positions on wrong side of the specified domain
-PINLINE void PASink_Impl(Particle_t& m, float dt, bool kill_inside, pDomain position)
+PINLINE void PASink_Impl(Particle_t& m, const float dt, const bool kill_inside, const std::shared_ptr<pDomain> position)
 {
     // Remove if inside/outside flag matches object's flag
-    if (!(position.Within(m.pos) ^ kill_inside)) { m.tmp0 = 1.0f; }
+    if (!(position->Within(m.pos) ^ kill_inside)) { m.tmp0 = 1.0f; }
 }
 
 // Kill particles with velocities on wrong side of the specified domain
-PINLINE void PASinkVelocity_Impl(Particle_t& m, float dt, bool kill_inside, pDomain velocity)
+PINLINE void PASinkVelocity_Impl(Particle_t& m, const float dt, const bool kill_inside, const std::shared_ptr<pDomain> velocity)
 {
     // Remove if inside/outside flag matches object's flag
-    if (!(velocity.Within(m.vel) ^ kill_inside)) { m.tmp0 = 1.0f; }
+    if (!(velocity->Within(m.vel) ^ kill_inside)) { m.tmp0 = 1.0f; }
 }
 
 // Sort the particles by their projection onto the Look vector
-PINLINE void PASort_Impl(Particle_t& m, float dt, pVec Eye, pVec Look, bool front_to_back, bool clamp_negative)
+PINLINE void PASort_Impl(Particle_t& m, const float dt, const pVec Eye, const pVec Look, const bool front_to_back, const bool clamp_negative)
 {
 #if 0
  // XXX Need access to all particles.
@@ -905,16 +829,16 @@ PINLINE size_t SourceQuantity(const float particle_rate, const float dt, const s
 }
 
 // Create a single particle
-PINLINE void PASource_Impl(Particle_t& m, const float dt, const pDomain& position, const pSourceState& SrcSt)
+PINLINE void PASource_Impl(Particle_t& m, const float dt, const std::shared_ptr<pDomain> position, const pSourceState& SrcSt)
 {
-    m.pos = position.Generate();
-    m.posB = SrcSt.vertexB_tracks_ ? m.pos : SrcSt.VertexB_.Generate();
-    m.up = SrcSt.Up_.Generate();
-    m.vel = SrcSt.Vel_.Generate();
-    m.rvel = SrcSt.RotVel_.Generate();
-    m.size = SrcSt.Size_.Generate();
-    m.color = SrcSt.Color_.Generate();
-    m.alpha = SrcSt.Alpha_.Generate().x();
+    m.pos = position->Generate();
+    m.posB = SrcSt.vertexB_tracks_ ? m.pos : SrcSt.VertexB_->Generate();
+    m.up = SrcSt.Up_->Generate();
+    m.vel = SrcSt.Vel_->Generate();
+    m.rvel = SrcSt.RotVel_->Generate();
+    m.size = SrcSt.Size_->Generate();
+    m.color = SrcSt.Color_->Generate();
+    m.alpha = SrcSt.Alpha_->Generate().x();
     m.age = SrcSt.Age_ + pNRandf(SrcSt.AgeSigma_);
     m.mass = SrcSt.Mass_;
     m.tmp0 = 0;
@@ -922,10 +846,11 @@ PINLINE void PASource_Impl(Particle_t& m, const float dt, const pDomain& positio
 }
 
 // Clamp particle velocities to the given range
-PINLINE void PASpeedClamp_Impl(Particle_t& m, float dt, float min_speed, float max_speed)
+PINLINE void PASpeedClamp_Impl(Particle_t& m, const float dt, const float min_speed, const float max_speed)
 {
     float min_sqr = fsqr(min_speed);
     float max_sqr = fsqr(max_speed);
+    // ^^^ Above values do not vary per particle.
 
     float sSqr = m.vel.lenSqr();
     if (sSqr < min_sqr && sSqr) {
@@ -939,49 +864,53 @@ PINLINE void PASpeedClamp_Impl(Particle_t& m, float dt, float min_speed, float m
 
 // Change color of all particles toward the specified color
 
-PINLINE void PATargetColor_Impl(Particle_t& m, float dt, pVec color, float alpha, float scale)
+PINLINE void PATargetColor_Impl(Particle_t& m, const float dt, const pVec color, const float alpha, const float scale)
 {
     float scaleFac = scale * dt;
+    // ^^^ Above values do not vary per particle.
 
     m.color += (color - m.color) * scaleFac;
     m.alpha += (alpha - m.alpha) * scaleFac;
 }
 
 // Change sizes of all particles toward the specified size
-PINLINE void PATargetSize_Impl(Particle_t& m, float dt, pVec size, pVec scale)
+PINLINE void PATargetSize_Impl(Particle_t& m, const float dt, const pVec size, const pVec scale)
 {
     pVec scaleFac = scale * dt;
+    // ^^^ Above values do not vary per particle.
 
     pVec dif = size - m.size;
     m.size += CompMult(dif, scaleFac);
 }
 
 // Change velocity of all particles toward the specified velocity
-PINLINE void PATargetVelocity_Impl(Particle_t& m, float dt, pVec velocity, float scale)
+PINLINE void PATargetVelocity_Impl(Particle_t& m, const float dt, const pVec velocity, const float scale)
 {
     float scaleFac = scale * dt;
+    // ^^^ Above values do not vary per particle.
 
     m.vel += (velocity - m.vel) * scaleFac;
 }
 
 // Change velocity of all particles toward the specified velocity
-PINLINE void PATargetRotVelocity_Impl(Particle_t& m, float dt, pVec velocity, float scale)
+PINLINE void PATargetRotVelocity_Impl(Particle_t& m, const float dt, const pVec velocity, const float scale)
 {
     float scaleFac = scale * dt;
+    // ^^^ Above values do not vary per particle.
 
     m.rvel += (velocity - m.rvel) * scaleFac;
 }
 
-PINLINE void PAVortex_Impl(Particle_t& m, float dt, pVec tip, pVec axis, float tightnessExponent, float max_radius, float inSpeed, float upSpeed,
-                           float aroundSpeed)
+// This one just rotates a particle around the axis. Amount is based on radius, magnitude, and mass.
+PINLINE void PAVortex_Impl(Particle_t& m, const float dt, const pVec tip, const pVec axis, const float tightnessExponent, const float max_radius,
+                           const float inSpeed, const float upSpeed, float aroundSpeed)
 {
     float max_radiusSqr = fsqr(max_radius);
     float axisLength = axis.length();
     float axisLengthInv = 1.0f / axisLength;
     pVec axisN = axis;
     axisN.normalize();
-
-    // This one just rotates a particle around the axis. Amount is based on radius, magnitude, and mass.
+    // ^^^ Above values do not vary per particle.
 
     // Direction to particle from base of line.
     pVec tipToPar = m.pos - tip;
