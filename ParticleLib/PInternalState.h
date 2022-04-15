@@ -8,8 +8,8 @@
 #define PInternalState_h
 
 #include "Actions.h"
+#include "Particle/pAPI.h"
 #include "ParticleGroup.h"
-#include "pAPI.h"
 
 #include <string>
 #include <vector>

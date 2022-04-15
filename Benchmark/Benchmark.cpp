@@ -144,6 +144,15 @@ void TestDomains()
     std::cerr << "Done testing domains.\n";
 }
 
+int findDemoByName(char* demoName)
+{
+    for (int d = 0; d < Efx.Effects.size(); d++) {
+        if (Efx.Effects[d]->GetName() == demoName) return d;
+    }
+    EASSERT(0 && "Unknown demo name");
+    return 0;
+}
+
 static void Usage(char* program_name, char* message)
 {
     if (message) std::cerr << message << std::endl;
@@ -166,7 +175,10 @@ static void Args(int argc, char** argv)
             RemoveArgs(argc, argv, i);
         } else if (starg == "-demo") {
             if (argc <= i + 1) Usage(program, "More args");
-            demoNum = atoi(argv[i + 1]);
+            if (strlen(argv[i + 1]) <= 2)
+                demoNum = atoi(argv[i + 1]);
+            else
+                demoNum = findDemoByName(argv[i + 1]);
 
             RemoveArgs(argc, argv, i, 2);
         } else if (starg == "-test") {

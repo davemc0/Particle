@@ -9,7 +9,7 @@
 #ifndef Particle_h
 #define Particle_h
 
-#include "pVec.h"
+#include "Particle/pVec.h"
 
 namespace PAPI {
 
@@ -48,6 +48,8 @@ struct Particle_t {
     // For sorting.
     bool operator<(const Particle_t& P) const { return tmp0 < P.tmp0; }
 };
+
+static_assert(sizeof(Particle_t) == 32 * 4, "Unexpected change in Particle_t size!");
 }; // namespace PAPI
 
 #endif

@@ -8,7 +8,7 @@
 #ifndef particle_api_h
 #define particle_api_h
 
-#include "pSourceState.h"
+#include "Particle/pSourceState.h"
 
 #include <string>
 

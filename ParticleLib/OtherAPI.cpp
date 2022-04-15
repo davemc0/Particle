@@ -5,7 +5,7 @@
 /// This file implements the API calls that are not particle actions.
 
 #include "PInternalState.h"
-#include "pAPI.h"
+#include "Particle/pAPI.h"
 
 #include <string>
 

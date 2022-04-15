@@ -7,8 +7,8 @@
 #ifndef pdomain_h
 #define pdomain_h
 
-#include "pError.h"
-#include "pVec.h"
+#include "Particle/pError.h"
+#include "Particle/pVec.h"
 
 #include <string>
 #include <vector>
