@@ -7,7 +7,7 @@
 #ifndef pSourceState_h
 #define pSourceState_h
 
-#include "pDomain.h"
+#include "Particle/pDomain.h"
 
 namespace PAPI {
 

@@ -23,7 +23,7 @@
 #define implactions_h
 
 #include "Particle.h"
-#include "pSourceState.h"
+#include "Particle/pSourceState.h"
 
 using namespace PAPI;
 
@@ -768,7 +768,7 @@ PINLINE void PARandomRotVelocity_Impl(Particle_t& m, const float dt, const std::
 }
 
 // Figure new velocity at next timestep
-PINLINE void Restore(pVec& vel, const pVec& posB, const pVec& pos, const float t, const float dtSqr, const float ttInv6dt, const float tttInv3dtSqr)
+PINLINE void doRestore(pVec& vel, const pVec& posB, const pVec& pos, const float t, const float dtSqr, const float ttInv6dt, const float tttInv3dtSqr)
 {
     pVec b = (vel * -0.6667f * t + posB - pos) * ttInv6dt;
     pVec a = (vel * t - posB - posB + pos + pos) * tttInv3dtSqr;
@@ -794,8 +794,8 @@ PINLINE void PARestore_Impl(Particle_t& m, const float dt, const float time_left
         float ttInv6dt = dt * 6.0f / fsqr(t);
         float tttInv3dtSqr = dtSqr * 3.0f / (t * t * t);
 
-        if (restore_velocity) Restore(m.vel, m.posB, m.pos, t, dtSqr, ttInv6dt, tttInv3dtSqr);
-        if (restore_rvelocity) Restore(m.rvel, m.upB, m.up, t, dtSqr, ttInv6dt, tttInv3dtSqr);
+        if (restore_velocity) doRestore(m.vel, m.posB, m.pos, t, dtSqr, ttInv6dt, tttInv3dtSqr);
+        if (restore_rvelocity) doRestore(m.rvel, m.upB, m.up, t, dtSqr, ttInv6dt, tttInv3dtSqr);
     }
 }
 

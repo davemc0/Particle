@@ -7,7 +7,7 @@
 #ifndef impldomains_h
 #define impldomains_h
 
-#include "pDomain.h"
+#include "Particle/pDomain.h"
 
 namespace PAPI {
 

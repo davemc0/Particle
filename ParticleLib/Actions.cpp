@@ -10,11 +10,10 @@
 #include "PInternalState.h"
 
 #include <algorithm>
-#include <typeinfo>
-// For dumping errors
 #include <execution>
 #include <sstream>
 #include <string>
+#include <typeinfo>
 
 // Remove these if not C++17.
 // #define P_EXPOL std::execution::par

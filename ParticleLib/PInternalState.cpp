@@ -12,7 +12,7 @@
 
 #include "PInternalState.h"
 
-#include "pAPI.h"
+#include "Particle/pAPI.h"
 
 #include <typeinfo>
 

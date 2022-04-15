@@ -42,7 +42,7 @@ target_link_options(Particle INTERFACE /LTCG)
 
 target_include_directories(Particle
     PRIVATE "."
-    PRIVATE "../Particle"
+    PRIVATE ".."
 )
 
 # Tell users of the library what they need to include to use it

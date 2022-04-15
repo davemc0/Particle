@@ -1130,5 +1130,6 @@ void EffectsManager::MakeEffects()
 
 void EffectsManager::MakeActionLists(ExecMode_e EM)
 {
-    for (auto e : Effects) { e->CreateList(EM, *this); }
+    if (EM != Immediate_Mode)
+        for (auto e : Effects) { e->CreateList(EM, *this); }
 }
