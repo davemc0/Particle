@@ -19,6 +19,7 @@ set(LIB_SOURCES
 
 set(API_SOURCES
     ../Particle/pAPI.h
+    ../Particle/pInlineAPI.h
     ../Particle/pDomain.h
     ../Particle/pError.h
     ../Particle/pSourceState.h

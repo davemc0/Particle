@@ -42,11 +42,10 @@ void PContextActions_t::Bounce(const float friction, const float resilience, con
     PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
-void PContextActions_t::Callback(P_PARTICLE_CALLBACK_ACTION callbackFunc, const std::string& callbackStr, const pdata_t data)
+void PContextActions_t::Callback(P_PARTICLE_CALLBACK_ACTION callbackFunc, const pdata_t data)
 {
     PACallback* A = new PACallback;
     A->callbackFunc = callbackFunc;
-    A->callbackStr = callbackStr;
     A->Data = data;
 
     A->SetKillsParticles(false);
@@ -68,13 +67,13 @@ void PContextActions_t::CopyVertexB(const bool copy_pos, const bool copy_vel)
     PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
-void PContextActions_t::Damping(const pVec& damping, const float vlow, const float vhigh)
+void PContextActions_t::Damping(const pVec& damping, const float min_vel, const float max_vel)
 {
     PADamping* A = new PADamping;
 
     A->damping = damping;
-    A->vlow = vlow;
-    A->vhigh = vhigh;
+    A->min_vel = min_vel;
+    A->max_vel = max_vel;
 
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
@@ -82,13 +81,13 @@ void PContextActions_t::Damping(const pVec& damping, const float vlow, const flo
     PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
-void PContextActions_t::RotDamping(const pVec& damping, const float vlow, const float vhigh)
+void PContextActions_t::RotDamping(const pVec& damping, const float min_vel, const float max_vel)
 {
     PARotDamping* A = new PARotDamping;
 
     A->damping = damping;
-    A->vlow = vlow;
-    A->vhigh = vhigh;
+    A->min_vel = min_vel;
+    A->max_vel = max_vel;
 
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);

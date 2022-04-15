@@ -88,7 +88,6 @@ struct PABounce : public PActionBase {
 
 struct PACallback : public PActionBase {
     P_PARTICLE_CALLBACK_ACTION callbackFunc;
-    std::string callbackStr;
     pdata_t Data; // The action list number to call
 
     ACTION_DECLS;
@@ -108,17 +107,17 @@ struct PACopyVertexB : public PActionBase {
 };
 
 struct PADamping : public PActionBase {
-    pVec damping; // Damping constant applied to velocity
-    float vlow;   // Apply damping only if velocity is within vlow and vhigh
-    float vhigh;
+    pVec damping;  // Damping constant applied to velocity
+    float min_vel; // Apply damping only if velocity is within min_vel and max_vel
+    float max_vel;
 
     ACTION_DECLS;
 };
 
 struct PARotDamping : public PActionBase {
-    pVec damping; // Damping constant applied to velocity
-    float vlow;   // Apply damping only if velocity is within vlow and vhigh
-    float vhigh;
+    pVec damping;  // Damping constant applied to velocity
+    float min_vel; // Apply damping only if velocity is within min_vel and max_vel
+    float max_vel;
 
     ACTION_DECLS;
 };

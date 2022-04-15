@@ -39,7 +39,6 @@ void Report()
 }
 
 // Optimize the working set size
-// 3 MB works for Q6300.
 void RunBenchmarkCache()
 {
     Efx.particleHandle = P.GenParticleGroups(1, Efx.maxParticles); // Make a particle group

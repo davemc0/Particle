@@ -233,13 +233,13 @@ void PACopyVertexB::Execute(ParticleGroup& group, ParticleList::iterator ibegin,
 // Dampen velocities
 void PADamping::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PADamping_Impl(m, dt, damping, vlow, vhigh); });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PADamping_Impl(m, dt, damping, min_vel, max_vel); });
 }
 
 // Dampen rotational velocities
 void PARotDamping::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PARotDamping_Impl(m, dt, damping, vlow, vhigh); });
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PARotDamping_Impl(m, dt, damping, min_vel, max_vel); });
 }
 
 // Exert force on each particle away from explosion center

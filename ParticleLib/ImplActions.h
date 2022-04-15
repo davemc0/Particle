@@ -517,29 +517,29 @@ PINLINE void PACopyVertexB_Impl(Particle_t& m, const float dt, const bool copy_p
 }
 
 // Dampen velocities
-PINLINE void PADamping_Impl(Particle_t& m, const float dt, const pVec damping, const float vlow, const float vhigh)
+PINLINE void PADamping_Impl(Particle_t& m, const float dt, const pVec damping, const float min_vel, const float max_vel)
 {
     pVec scale(pVec(1.f) - ((pVec(1.f) - damping) * dt)); // This is important if dt is != 1.
-    float vlowSqr = fsqr(vlow);
-    float vhighSqr = fsqr(vhigh);
+    float min_vel_sqr = fsqr(min_vel);
+    float max_vel_sqr = fsqr(max_vel);
     // ^^^ Above values do not vary per particle.
 
     float vSqr = m.vel.lenSqr();
 
-    if (vSqr >= vlowSqr && vSqr <= vhighSqr) { m.vel = CompMult(m.vel, scale); }
+    if (vSqr >= min_vel_sqr && vSqr <= max_vel_sqr) { m.vel = CompMult(m.vel, scale); }
 }
 
 // Dampen rotational velocities
-PINLINE void PARotDamping_Impl(Particle_t& m, const float dt, const pVec damping, const float vlow, const float vhigh)
+PINLINE void PARotDamping_Impl(Particle_t& m, const float dt, const pVec damping, const float min_vel, const float max_vel)
 {
     pVec scale(pVec(1.f) - ((pVec(1.f) - damping) * dt)); // This is important if dt is != 1.
-    float vlowSqr = fsqr(vlow);
-    float vhighSqr = fsqr(vhigh);
+    float min_vel_sqr = fsqr(min_vel);
+    float max_vel_sqr = fsqr(max_vel);
     // ^^^ Above values do not vary per particle.
 
     float vSqr = m.rvel.lenSqr();
 
-    if (vSqr >= vlowSqr && vSqr <= vhighSqr) { m.rvel = CompMult(m.rvel, scale); }
+    if (vSqr >= min_vel_sqr && vSqr <= max_vel_sqr) { m.rvel = CompMult(m.rvel, scale); }
 }
 
 // Exert force on each particle away from explosion center

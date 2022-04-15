@@ -298,6 +298,9 @@ void PContextParticleGroup_t::DeathCallback(P_PARTICLE_CALLBACK callback, pdata_
     PS->PGroups[PS->pgroup_id].SetDeathCallback(callback, data);
 }
 
-/// Set the number of particles that fit in the CPU's cache
+// Set the number of particles that fit in the CPU's cache
 void PContextParticleGroup_t::SetWorkingSetSize(const int set_size_bytes) { PS->PWorkingSetSize = set_size_bytes / sizeof(Particle_t); }
+
+ParticleList::iterator PContextInlineActions_t::PGbegin() { return PS->PGroups[PS->pgroup_id].begin(); }
+ParticleList::iterator PContextInlineActions_t::PGend() { return PS->PGroups[PS->pgroup_id].end(); }
 }; // namespace PAPI
