@@ -12,6 +12,7 @@
 
 // The following header files are part of DMcTools.
 // DMcTools is part of the same source distribution as the Particle API.
+#include "Image/tImage.h"
 #include "Math/Random.h"
 #include "Util/Assert.h"
 #include "Util/StatTimer.h"
