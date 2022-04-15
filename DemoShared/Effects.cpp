@@ -1060,6 +1060,12 @@ EffectsManager::EffectsManager(ParticleContext_t& P_, int mp) : P(P_)
     MakeEffects();
 }
 
+void EffectsManager::SetPhoto(uc3Image* Im)
+{
+    Img = Im;
+    EASSERT(Img != NULL && Img->size() > 0);
+}
+
 // EM specifies how you want to run (for different benchmark purposes, mostly).
 // Allowed values are Immediate_Mode, Internal_Mode, and Compiled_Mode.
 // Set demoNum to -2 to let NextEffect choose the next demo.

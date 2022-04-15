@@ -1,7 +1,6 @@
 #ifndef Effects_h
 #define Effects_h
 
-#include "Image/tImage.h"
 #include "Particle/pAPI.h"
 
 #include <memory>
@@ -295,6 +294,11 @@ struct Waterfall : public Effect {
 
 //////////////////////////////////////////////////////////////////////////////
 
+template <typename, int> class tPixel;
+typedef tPixel<unsigned char, 3> uc3Pixel;
+template <typename> class tImage;
+typedef tImage<uc3Pixel> uc3Image; // Super lame to have to forward declare a uc3Image this way.
+
 class EffectsManager {
 public:
     uc3Image* Img; // For the PhotoShape effect
@@ -312,11 +316,7 @@ public:
     float demoRunSec;              // Seconds to run each demo before randomly changing
     int particleHandle;            // The handle of the particle group
 
-    void SetPhoto(uc3Image* Im)
-    {
-        Img = Im;
-        EASSERT(Img != NULL && Img->size() > 0);
-    }
+    void SetPhoto(uc3Image* Im);
     const std::string GetCurEffectName() { return Demo->GetName(); }
 
     EffectsManager(ParticleContext_t& P_, int mp = 100);

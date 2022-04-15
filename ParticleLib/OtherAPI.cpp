@@ -299,11 +299,5 @@ void PContextParticleGroup_t::DeathCallback(P_PARTICLE_CALLBACK callback, pdata_
 }
 
 /// Set the number of particles that fit in the CPU's cache
-///
-/// You probably don't need to call this function. It is the number of bytes in the working set. Most action lists apply several actions to the working set of
-/// particles, then load the next working set of particles and apply the same actions to them. This allows particles to stay resident in the CPU's cache for a
-/// longer period of time, potentially increasing performance dramatically.
-///
-/// You specify the working set size in bytes. The default is 1.75 MB.
 void PContextParticleGroup_t::SetWorkingSetSize(const int set_size_bytes) { PS->PWorkingSetSize = set_size_bytes / sizeof(Particle_t); }
 }; // namespace PAPI
