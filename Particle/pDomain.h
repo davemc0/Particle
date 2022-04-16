@@ -7,6 +7,7 @@
 #ifndef pdomain_h
 #define pdomain_h
 
+#include "Particle/pDeclarations.h"
 #include "Particle/pError.h"
 #include "Particle/pVec.h"
 

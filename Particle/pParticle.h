@@ -28,7 +28,7 @@ struct Particle_t {
     float age;
     float mass;
     float tmp0;   // These temporaries are used as padding and for sorting.
-    pdata_t data; // Arbitrary data for user
+    pdata_t data; // Arbitrary data for user callbacks
 
     inline Particle_t() {}
 

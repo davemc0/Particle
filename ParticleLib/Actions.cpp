@@ -2,12 +2,14 @@
 ///
 /// Copyright 1997-2007, 2022 by David K. McAllister
 ///
-/// This file implements the dynamics of particle actions.
+/// The legacy implementation of dynamics of particle actions are here.
+/// Each action has its own loop over all the particles.
+/// This is inefficient, both in terms of minimal opportunities for code optimization, and in terms of memory access.
 
 #include "Actions.h"
 
-#include "ImplActions.h"
 #include "PInternalState.h"
+#include "Particle/pActionImpls.h"
 
 #include <algorithm>
 #include <execution>
@@ -124,21 +126,21 @@ void PAAvoid::Exec(const PDDisc& dom, ParticleGroup& group, ParticleList::iterat
 
 void PAAvoid::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    // Can build generic bounce function that works on any domain by using the Within function and a normal.
+    // Can build generic avoid function that works on any domain by using the Within function and a normal.
 
     switch (position->Which) {
-    // case PDUnion_e: Exec(*dynamic_cast<const PDUnion_e*>(position.get()), group, ibegin, iend); return;
-    // case PDPoint_e: Exec(*dynamic_cast<const PDPoint_e*>(position.get()), group, ibegin, iend); return;
+    // case PDBlob_e: Exec(*dynamic_cast<const PDBlob_e*>(position.get()), group, ibegin, iend); return;
+    // case PDBox_e: Exec(*dynamic_cast<const PDBox_e*>(position.get()), group, ibegin, iend); return;
+    // case PDCone_e: Exec(*dynamic_cast<const PDCone_e*>(position.get()), group, ibegin, iend); return;
+    // case PDCylinder_e: Exec(*dynamic_cast<const PDCylinder_e*>(position.get()), group, ibegin, iend); return;
     // case PDLine_e: Exec(*dynamic_cast<const PDLine_e*>(position.get()), group, ibegin, iend); return;
-    case PDTriangle_e: Exec(*dynamic_cast<const PDTriangle*>(position.get()), group, ibegin, iend); return;
-    case PDRectangle_e: Exec(*dynamic_cast<const PDRectangle*>(position.get()), group, ibegin, iend); return;
+    // case PDPoint_e: Exec(*dynamic_cast<const PDPoint_e*>(position.get()), group, ibegin, iend); return;
+    // case PDUnion_e: Exec(*dynamic_cast<const PDUnion_e*>(position.get()), group, ibegin, iend); return;
     case PDDisc_e: Exec(*dynamic_cast<const PDDisc*>(position.get()), group, ibegin, iend); return;
     case PDPlane_e: Exec(*dynamic_cast<const PDPlane*>(position.get()), group, ibegin, iend); return;
-    // case PDBox_e: Exec(*dynamic_cast<const PDBox_e*>(position.get()), group, ibegin, iend); return;
-    // case PDCylinder_e: Exec(*dynamic_cast<const PDCylinder_e*>(position.get()), group, ibegin, iend); return;
-    // case PDCone_e: Exec(*dynamic_cast<const PDCone_e*>(position.get()), group, ibegin, iend); return;
+    case PDRectangle_e: Exec(*dynamic_cast<const PDRectangle*>(position.get()), group, ibegin, iend); return;
     case PDSphere_e: Exec(*dynamic_cast<const PDSphere*>(position.get()), group, ibegin, iend); return;
-    // case PDBlob_e: Exec(*dynamic_cast<const PDBlob_e*>(position.get()), group, ibegin, iend); return;
+    case PDTriangle_e: Exec(*dynamic_cast<const PDTriangle*>(position.get()), group, ibegin, iend); return;
     default: throw PErrNotImplemented(std::string("Avoid not implemented for domain ") + std::string(typeid(position.get()).name()));
     }
 }
@@ -213,17 +215,6 @@ void PACallActionList::Execute(ParticleGroup& group, ParticleList::iterator ibeg
     PS->ExecuteActionList(PS->ALists[action_list_num]);
 }
 
-void PACallback::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
-{
-    if (callbackFunc == NULL) return;
-
-    // TODO: Can we parallelize this? Should we let the app specify whether we can?
-    for (ParticleList::iterator it = ibegin; it != iend; it++) {
-        Particle_t& m = (*it);
-        (*callbackFunc)(m, Data, dt);
-    }
-}
-
 // Set the secondary position and velocity from current.
 void PACopyVertexB::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
@@ -248,61 +239,6 @@ void PAExplosion::Execute(ParticleGroup& group, ParticleList::iterator ibegin, P
     std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PAExplosion_Impl(m, dt, center, radius, magnitude, stdev, epsilon); });
 }
 
-// Follow the next particle in the list
-void PAFollow::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
-{
-    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
-
-    float magdt = magnitude * dt;
-    float max_radiusSqr = fsqr(max_radius);
-
-    if (group.size() < 2) return;
-
-    ParticleList::iterator end = iend;
-    end--;
-
-    // TODO: Parallelize this
-    for (ParticleList::iterator it = ibegin; it != end; it++) {
-        Particle_t& m = (*it);
-        ParticleList::iterator next = it;
-        next++;
-
-        // Accelerate toward the particle after me in the list.
-        pVec toHim((*next).pos - m.pos); // toHim = p1 - p0
-        float toHimlenSqr = toHim.lenSqr();
-
-        if (toHimlenSqr < max_radiusSqr) {
-            // Compute force exerted between the two bodies
-            m.vel += toHim * (magdt / (sqrtf(toHimlenSqr) * (toHimlenSqr + epsilon)));
-        }
-    }
-}
-
-// Inter-particle gravitation
-void PAGravitate::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
-{
-    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
-
-    float magdt = magnitude * dt;
-    float max_radiusSqr = fsqr(max_radius);
-
-    std::for_each(P_EXPOLP, ibegin, iend, [&](Particle_t& m) {
-        // Add interactions with other particles
-        for (ParticleList::iterator j = ibegin; j != iend; ++j) {
-            Particle_t& mj = (*j);
-
-            pVec toHim(mj.pos - m.pos); // toHim = p1 - p0
-            float toHimlenSqr = toHim.lenSqr();
-            if (toHimlenSqr > 0.f && toHimlenSqr < max_radiusSqr) {
-                // Compute force exerted between the two bodies
-                pVec acc(toHim * (magdt / (sqrtf(toHimlenSqr) * (toHimlenSqr + epsilon))));
-
-                m.vel += acc;
-            }
-        }
-    });
-}
-
 // Acceleration in a constant direction
 void PAGravity::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
@@ -313,76 +249,6 @@ void PAGravity::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Par
 void PAJet::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
     std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PAJet_Impl(m, dt, dom, acc); });
-}
-
-// Get rid of older particles
-void PAKillOld::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
-{
-    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
-
-    // Must traverse list carefully so Remove will work
-    // TODO: Parallelize this. Perhaps use a partition primitive.
-    for (ParticleList::iterator it = ibegin; it != iend;) {
-        Particle_t& m = (*it);
-
-        if (!((m.age < age_limit) ^ kill_less_than)) {
-            it = group.Remove(it);
-            iend = group.end();
-        } else
-            it++;
-    }
-}
-
-// Match velocity to near neighbors
-void PAMatchVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
-{
-    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
-
-    float magdt = magnitude * dt;
-    float max_radiusSqr = fsqr(max_radius);
-
-    std::for_each(P_EXPOLP, ibegin, iend, [&](Particle_t& m) {
-        // Add interactions with other particles
-        for (ParticleList::iterator j = ibegin; j != iend; ++j) {
-            Particle_t& mj = (*j);
-
-            pVec toHim(mj.pos - m.pos); // toHim = p1 - p0
-            float toHimlenSqr = toHim.lenSqr();
-            if (toHimlenSqr > 0.f && toHimlenSqr < max_radiusSqr) {
-                // Compute force exerted between the two bodies
-                pVec veltoHim(mj.vel - m.vel);
-                pVec acc(veltoHim * (magdt / (toHimlenSqr + epsilon)));
-
-                m.vel += acc;
-            }
-        }
-    });
-}
-
-// Match rotational velocity to near neighbors
-void PAMatchRotVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
-{
-    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
-
-    float magdt = magnitude * dt;
-    float max_radiusSqr = fsqr(max_radius);
-
-    std::for_each(P_EXPOLP, ibegin, iend, [&](Particle_t& m) {
-        // Add interactions with other particles
-        for (ParticleList::iterator j = ibegin; j != iend; ++j) {
-            Particle_t& mj = (*j);
-
-            pVec toHim(mj.pos - m.pos); // toHim = p1 - p0
-            float toHimlenSqr = toHim.lenSqr();
-            if (toHimlenSqr > 0.f && toHimlenSqr < max_radiusSqr) {
-                // Compute force exerted between the two bodies
-                pVec rveltoHim(mj.rvel - m.rvel);
-                pVec acc(rveltoHim * (magdt / (toHimlenSqr + epsilon)));
-
-                m.rvel += acc;
-            }
-        }
-    });
 }
 
 // Apply the particles' velocities to their positions, and age the particles
@@ -433,93 +299,6 @@ void PARestore::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Par
     std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PARestore_Impl(m, dt, time_left, restore_velocity, restore_rvelocity); });
 }
 
-// Kill particles with positions on wrong side of the specified domain
-void PASink::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
-{
-    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
-
-    // Must traverse list carefully so Remove will work
-    // TODO: Parallelize this!
-    for (ParticleList::iterator it = ibegin; it != iend;) {
-        Particle_t& m = (*it);
-
-        // Remove if inside/outside flag matches object's flag
-        if (!(position->Within(m.pos) ^ kill_inside)) {
-            it = group.Remove(it);
-            iend = group.end();
-        } else
-            it++;
-    }
-}
-
-// Kill particles with velocities on wrong side of the specified domain
-void PASinkVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
-{
-    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
-
-    // Must traverse list carefully so Remove will work
-    // TODO: Parallelize this!
-    for (ParticleList::iterator it = ibegin; it != iend;) {
-        Particle_t& m = (*it);
-
-        // Remove if inside/outside flag matches object's flag
-        if (!(velocity->Within(m.vel) ^ kill_inside)) {
-            it = group.Remove(it);
-            iend = group.end();
-        } else
-            it++;
-    }
-}
-
-// Sort the particles by their projection onto the Look vector
-void PASort::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
-{
-    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
-
-    float Scale = front_to_back ? -1.0f : 1.0f;
-
-    // First compute projection of particle onto view vector
-    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) {
-        pVec ToP = m.pos - Eye;
-        m.tmp0 = dot(ToP, Look) * Scale;
-        if (clamp_negative && m.tmp0 < 0) m.tmp0 = 0.0f;
-    });
-
-    std::sort(P_EXPOL, ibegin, iend);
-}
-
-// Randomly add particles to the system
-void PASource::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
-{
-    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
-
-    size_t rate = size_t(floor(particle_rate * dt));
-
-    // Dither the fractional particle in time.
-    if (pRandf() < particle_rate * dt - float(rate)) rate++;
-
-    // Don't emit more than it can hold.
-    if (group.size() + rate > group.GetMaxParticles()) rate = group.GetMaxParticles() - group.size();
-
-    for (size_t i = 0; i < rate; i++) {
-        Particle_t P;
-
-        P.pos = position->Generate();
-        P.posB = SrcSt.vertexB_tracks_ ? P.pos : SrcSt.VertexB_->Generate();
-        P.up = SrcSt.Up_->Generate();
-        P.vel = SrcSt.Vel_->Generate();
-        P.rvel = SrcSt.RotVel_->Generate();
-        P.size = SrcSt.Size_->Generate();
-        P.color = SrcSt.Color_->Generate();
-        P.alpha = SrcSt.Alpha_->Generate().x();
-        P.age = SrcSt.Age_ + pNRandf(SrcSt.AgeSigma_);
-        P.mass = SrcSt.Mass_;
-        P.data = SrcSt.Data_;
-
-        group.Add(P);
-    }
-}
-
 // Clamp particle velocities to the given range
 void PASpeedClamp::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
@@ -553,5 +332,138 @@ void PATargetRotVelocity::Execute(ParticleGroup& group, ParticleList::iterator i
 void PAVortex::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
     std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PAVortex_Impl(m, dt, tip, axis, tightnessExponent, max_radius, inSpeed, upSpeed, aroundSpeed); });
+}
+
+//////////////////////////////////////////////////////////////////
+// Inter-particle actions
+
+// Follow the next particle in the list
+void PAFollow::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
+{
+    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
+
+    if (group.size() < 2) return;
+
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PAFollow_Impl(m, dt, magnitude, epsilon, max_radius, &*ibegin, &*iend); });
+}
+
+// Inter-particle gravitation
+void PAGravitate::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
+{
+    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
+
+    if (group.size() < 2) return;
+
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PAGravitate_Impl(m, dt, magnitude, epsilon, max_radius, &*ibegin, &*iend); });
+}
+
+// Match velocity to near neighbors
+void PAMatchVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
+{
+    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
+
+    if (group.size() < 2) return;
+
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PAMatchVelocity_Impl(m, dt, magnitude, epsilon, max_radius, &*ibegin, &*iend); });
+}
+
+// Match rotational velocity to near neighbors
+void PAMatchRotVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
+{
+    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
+
+    if (group.size() < 2) return;
+
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PAMatchRotVelocity_Impl(m, dt, magnitude, epsilon, max_radius, &*ibegin, &*iend); });
+}
+
+//////////////////////////////////////////////////////////////////
+// Other exceptional actions
+
+void PACallback::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
+{
+    if (callbackFunc == NULL) return;
+
+    // TODO: Can we parallelize this? Should we let the app specify whether to call back in parallel?
+    for (ParticleList::iterator it = ibegin; it != iend; it++) {
+        Particle_t& m = (*it);
+        (*callbackFunc)(m, Data, dt);
+    }
+}
+
+// Get rid of older particles
+void PAKillOld::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
+{
+    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
+
+    // Must traverse list carefully so Remove will work
+    for (ParticleList::iterator it = ibegin; it != iend;) {
+        Particle_t& m = (*it);
+        PAKillOld_Impl(m, dt, age_limit, kill_less_than);
+        if (m.tmp0 == P_MAXFLOAT) {
+            it = group.Remove(it);
+            iend = group.end();
+        } else
+            ++it;
+    }
+}
+
+// Kill particles with positions on wrong side of the specified domain
+void PASink::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
+{
+    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
+
+    // Must traverse list carefully so Remove will work
+    // TODO: Would it be faster to parallelize the loop over the predicate and then do a partition?
+    for (ParticleList::iterator it = ibegin; it != iend;) {
+        Particle_t& m = (*it);
+        PASink_Impl(m, dt, kill_inside, position);
+        if (m.tmp0 == P_MAXFLOAT) {
+            it = group.Remove(it);
+            iend = group.end();
+        } else
+            ++it;
+    }
+}
+
+// Kill particles with velocities on wrong side of the specified domain
+void PASinkVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
+{
+    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
+
+    // Must traverse list carefully so Remove will work
+    for (ParticleList::iterator it = ibegin; it != iend;) {
+        Particle_t& m = (*it);
+        PASinkVelocity_Impl(m, dt, kill_inside, velocity);
+        if (m.tmp0 == P_MAXFLOAT) {
+            it = group.Remove(it);
+            iend = group.end();
+        } else
+            ++it;
+    }
+}
+
+// Sort the particles by their projection onto the Look vector
+void PASort::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
+{
+    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
+
+    std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PASort_Impl(m, dt, Eye, Look, front_to_back, clamp_negative); });
+
+    std::sort(P_EXPOL, ibegin, iend);
+}
+
+// Randomly add particles to the system
+void PASource::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
+{
+    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
+
+    size_t rate = SourceQuantity(particle_rate, dt, group.size(), group.GetMaxParticles());
+
+    for (size_t i = 0; i < rate; i++) {
+        Particle_t m;
+        PASource_Impl(m, dt, position, SrcSt);
+        group.Add(m);
+    }
 }
 }; // namespace PAPI

@@ -1,8 +1,6 @@
 #include "Effects.h"
 
 #include "Particle/pAPI.h"
-// TODO: Make an interface to the implementation API
-#include "ParticleLib/ImplActions.h"
 
 using namespace PAPI;
 
@@ -529,13 +527,11 @@ void Fountain::DoActions(EffectsManager& Efx)
     P.Bounce(0.f, 0.5f, 0.f, Render(PDDisc(pVec(0, 0, 1.f), pVec(0, 0, 1.f), 5)));
     P.Move(true, false);
 #else
-    // std::for_each(std::execution::par_unseq, P.PGbegin(), P.PGend(), [&](Particle_t& m) {
     P.ParticleLoop(std::execution::par_unseq, [&](Particle_t& m) {
-        P.IGravity(Efx.GravityVec);
-        P.IBounce(0.f, 0.5f, 0.f, PDDisc(pVec(0, 0, 1.f), pVec(0, 0, 1.f), 5));
-        P.IMove(true, false);
+        P.I.Gravity(m, Efx.GravityVec);
+        P.I.Bounce(m, 0.f, 0.5f, 0.f, PDDisc(pVec(0, 0, 1.f), pVec(0, 0, 1.f), 5));
+        P.I.Move(m, true, false);
     });
-
 #endif
 
     P.Sink(false, Render(PDPlane(pVec(0, 0, -3), pVec(0, 0, 1))));
@@ -870,7 +866,7 @@ void Shower::StartEffect(EffectsManager& Efx)
     PrimType = PRIM_LINE;
     WhiteBackground = true;
     DepthTest = true;
-    MotionBlur = false;
+    MotionBlur = true;
     SortParticles = false;
 }
 

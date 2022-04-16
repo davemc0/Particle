@@ -21,15 +21,8 @@
 #endif
 
 namespace PAPI {
-typedef unsigned int pdata_t;
-
 const float P_SQRT2PI = 2.506628274631000502415765284811045253006f;
 const float P_ONEOVERSQRT2PI = (1.f / P_SQRT2PI);
-
-///< These are magic numbers that tell the action list compiler to get the value at runtime instead of action list compilation time.
-#define P_VARYING_FLOAT -340282326356119256160033759537265639424.0f
-#define P_VARYING_INT 0x7fffffce
-#define P_VARYING_BOOL (bool)0xce
 
 PINLINE float fsqr(float f) { return f * f; }
 

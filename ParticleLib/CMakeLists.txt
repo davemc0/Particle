@@ -8,20 +8,22 @@ set(LIB_SOURCES
     Actions.cpp
     Actions.h
     ActionsAPI.cpp
-    ImplActions.h
-    ImplDomains.h
     OtherAPI.cpp
     PInternalState.cpp
     PInternalState.h
-    Particle.h
     ParticleGroup.h
 )
 
 set(API_SOURCES
     ../Particle/pAPI.h
-    ../Particle/pInlineAPI.h
+    ../Particle/pAPIContext.h
+    ../Particle/pActionDecls.h
+    ../Particle/pActionImpls.h
+    ../Particle/pDeclarations.h
     ../Particle/pDomain.h
     ../Particle/pError.h
+    ../Particle/pInlineActionsAPI.h
+    ../Particle/pParticle.h
     ../Particle/pSourceState.h
     ../Particle/pVec.h
 )

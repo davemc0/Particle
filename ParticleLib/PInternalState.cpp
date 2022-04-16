@@ -12,7 +12,7 @@
 
 #include "PInternalState.h"
 
-#include "Particle/pAPI.h"
+#include "Particle/pAPIContext.h"
 
 #include <typeinfo>
 
@@ -23,13 +23,16 @@ ParticleContext_t::ParticleContext_t()
 {
     std::shared_ptr<PInternalState_t> PSt(new PInternalState_t);
     PContextActionList_t::InternalSetup(PSt);
-    PContextActions_t::InternalSetup(PSt);
     PContextParticleGroup_t::InternalSetup(PSt);
+    PContextActions_t::InternalSetup(PSt);
+    I.InternalSetup(PSt);
 }
 
 void PContextActionList_t::InternalSetup(std::shared_ptr<PInternalState_t> St) { PS = St; }
 
 void PContextActions_t::InternalSetup(std::shared_ptr<PInternalState_t> St) { PS = St; }
+
+void PContextInlineActions_t::InternalSetup(std::shared_ptr<PInternalState_t> St) { PS = St; }
 
 void PContextParticleGroup_t::InternalSetup(std::shared_ptr<PInternalState_t> St) { PS = St; }
 
@@ -46,7 +49,7 @@ PInternalState_t::PInternalState_t()
     pgroup_id = -1;
     alist_id = -1;
 
-    PWorkingSetSize = (0x40000 / sizeof(Particle_t)); // Use 256 KB of cache.
+    PWorkingSetSize = (0x100000 / sizeof(Particle_t)); // Use 1 MB of cache.
 }
 
 // Return an index into the list of particle groups where

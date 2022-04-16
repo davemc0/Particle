@@ -6,7 +6,7 @@
 /// which are either executed or added to an action list.
 
 #include "PInternalState.h"
-#include "Particle/pAPI.h"
+#include "Particle/pAPIContext.h"
 
 namespace PAPI {
 

@@ -8,7 +8,7 @@
 #define PInternalState_h
 
 #include "Actions.h"
-#include "Particle/pAPI.h"
+#include "Particle/pAPIContext.h"
 #include "ParticleGroup.h"
 
 #include <string>
