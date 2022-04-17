@@ -42,13 +42,23 @@ void PContextActions_t::Bounce(const float friction, const float resilience, con
     PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
-void PContextActions_t::Callback(P_PARTICLE_CALLBACK_ACTION callbackFunc, const pdata_t data)
+void PContextActions_t::Callback(P_PARTICLE_CALLBACK_ACTION callbackFunc, const pdata_t call_data)
 {
     PACallback* A = new PACallback;
     A->callbackFunc = callbackFunc;
-    A->Data = data;
+    A->call_data = call_data;
 
     A->SetKillsParticles(false);
+    A->SetDoNotSegment(false);
+
+    PS->SendAction(std::shared_ptr<PActionBase>(A));
+}
+
+void PContextActions_t::CommitKills()
+{
+    PACommitKills* A = new PACommitKills;
+
+    A->SetKillsParticles(true);
     A->SetDoNotSegment(false);
 
     PS->SendAction(std::shared_ptr<PActionBase>(A));
@@ -307,11 +317,11 @@ void PContextActions_t::Restore(const float time_left, const bool vel, const boo
     PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
-void PContextActions_t::Sink(const bool kill_inside, const pDomain& dom)
+void PContextActions_t::Sink(const bool kill_inside, const pDomain& kill_pos_dom)
 {
     PASink* A = new PASink;
 
-    A->position = dom.copy();
+    A->kill_pos_dom = kill_pos_dom.copy();
     A->kill_inside = kill_inside;
 
     A->SetKillsParticles(true); // Kills.
@@ -320,11 +330,11 @@ void PContextActions_t::Sink(const bool kill_inside, const pDomain& dom)
     PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
 
-void PContextActions_t::SinkVelocity(const bool kill_inside, const pDomain& dom)
+void PContextActions_t::SinkVelocity(const bool kill_inside, const pDomain& kill_vel_dom)
 {
     PASinkVelocity* A = new PASinkVelocity;
 
-    A->velocity = dom.copy();
+    A->kill_vel_dom = kill_vel_dom.copy();
     A->kill_inside = kill_inside;
 
     A->SetKillsParticles(true); // Kills.
@@ -352,7 +362,7 @@ void PContextActions_t::Source(const float particle_rate, const pDomain& dom, co
 {
     PASource* A = new PASource;
 
-    A->position = dom.copy();
+    A->gen_pos = dom.copy();
     A->particle_rate = particle_rate;
     A->SrcSt = SrcSt;
 
@@ -459,14 +469,8 @@ void PContextActions_t::Vertex(const pVec& pos, const pSourceState& SrcSt, const
     PS->PGroups[PS->pgroup_id].Add(P);
 }
 
-void PContextActions_t::Vortex(const pVec& center,            ///< tip of the vortex
-                               const pVec& axis,              ///< the ray along the center of the vortex
-                               const float tightnessExponent, ///< like a Phong exponent that gives a curve to the vortex silhouette; 1.8 is good.
-                               const float max_radius,        ///< defines the infinite cylinder of influence of this action.
-                                                              ///< No particle further than max_radius from the axis is affected.
-                               const float inSpeed,           ///< inward acceleration of particles outside the vortex
-                               const float upSpeed,           ///< vertical acceleration of particles inside the vortex. Can be negative to counteract gravity.
-                               const float aroundSpeed)       ///< acceleration around vortex of particles inside the vortex
+void PContextActions_t::Vortex(const pVec& center, const pVec& axis, const float tightnessExponent, const float max_radius, const float inSpeed,
+                               const float upSpeed, const float aroundSpeed)
 {
     PAVortex* A = new PAVortex;
 

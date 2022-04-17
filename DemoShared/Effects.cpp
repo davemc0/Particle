@@ -526,16 +526,19 @@ void Fountain::DoActions(EffectsManager& Efx)
     P.Gravity(Efx.GravityVec);
     P.Bounce(0.f, 0.5f, 0.f, Render(PDDisc(pVec(0, 0, 1.f), pVec(0, 0, 1.f), 5)));
     P.Move(true, false);
+    P.Sink(false, PDPlane(pVec(0, 0, -3), pVec(0, 0, 1)));
+    P.SinkVelocity(true, PDSphere(pVec(0, 0, 0), 0.01));
 #else
     P.ParticleLoop(std::execution::par_unseq, [&](Particle_t& m) {
         P.I.Gravity(m, Efx.GravityVec);
         P.I.Bounce(m, 0.f, 0.5f, 0.f, PDDisc(pVec(0, 0, 1.f), pVec(0, 0, 1.f), 5));
         P.I.Move(m, true, false);
+        P.I.Sink(m, false, PDPlane(pVec(0, 0, -3), pVec(0, 0, 1)));
+        P.I.SinkVelocity(m, true, PDSphere(pVec(0, 0, 0), 0.01));
     });
-#endif
 
-    P.Sink(false, Render(PDPlane(pVec(0, 0, -3), pVec(0, 0, 1))));
-    P.SinkVelocity(true, PDSphere(pVec(0, 0, 0), 0.01));
+    P.CommitKills();
+#endif
 }
 
 void Fountain::EmitList(EffectsManager& Efx)

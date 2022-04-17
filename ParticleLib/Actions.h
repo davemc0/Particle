@@ -88,7 +88,7 @@ struct PABounce : public PActionBase {
 
 struct PACallback : public PActionBase {
     P_PARTICLE_CALLBACK_ACTION callbackFunc;
-    pdata_t Data; // The action list number to call
+    pdata_t call_data;
 
     ACTION_DECLS;
 };
@@ -99,9 +99,13 @@ struct PACallActionList : public PActionBase {
     ACTION_DECLS;
 };
 
+struct PACommitKills : public PActionBase {
+    ACTION_DECLS;
+};
+
 struct PACopyVertexB : public PActionBase {
-    bool copy_pos; // True to copy pos to posB.
-    bool copy_vel; // True to copy vel to velB.
+    bool copy_pos; // True to copy pos to posB
+    bool copy_vel; // True to copy vel to velB
 
     ACTION_DECLS;
 };
@@ -242,15 +246,15 @@ struct PARestore : public PActionBase {
 };
 
 struct PASink : public PActionBase {
-    bool kill_inside;                  // True to dispose of particles *inside* domain
-    std::shared_ptr<pDomain> position; // Disposal region
+    bool kill_inside;                      // True to dispose of particles *inside* domain
+    std::shared_ptr<pDomain> kill_pos_dom; // Disposal region
 
     ACTION_DECLS;
 };
 
 struct PASinkVelocity : public PActionBase {
-    bool kill_inside;                  // True to dispose of particles with vel *inside* domain
-    std::shared_ptr<pDomain> velocity; // Disposal region
+    bool kill_inside;                      // True to dispose of particles with vel *inside* domain
+    std::shared_ptr<pDomain> kill_vel_dom; // Disposal region
 
     ACTION_DECLS;
 };
@@ -265,9 +269,9 @@ struct PASort : public PActionBase {
 };
 
 struct PASource : public PActionBase {
-    std::shared_ptr<pDomain> position; // Choose a position in this domain
-    float particle_rate;               // Particles to generate per unit time
-    pSourceState SrcSt;                // The state needed to create a new particle
+    std::shared_ptr<pDomain> gen_pos; // Choose a position in this domain
+    float particle_rate;              // Particles to generate per unit time
+    pSourceState SrcSt;               // The state needed to create a new particle
 
     ACTION_DECLS;
 };

@@ -370,6 +370,9 @@ public:
 #include "Particle/pActionDecls.h"
 #undef PARG
 
+    /// Delete particles tagged to be killed by inline P.I.KillOld(), P.I.Sink(), and P.I.SinkVelocity()
+    void CommitKills();
+
     /// Add particles with positions in the specified domain.
     ///
     /// Adds new particles to the current particle group. The particle positions are chosen from the given domain. All the other particle
@@ -406,16 +409,20 @@ public:
                 pdata_t data = 0           ///< application data to be passed to the birth and death callbacks
     );
 
-    template <class UnaryFunction> void ParticleLoop(UnaryFunction f) { std::for_each(PGbegin(), PGend(), f); }
-    template <class ExPol, class UnaryFunction> void ParticleLoop(ExPol&& policy, UnaryFunction f) { std::for_each(policy, PGbegin(), PGend(), f); }
+    template <class UnaryFunction> void ParticleLoop(UnaryFunction f)
+    {
+        std::for_each(PS->PGroups[PS->pgroup_id].begin(), PS->PGroups[PS->pgroup_id].end(), f);
+    }
+    template <class ExPol, class UnaryFunction> void ParticleLoop(ExPol&& policy, UnaryFunction f)
+    {
+        std::for_each(policy, PS->PGroups[PS->pgroup_id].begin(), PS->PGroups[PS->pgroup_id].end(), f);
+    }
 
 protected:
     std::shared_ptr<PInternalState_t> PS;                     // The internal API data for this context is stored here.
     void InternalSetup(std::shared_ptr<PInternalState_t> Sr); // Calls this after construction to set up the PS pointer
 
-    typedef std::vector<Particle_t> ParticleList;
-    ParticleList::iterator PGbegin();
-    ParticleList::iterator PGend();
+    // typedef std::vector<Particle_t> ParticleList;
 };
 
 /// The Particle System API - Your app should have one of these.

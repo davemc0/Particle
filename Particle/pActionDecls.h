@@ -37,13 +37,6 @@ void Bounce(PARG float friction,      ///< tangential component of the outgoing 
             const pDomain& dom        ///< bounce off the surface of this domain
 );
 
-/// Call an arbitrary user-provided function on each particle in the group.
-///
-/// The function will receive both your call data and the full Particle_t struct, which contains per-particle user data.
-void Callback(PARG P_PARTICLE_CALLBACK_ACTION callbackFunc, ///< Pointer to function of yours to call.
-              const pdata_t call_data = 0                   ///< Arbitrary data of yours to pass into your function
-);
-
 /// Set the secondary position and velocity from current.
 void CopyVertexB(PARG const bool copy_pos = true, ///< If true, sets particle's PositionB to the current position of that particle. This makes each
                                                   ///< particle remember this position so it can later return to it using the Restore() action.
@@ -91,26 +84,6 @@ void Explosion(PARG const pVec& center,    ///< center point of shock wave
                const float epsilon = P_EPS ///< added to distance to dampen acceleration
 );
 
-/// Accelerate toward the next particle in the list.
-///
-/// This allows snaky effects where the particles follow each other. Each particle is accelerated toward the next particle in the group.
-/// The Follow() action does not affect the last particle in the group. This allows controlled effects where the last particle in the group
-/// is killed after each time step and replaced by a new particle at a slightly different position. See KillOld() to learn how to kill
-/// the last particle in the group after each step.
-void Follow(PARG float magnitude = 1.0f,        ///< scales each particle's acceleration
-            const float epsilon = P_EPS,        ///< added to distance to dampen acceleration
-            const float max_radius = P_MAXFLOAT ///< no particle further than max_radius from its predecessor is affected
-);
-
-/// Accelerate each particle toward each other particle.
-///
-/// Each particle is accelerated toward each other particle.
-/// This action is more computationally intensive than the others are because each particle is affected by each other particle.
-void Gravitate(PARG const float magnitude = 1.0f,  ///< scales each particle's acceleration
-               const float epsilon = P_EPS,        ///< added to distance to dampen acceleration
-               const float max_radius = P_MAXFLOAT ///< no particle further than max_radius from another particle is affected
-);
-
 /// Accelerate particles in the given direction.
 ///
 /// The gravity acceleration vector is simply added to the velocity vector of each particle at each time step. The magnitude of the
@@ -124,39 +97,6 @@ void Gravity(PARG const pVec& dir ///< acceleration vector
 /// it to the particle's velocity.
 void Jet(PARG const pDomain& dom, ///< apply jet to particles in this domain
          const pDomain& acc);     ///< acceleration vector comes from this domain
-
-/// Get rid of older particles.
-///
-/// Removes all particles older than age_limit. But if kill_less_than is true, it instead removes all particles newer than age_limit.
-/// age_limit is not clamped, so negative values are ok. This can be used in conjunction with StartingAge(-n) to create and then kill a particular set of
-/// particles.
-///
-/// In order to kill a particular particle, set StartingAge() to a number that will never be a typical age for any other particle in the
-/// group, for example -1.0. Then emit the particle using Source() or Vertex(). Then do the rest of the particle actions and finally call
-/// KillOld(-0.9, true) to kill the special particle because it is the only one with an age less than -0.9.
-void KillOld(PARG const float age_limit,
-             const bool kill_less_than = false ///< true to kill particles younger than age_limit instead of older
-);
-
-/// Modify each particle's velocity to be similar to that of its neighbors.
-///
-/// Each particle is accelerated toward the weighted mean of the velocities of the other particles in the group.
-///
-/// Using an epsilon similar in size to magnitude can increase the range of influence of nearby particles on this particle.
-void MatchVelocity(PARG const float magnitude = 1.0f,  ///< scales each particle's acceleration
-                   const float epsilon = P_EPS,        ///< added to distance to dampen acceleration
-                   const float max_radius = P_MAXFLOAT ///< no particle further than max_radius from another particle is affected
-);
-
-/// Modify each particle's rotational velocity to be similar to that of its neighbors.
-///
-/// Each particle is accelerated toward the weighted mean of the rotational velocities of the other particles in the group.
-///
-/// Using an epsilon similar in size to magnitude can increase the range of influence of nearby particles on this particle.
-void MatchRotVelocity(PARG const float magnitude = 1.0f,  ///< scales each particle's acceleration
-                      const float epsilon = P_EPS,        ///< added to distance to dampen acceleration
-                      const float max_radius = P_MAXFLOAT ///< no particle further than max_radius from another particle is affected
-);
 
 /// Apply the particles' velocities to their positions, and age the particles.
 ///
@@ -245,35 +185,6 @@ void Restore(PARG const float time, ///< how long more until particles should ar
              const bool rvel = true ///< restore up vectors
 );
 
-/// Kill particles that have positions on wrong side of the specified domain.
-///
-/// If kill_inside is true, deletes all particles inside the given domain. If kill_inside is false, deletes all particles outside the given domain.
-void Sink(PARG const bool kill_inside, ///< true to kill particles inside the domain
-          const pDomain& dom           ///< kill particles in this domain
-);
-
-/// Kill particles that have velocities on wrong side of the specified domain.
-///
-/// If kill_inside is true, deletes all particles whose velocity vectors are inside the given domain. If kill_inside is false, deletes all
-/// particles whose velocity vectors are outside the given domain.
-/// This allows particles to die when they turn around, get too fast or too slow, etc. For example, use a sphere domain centered at the
-/// origin with a radius equal to the minimum velocity to kill particles that are too slow.
-void SinkVelocity(PARG const bool kill_inside, ///< true to kill particles with velocities inside the domain
-                  const pDomain& dom           ///< kill particles with velocities in this domain
-);
-
-/// Sort the particles by their projection onto the look vector.
-///
-/// Many rendering systems require rendering transparent particles in back-to-front order. The ordering is defined by the eye point and the
-/// look vector. These are the same vectors you pass into gluLookAt(), for example. The vector from the eye point to each particle's
-/// position is computed, then projected onto the look vector. Particles are sorted back-to-front by the result of this dot product.
-/// Setting clamp_negative to true speeds up sorting time. Particles behind the viewer won't be visible so their relative order doesn't matter.
-void Sort(PARG const pVec& eye,             ///< eye point is a point on the line the particles project onto
-          const pVec& look_dir,             ///< direction vector of projection line; does not need to be normalized
-          const bool front_to_back = false, ///< true to sort in front-to-back order instead of back-to-front
-          const bool clamp_negative = false ///< true to set negative dot product values to zero before sorting
-);
-
 /// Clamp particle velocities to the given range.
 ///
 /// Computes each particle's speed (the magnitude of its velocity vector) and if it is less than min_speed or greater than max_speed the
@@ -337,11 +248,106 @@ void TargetRotVelocity(PARG const pVec& rvel, ///< rotational velocity
 /// Accelerate particles in a vortex-like way.
 ///
 /// The vortex is a complicated action to use, but when done correctly it makes particles fly around like in a tornado.
-void Vortex(const pVec& center,            ///< tip of the vortex
+void Vortex(PARG const pVec& tip,          ///< tip of the vortex
             const pVec& axis,              ///< the ray along the center of the vortex
             const float tightnessExponent, ///< exponent that curves the vortex silhouette; 1.0 is a cone; greater curves inward
             const float max_radius,        ///< no particle further than max_radius from the axis is affected
             const float inSpeed,           ///< inward acceleration of particles OUTSIDE the vortex
             const float upSpeed,           ///< vertical acceleration of particles INSIDE the vortex. Can be negative to apply gravity.
             const float aroundSpeed        ///< acceleration around vortex of particles INSIDE the vortex.
+);
+
+//////////////////////////////////////////////////////////////////
+// Inter-particle actions
+
+/// Accelerate toward the next particle in the list.
+///
+/// This allows snaky effects where the particles follow each other. Each particle is accelerated toward the next particle in the group.
+/// The Follow() action does not affect the last particle in the group. This allows controlled effects where the last particle in the group
+/// is killed after each time step and replaced by a new particle at a slightly different position. See KillOld() to learn how to kill
+/// the last particle in the group after each step.
+void Follow(PARG float magnitude = 1.0f,        ///< scales each particle's acceleration
+            const float epsilon = P_EPS,        ///< added to distance to dampen acceleration
+            const float max_radius = P_MAXFLOAT ///< no particle further than max_radius from its predecessor is affected
+);
+
+/// Accelerate each particle toward each other particle.
+///
+/// Each particle is accelerated toward each other particle.
+/// This action is more computationally intensive than the others are because each particle is affected by each other particle.
+void Gravitate(PARG const float magnitude = 1.0f,  ///< scales each particle's acceleration
+               const float epsilon = P_EPS,        ///< added to distance to dampen acceleration
+               const float max_radius = P_MAXFLOAT ///< no particle further than max_radius from another particle is affected
+);
+
+/// Modify each particle's velocity to be similar to that of its neighbors.
+///
+/// Each particle is accelerated toward the weighted mean of the velocities of the other particles in the group.
+///
+/// Using an epsilon similar in size to magnitude can increase the range of influence of nearby particles on this particle.
+void MatchVelocity(PARG const float magnitude = 1.0f,  ///< scales each particle's acceleration
+                   const float epsilon = P_EPS,        ///< added to distance to dampen acceleration
+                   const float max_radius = P_MAXFLOAT ///< no particle further than max_radius from another particle is affected
+);
+
+/// Modify each particle's rotational velocity to be similar to that of its neighbors.
+///
+/// Each particle is accelerated toward the weighted mean of the rotational velocities of the other particles in the group.
+///
+/// Using an epsilon similar in size to magnitude can increase the range of influence of nearby particles on this particle.
+void MatchRotVelocity(PARG const float magnitude = 1.0f,  ///< scales each particle's acceleration
+                      const float epsilon = P_EPS,        ///< added to distance to dampen acceleration
+                      const float max_radius = P_MAXFLOAT ///< no particle further than max_radius from another particle is affected
+);
+
+//////////////////////////////////////////////////////////////////
+// Other exceptional actions
+
+/// Call an arbitrary user-provided function on each particle in the group.
+///
+/// The function will receive both your call data and the full Particle_t struct, which contains per-particle user data.
+void Callback(PARG P_PARTICLE_CALLBACK_ACTION callbackFunc, ///< Pointer to function of yours to call.
+              const pdata_t call_data = 0                   ///< Arbitrary data of yours to pass into your function
+);
+
+/// Get rid of older particles.
+///
+/// Removes all particles older than age_limit. But if kill_less_than is true, it instead removes all particles newer than age_limit.
+/// age_limit is not clamped, so negative values are ok. This can be used in conjunction with StartingAge(-n) to create and then kill a particular set of
+/// particles.
+///
+/// In order to kill a particular particle, set StartingAge() to a number that will never be a typical age for any other particle in the
+/// group, for example -1.0. Then emit the particle using Source() or Vertex(). Then do the rest of the particle actions and finally call
+/// KillOld(-0.9, true) to kill the special particle because it is the only one with an age less than -0.9.
+void KillOld(PARG const float age_limit,
+             const bool kill_less_than = false ///< true to kill particles younger than age_limit instead of older
+);
+
+/// Kill particles that have positions on wrong side of the specified domain.
+///
+/// If kill_inside is true, deletes all particles inside the given domain. If kill_inside is false, deletes all particles outside the given domain.
+void Sink(PARG const bool kill_inside, ///< true to kill particles inside the domain
+          const pDomain& kill_pos_dom  ///< kill particles in this domain
+);
+
+/// Kill particles that have velocities on wrong side of the specified domain.
+///
+/// If kill_inside is true, deletes all particles whose velocity vectors are inside the given domain. If kill_inside is false, deletes all
+/// particles whose velocity vectors are outside the given domain.
+/// This allows particles to die when they turn around, get too fast or too slow, etc. For example, use a sphere domain centered at the
+/// origin with a radius equal to the minimum velocity to kill particles that are too slow.
+void SinkVelocity(PARG const bool kill_inside, ///< true to kill particles with velocities inside the domain
+                  const pDomain& kill_vel_dom  ///< kill particles with velocities in this domain
+);
+
+/// Sort the particles by their projection onto the look vector.
+///
+/// Many rendering systems require rendering transparent particles in back-to-front order. The ordering is defined by the eye point and the
+/// look vector. These are the same vectors you pass into gluLookAt(), for example. The vector from the eye point to each particle's
+/// position is computed, then projected onto the look vector. Particles are sorted back-to-front by the result of this dot product.
+/// Setting clamp_negative to true speeds up sorting time. Particles behind the viewer won't be visible so their relative order doesn't matter.
+void Sort(PARG const pVec& eye,             ///< eye point is a point on the line the particles project onto
+          const pVec& look_dir,             ///< direction vector of projection line; does not need to be normalized
+          const bool front_to_back = false, ///< true to sort in front-to-back order instead of back-to-front
+          const bool clamp_negative = false ///< true to set negative dot product values to zero before sorting
 );

@@ -18,6 +18,7 @@
 // Actions that use domains (maybe not difficult)
 // Actions that refer to other particles
 // Actions that call callbacks
+// Actions that call action lists
 
 #ifndef implactions_h
 #define implactions_h
@@ -255,6 +256,8 @@ PINLINE void PAAvoidDisc_Impl(Particle_t& m, const float dt, const PDDisc& dom, 
     pVec dir = (S * (magdt / (fsqr(t) + epsilon))) + Vn;
     m.vel = dir * (vlen / dir.length()); // Speed of m.vel, but in direction dir.
 }
+
+// TODO: Could I implement a generic bounce function that works on any domain, given the domain's Within function and its surface normal at the hit location?
 
 // Bounce() doesn't work correctly with small time step sizes for particles sliding along a surface.
 // The friction and resilience parameters should not be scaled by dt, since a bounce happens instantaneously.
@@ -573,10 +576,10 @@ PINLINE void PAGravity_Impl(Particle_t& m, const float dt, const pVec direction)
 }
 
 // For particles in the domain of influence, accelerate them with a domain.
-PINLINE void PAJet_Impl(Particle_t& m, const float dt, const std::shared_ptr<pDomain> dom, const std::shared_ptr<pDomain> acc)
+PINLINE void PAJet_Impl(Particle_t& m, const float dt, const pDomain& dom, const pDomain& acc)
 {
-    if (dom->Within(m.pos)) {
-        pVec accel = acc->Generate();
+    if (dom.Within(m.pos)) {
+        pVec accel = acc.Generate();
 
         m.vel += accel * dt;
     }
@@ -633,9 +636,9 @@ PINLINE void PAOrbitPoint_Impl(Particle_t& m, const float dt, const pVec center,
 }
 
 // Accelerate in random direction each time step
-PINLINE void PARandomAccel_Impl(Particle_t& m, const float dt, const std::shared_ptr<pDomain> gen_acc)
+PINLINE void PARandomAccel_Impl(Particle_t& m, const float dt, const pDomain& gen_acc)
 {
-    pVec accel = gen_acc->Generate();
+    pVec accel = gen_acc.Generate();
 
     // Dt will affect this by making a higher probability of being near the original velocity after unit time.
     // Smaller dt approach a normal distribution instead of a square wave.
@@ -643,9 +646,9 @@ PINLINE void PARandomAccel_Impl(Particle_t& m, const float dt, const std::shared
 }
 
 // Immediately displace position randomly
-PINLINE void PARandomDisplace_Impl(Particle_t& m, const float dt, const std::shared_ptr<pDomain> gen_disp)
+PINLINE void PARandomDisplace_Impl(Particle_t& m, const float dt, const pDomain& gen_disp)
 {
-    pVec disp = gen_disp->Generate();
+    pVec disp = gen_disp.Generate();
 
     // Dt will affect this by making a higher probability of being near the original position after unit time.
     // Smaller dt approach a normal distribution instead of a square wave.
@@ -653,19 +656,19 @@ PINLINE void PARandomDisplace_Impl(Particle_t& m, const float dt, const std::sha
 }
 
 // Immediately assign a random velocity
-PINLINE void PARandomVelocity_Impl(Particle_t& m, const float dt, const std::shared_ptr<pDomain> gen_vel)
+PINLINE void PARandomVelocity_Impl(Particle_t& m, const float dt, const pDomain& gen_vel)
 {
-    pVec velocity = gen_vel->Generate();
+    pVec velocity = gen_vel.Generate();
 
     // Don't multiply by dt because velocities are invariant of dt.
     m.vel = velocity;
 }
 
 // Immediately assign a random rotational velocity
-PINLINE void PARandomRotVelocity_Impl(Particle_t& m, const float dt, const std::shared_ptr<pDomain> gen_vel)
+PINLINE void PARandomRotVelocity_Impl(Particle_t& m, const float dt, const pDomain& gen_vel)
 
 {
-    pVec velocity = gen_vel->Generate();
+    pVec velocity = gen_vel.Generate();
 
     // Don't multiply by dt because velocities are invariant of dt.
     m.rvel = velocity;
@@ -750,12 +753,12 @@ PINLINE void PATargetVelocity_Impl(Particle_t& m, const float dt, const pVec vel
 }
 
 // Change velocity of all particles toward the specified velocity
-PINLINE void PATargetRotVelocity_Impl(Particle_t& m, const float dt, const pVec velocity, const float scale)
+PINLINE void PATargetRotVelocity_Impl(Particle_t& m, const float dt, const pVec rot_velocity, const float scale)
 {
     float scaleFac = scale * dt;
     // ^^^ Above values do not vary per particle.
 
-    m.rvel += (velocity - m.rvel) * scaleFac;
+    m.rvel += (rot_velocity - m.rvel) * scaleFac;
 }
 
 // This one just rotates a particle around the axis. Amount is based on radius, magnitude, and mass.
@@ -920,15 +923,16 @@ PINLINE void PAKillOld_Impl(Particle_t& m, const float dt, const float age_limit
 }
 
 // Kill particles with positions on wrong side of the specified domain
-PINLINE void PASink_Impl(Particle_t& m, const float dt, const bool kill_inside, const std::shared_ptr<pDomain> position)
+PINLINE void PASink_Impl(Particle_t& m, const float dt, const bool kill_inside, const pDomain& kill_pos_dom)
 {
-    m.tmp0 = (position->Within(m.pos) ^ kill_inside) ? m.tmp0 : P_MAXFLOAT;
+    m.tmp0 = (kill_pos_dom.Within(m.pos) ^ kill_inside) ? m.tmp0 : P_MAXFLOAT;
 }
 
 // Kill particles with velocities on wrong side of the specified domain
-PINLINE void PASinkVelocity_Impl(Particle_t& m, const float dt, const bool kill_inside, const std::shared_ptr<pDomain> velocity)
+// PINLINE void PASinkVelocity_Impl(Particle_t& m, const float dt, const bool kill_inside, const pDomain& kill_vel_dom)
+PINLINE void PASinkVelocity_Impl(Particle_t& m, const float dt, const bool kill_inside, const pDomain& kill_vel_dom)
 {
-    m.tmp0 = (velocity->Within(m.vel) ^ kill_inside) ? m.tmp0 : P_MAXFLOAT;
+    m.tmp0 = (kill_vel_dom.Within(m.vel) ^ kill_inside) ? m.tmp0 : P_MAXFLOAT;
 }
 
 // Project the particle onto the Look vector to get sort key and store it in tmp0
@@ -957,9 +961,9 @@ PINLINE size_t SourceQuantity(const float particle_rate, const float dt, const s
 }
 
 // Fill in a single particle
-PINLINE void PASource_Impl(Particle_t& m, const float dt, const std::shared_ptr<pDomain> position, const pSourceState& SrcSt)
+PINLINE void PASource_Impl(Particle_t& m, const float dt, const pDomain& gen_pos, const pSourceState& SrcSt)
 {
-    m.pos = position->Generate();
+    m.pos = gen_pos.Generate();
     m.posB = SrcSt.vertexB_tracks_ ? m.pos : SrcSt.VertexB_->Generate();
     m.up = SrcSt.Up_->Generate();
     m.vel = SrcSt.Vel_->Generate();
