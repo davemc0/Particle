@@ -46,7 +46,8 @@ bool MotionBlur = false;
 bool SortParticles = false;
 
 // Internal state
-ExecMode_e ExecMode = Internal_Mode; // Execute compiled action lists on host for non-varying effects or immediate for varying
+// ExecMode_e ExecMode = Internal_Mode; // Execute compiled action lists on host for non-varying effects or immediate for varying
+ExecMode_e ExecMode = Immediate_Mode; // Execute compiled action lists on host for non-varying effects or immediate for varying
 ParticleContext_t P;
 StatTimer FPSClock(100);
 Timer RandomDemoClock;
@@ -56,9 +57,9 @@ int DisplayListID = -1;
 int SpotTexID = -1, SphereTexID = -1;
 int WinWidth = 880, WinHeight = 880;
 #ifdef _DEBUG
-EffectsManager Efx(P, 20000);
+EffectsManager Efx(P, 30000);
 #else
-EffectsManager Efx(P, 200000);
+EffectsManager Efx(P, 300000);
 #endif
 
 float blackColor[] = {0, 0, 0, 1};

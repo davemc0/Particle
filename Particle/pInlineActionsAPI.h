@@ -128,25 +128,29 @@ PINLINE void PContextInlineActions_t::Vortex(Particle_t& m, const pVec& tip, con
 PINLINE void PContextInlineActions_t::Follow(Particle_t& m, const float magnitude, const float epsilon, const float max_radius)
 {
     ParticleGroup& pg = PS->PGroups[PS->pgroup_id];
-    PAFollow_Impl(m, PS->dt, magnitude, epsilon, max_radius, &*pg.begin(), &*pg.end());
+    const Particle_t* endp = &*pg.begin() + (pg.end() - pg.begin());
+    PAFollow_Impl(m, PS->dt, magnitude, epsilon, max_radius, &*pg.begin(), endp);
 }
 
 PINLINE void PContextInlineActions_t::Gravitate(Particle_t& m, const float magnitude, const float epsilon, const float max_radius)
 {
     ParticleGroup& pg = PS->PGroups[PS->pgroup_id];
-    PAGravitate_Impl(m, PS->dt, magnitude, epsilon, max_radius, &*pg.begin(), &*pg.end());
+    const Particle_t* endp = &*pg.begin() + (pg.end() - pg.begin());
+    PAGravitate_Impl(m, PS->dt, magnitude, epsilon, max_radius, &*pg.begin(), endp);
 }
 
 PINLINE void PContextInlineActions_t::MatchVelocity(Particle_t& m, const float magnitude, const float epsilon, const float max_radius)
 {
     ParticleGroup& pg = PS->PGroups[PS->pgroup_id];
-    PAMatchVelocity_Impl(m, PS->dt, magnitude, epsilon, max_radius, &*pg.begin(), &*pg.end());
+    const Particle_t* endp = &*pg.begin() + (pg.end() - pg.begin());
+    PAMatchVelocity_Impl(m, PS->dt, magnitude, epsilon, max_radius, &*pg.begin(), endp);
 }
 
 PINLINE void PContextInlineActions_t::MatchRotVelocity(Particle_t& m, const float magnitude, const float epsilon, const float max_radius)
 {
     ParticleGroup& pg = PS->PGroups[PS->pgroup_id];
-    PAMatchRotVelocity_Impl(m, PS->dt, magnitude, epsilon, max_radius, &*pg.begin(), &*pg.end());
+    const Particle_t* endp = &*pg.begin() + (pg.end() - pg.begin());
+    PAMatchRotVelocity_Impl(m, PS->dt, magnitude, epsilon, max_radius, &*pg.begin(), endp);
 }
 
 //////////////////////////////////////////////////////////////////
