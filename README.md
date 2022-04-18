@@ -6,10 +6,16 @@ by David McAllister
 version 2.3.0
 April 18, 2022
 
-Was previously hosted at: http://www.particlesystems.org.
-Now here on https://github.com/davemc0/Particle.git.
+Hosted at https://github.com/davemc0/Particle.git.
+Hosted for 15 years at: http://www.particlesystems.org.
 
-Welcome to the Particle System API
+Documentation is [here](./ParticleHelp.html), but is out-of-date.
+
+Change log is [here](./ChangeLog.html).
+
+And there is still [plenty to do](./ToDo.html).
+
+Welcome back to the Particle System API!
 ==================================
 
 The Particle System API has served as a resource for building all sorts of interesting particle system-based special effects, mostly for games and other 3D graphics.
@@ -23,9 +29,6 @@ I have recently revisited the API and added many enhancements:
 * The sample effects are much more elegant and unified.
 * The sample effect particle dynamics are framerate independent by varying dt with frame time.
 * I made a good flocking behavior effect, based on Boids by Craig Reynolds.
-* See full [ChangeLog](./ChangeLog.html).
-
-And there is still [plenty to do](./ToDo.html).
 
 Building the Program
 ====================
