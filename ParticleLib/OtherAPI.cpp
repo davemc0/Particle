@@ -32,8 +32,6 @@ void PContextActionList_t::NewActionList(const int action_list_num)
 
     PS->in_new_list = true;
     PS->ALists[PS->alist_id].resize(0); // Remove any old actions
-
-    // Don't change ALFunc or Params since we might be recreating the same action list with different P_VARYING_* arguments.
 }
 
 void PContextActionList_t::EndActionList()
@@ -70,24 +68,6 @@ void PContextActionList_t::CallActionList(const int action_list_num)
         // Execute the specified action list.
         PS->ExecuteActionList(PS->ALists[action_list_num]);
     }
-}
-
-void PContextActionList_t::EmitActionList(const int action_list_num, std::string& Kernel, const std::string& KernelName, const EmitCodeParams_e Params)
-{
-    if (PS->in_new_list) throw PErrInNewActionList("Can't call EmitActionList while in NewActionList.");
-
-    if (action_list_num < 0 || action_list_num >= (int)PS->ALists.size()) throw PErrActionList("Invalid action list number.");
-
-    throw PErrNotImplemented("EmitActionList");
-}
-
-void PContextActionList_t::BindEmittedActionList(const int action_list_num, P_PARTICLE_EMITTED_ACTION_LIST ALFunc, const EmitCodeParams_e Params)
-{
-    if (PS->in_new_list) throw PErrInNewActionList("Can't call BindEmittedActionList while in NewActionList.");
-
-    if (action_list_num < 0 || action_list_num >= (int)PS->ALists.size()) throw PErrActionList("Invalid action list number.");
-
-    throw PErrNotImplemented("BindEmittedActionList");
 }
 
 void PContextActionList_t::TimeStep(const float newDT) { PS->dt = newDT; }

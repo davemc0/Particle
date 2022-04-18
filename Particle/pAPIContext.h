@@ -53,7 +53,7 @@ public:
     /// The Particle System API uses a discrete time approximation to all actions. This means that actions are applied to the particles at a
     /// particular instant in time as if the action's effect accumulated over a small time interval, dt, with the world being constant over the
     /// interval. The clock is then "ticked" by the length of the interval and the actions can then be reapplied with the particles having their
-    /// updated values. This is the standard method of doing almost all time-varying simulations in computer science.
+    /// updated values. This is the standard method of doing many time-varying simulations in computer science.
     ///
     /// How does the time step, dt, relate to the application's frame rate? The easiest method is to apply the actions once per frame. If the
     /// application prefers to keep time in terms of seconds, dt can be set to (1 / frames_per_second). But more often, it is easier for a time
@@ -123,44 +123,6 @@ public:
     /// If called on an action list that has previously been defined, the previous contents of the action list are destroyed and the action
     /// list will be created anew. This is as with glNewActionList() in OpenGL.
     void NewActionList(const int action_list_num);
-
-    /// Return the source code string of the action list kernel
-    ///
-    /// Returns a string representing the C code that implements the action list.
-    /// This string is suitable for saving as the complete contents of a .cu or .cpp file.
-    /// NOT IMPLEMENTED! When I (or someone) actually implements emitted action lists, get it working completely with host code before attempting CUDA.
-    void EmitActionList(const int action_list_num,     ///< the action list number returned from a call to GenActionLists().
-                        std::string& Kernel,           ///< a reference to the string to store the kernel source code in
-                        const std::string& KernelName, ///< your chosen name for this kernel. This can be the base of the filename where the contents are stored.
-                        const EmitCodeParams_e Params  ///< Tells what kind of code to emit; currently host CPU C++ code or GPU CUDA code
-    );
-
-    /// Give a function pointer for executing the emitted and compiled action list kernel
-    ///
-    /// When an action list has been emitted and compiled by your emitter program it is then linked into your main application.
-    /// To call this compiled action list function you must bind it to an action list. If the emitter program passed P_VARYING_* as an argument
-    /// to any action in the emitted action list you must provide the actual desired values for those arguments at run time. To do this,
-    /// create an action list identical to the compiled one, with the same actions in the same sequence, passing the same kinds of domains
-    /// as arguments. The value of all parameters to all actions are ignored, except the ones whose value while being generated was P_VARYING_*.
-    /// The varying values of those arguments are taken from these calls.
-    ///
-    /// Each time you want to change the value of any P_VARYING_* argument you must recreate the entire action list.
-    /// You do not need to call BindEmittedActionList() again if you use the same action list number each time.
-    /// If the emitted action list does not contain any P_VARYING_* arguments then its function can be bound to any action list,
-    /// including an empty one created with just NewActionList(action_list_num); EndActionList().
-    ///
-    /// Once the action list is created you must provide the API the function pointer of the function that was emitted then linked to your app.
-    /// The function's name is what you provided in the KernelName argument of EmitActionList(). Declare this function extern like so:
-    ///     extern P_PARTICLE_EMITTED_ACTION_LIST YourKernelName;
-    /// Then provide it to the API like so:
-    ///     BindEmittedActionList(action_list_num, YourKernelName, Params);
-    ///
-    /// Setting ALFunc to NULL and Params to P_INTERNAL_CODE unbinds the compiled action list so future calls to CallActionList()
-    /// are executed internally in the traditional way.
-    void BindEmittedActionList(const int action_list_num,             ///< the action list number returned from a call to GenActionLists().
-                               P_PARTICLE_EMITTED_ACTION_LIST ALFunc, ///< Pointer to the function that executes the compiled action list
-                               const EmitCodeParams_e Params          ///< Tells what kind of code this is; currently host CPU C++ code or GPU CUDA code
-    );
 
 protected:
     std::shared_ptr<PInternalState_t> PS;                       // The internal API data for this context is stored here.

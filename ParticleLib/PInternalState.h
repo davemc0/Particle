@@ -23,14 +23,7 @@ namespace PAPI {
 
 class ActionList : public std::vector<std::shared_ptr<PActionBase>> {
 public:
-    P_PARTICLE_EMITTED_ACTION_LIST ALFunc;
-    EmitCodeParams_e Params;
-
-    ActionList()
-    {
-        ALFunc = NULL;
-        Params = P_INTERNAL_CODE;
-    }
+    ActionList() {}
 };
 
 // This is the per-thread state of the API.

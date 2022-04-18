@@ -15,21 +15,13 @@ using namespace PAPI;
 
 class EffectsManager;
 
-// Execution modes:
-// 1) Immediate mode - just do the actions each frame; the only mode that works with varying inputs right now
-// 2) Internal mode  - compile an action list at program start and call it each frame
-// 3) Compiled mode  - set it to Emit_Mode at program start to compile the action lists,
-//                     then per frame set it to Varying_Mode and do the actions to grab the current values of all the varying parameters
-//                     then bind the compiled program and call it in Compiled_Mode to run it with the varying parameters
 enum ExecMode_e {
-    Immediate_Mode, // Apply the actions to the particles right now with no action list
-    Internal_Mode,  // Build an action list once at program start and call it each frame
-    Compiled_Mode,  // Execute a compiled action list
-    Varying_Mode,   // Create the action list each frame just for passing the varying structure into the previously compiled action list
-    Emit_Mode       // Build an action list for emitting
+    Immediate_Mode,  // Apply the actions to the particles right now with no action list
+    ActionList_Mode, // Build an action list once at program start and call it each frame
+    Inline_Mode,     // No action lists; app owns particle loop
 };
 
-enum SteerShape_e { STEER_SPHERE, STEER_TRIANGLE, STEER_RECTANGLE, STEER_PLANE, STEER_DISC, STEER_VARYING };
+enum SteerShape_e { STEER_SPHERE, STEER_TRIANGLE, STEER_RECTANGLE, STEER_PLANE, STEER_DISC, STEER_CNT };
 
 enum PrimType_e { PRIM_GAUSSIAN_SPRITE, PRIM_SPHERE_SPRITE, PRIM_QUAD, PRIM_POINT, PRIM_LINE, PRIM_DISPLAY_LIST, PRIM_NONE, PRIM_TYPE_COUNT };
 static char const* PrimTypeNames[] = {"GAUSSIAN_SPRITE", "SPHERE_SPRITE", "QUAD", "POINT", "LINE", "DISPLAY_LIST", "NONE"};
@@ -47,21 +39,17 @@ protected:
     float particleSize;      // How big of particles for this effect
 
 public:
-    int AList;                                   // The action list handle
-    P_PARTICLE_EMITTED_ACTION_LIST CompiledFunc; // Remember how we bound this so we can unbind/rebind it when the app wants to run differently
-    EmitCodeParams_e BIND_KIND;
+    int AList;                                         // The action list handle
     std::vector<std::shared_ptr<pDomain>> Renderables; // A list of domains to render in the app
 
     Effect(EffectsManager& Efx);
 
     void CreateList(ExecMode_e EM, EffectsManager& Efx);
-    void BindEmitted(EffectsManager& Efx, P_PARTICLE_EMITTED_ACTION_LIST, EmitCodeParams_e);
     const pDomain& Effect::Render(const pDomain& dom);
 
     virtual const std::string GetName() const = 0;
     virtual void DoActions(EffectsManager& Efx) = 0;           // Call the actions the go in the action list and get executed per frame
-    virtual void PerFrame(ExecMode_e EM, EffectsManager& Efx); // Set varying state to values for current frame
-    virtual void EmitList(EffectsManager& Efx);                // Set varying state to VARYING for emitting the action list as code
+    virtual void PerFrame(ExecMode_e EM, EffectsManager& Efx); // Set anything dynamic for current frame
     virtual void StartEffect(EffectsManager& Efx) {}           // Initialize internal variables and set up anything else for the start of this effect
     virtual int NextEffect(EffectsManager& Efx);               // Specify next demo to run in case only a particular one is interesting
 
@@ -77,9 +65,7 @@ public:
 struct Atom : public Effect {
     Atom(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Atom"; }
-    void EmitList(EffectsManager& Efx);
     void DoActions(EffectsManager& Efx);
-    void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
 };
 
@@ -87,9 +73,7 @@ struct Atom : public Effect {
 struct Balloons : public Effect {
     Balloons(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Balloons"; }
-    void EmitList(EffectsManager& Efx);
     void DoActions(EffectsManager& Efx);
-    void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
 };
 
@@ -119,7 +103,6 @@ struct Explosion : public Effect {
 
     Explosion(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Explosion"; }
-    void EmitList(EffectsManager& Efx);
     void DoActions(EffectsManager& Efx);
     void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
@@ -141,7 +124,6 @@ struct Fireworks : public Effect {
 
     Fireworks(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Fireworks"; }
-    void EmitList(EffectsManager& Efx);
     void DoActions(EffectsManager& Efx);
     void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
@@ -153,7 +135,6 @@ struct FlameThrower : public Effect {
 
     FlameThrower(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "FlameThrower"; }
-    void EmitList(EffectsManager& Efx);
     void DoActions(EffectsManager& Efx);
     void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
@@ -162,10 +143,8 @@ struct FlameThrower : public Effect {
 // A fountain spraying up in the middle of the screen
 struct Fountain : public Effect {
     Fountain(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
-    void EmitList(EffectsManager& Efx);
     const std::string GetName() const { return "Fountain"; }
     void DoActions(EffectsManager& Efx);
-    void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
 };
 
@@ -183,7 +162,6 @@ struct JetSpray : public Effect {
 
     JetSpray(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "JetSpray"; }
-    void EmitList(EffectsManager& Efx);
     void DoActions(EffectsManager& Efx);
     void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
@@ -195,7 +173,6 @@ struct Orbit2 : public Effect {
 
     Orbit2(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Orbit2"; }
-    void EmitList(EffectsManager& Efx);
     void DoActions(EffectsManager& Efx);
     void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
@@ -213,9 +190,7 @@ struct PhotoShape : public Effect {
 struct Rain : public Effect {
     Rain(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Rain"; }
-    void EmitList(EffectsManager& Efx);
     void DoActions(EffectsManager& Efx);
-    void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
 };
 
@@ -225,7 +200,6 @@ struct Restore : public Effect {
 
     Restore(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Restore"; }
-    void EmitList(EffectsManager& Efx);
     void DoActions(EffectsManager& Efx);
     void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
@@ -238,7 +212,6 @@ struct Shower : public Effect {
 
     Shower(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Shower"; }
-    void EmitList(EffectsManager& Efx);
     void DoActions(EffectsManager& Efx);
     void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
@@ -258,7 +231,6 @@ struct Sphere : public Effect {
 
     Sphere(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Sphere"; }
-    void EmitList(EffectsManager& Efx);
     void DoActions(EffectsManager& Efx);
     void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
@@ -270,7 +242,6 @@ struct Swirl : public Effect {
 
     Swirl(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "Swirl"; }
-    void EmitList(EffectsManager& Efx);
     void DoActions(EffectsManager& Efx);
     void PerFrame(ExecMode_e EM, EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);

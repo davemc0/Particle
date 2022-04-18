@@ -17,7 +17,7 @@
 
 namespace {
 const int PRINT_PERIOD = 100, NUM_REPORTS = 5;
-ExecMode_e ExecMode = Internal_Mode;
+ExecMode_e ExecMode = ActionList_Mode;
 ParticleContext_t P;
 EffectsManager Efx(P, 500000);
 StatTimer FPSClock(PRINT_PERIOD);
@@ -31,7 +31,7 @@ void Report()
     if (++FrameCountForClock >= PRINT_PERIOD) {
         int cnt = (int)P.GetGroupCount();
 
-        char exCh = (ExecMode == Immediate_Mode) ? 'I' : (ExecMode == Internal_Mode) ? 'N' : 'C';
+        char exCh = (ExecMode == Immediate_Mode) ? 'I' : (ExecMode == ActionList_Mode) ? 'N' : 'C';
         printf("%c%c n=%5d time=%02.4f %s\n", exCh, SortParticles ? 'S' : ' ', cnt, (float)FPSClock.GetMean(), Efx.GetCurEffectName().c_str());
         fflush(stdout);
         FrameCountForClock = 0;
@@ -188,8 +188,8 @@ static void Args(int argc, char** argv)
         } else if (starg == "-immed") {
             ExecMode = Immediate_Mode;
             RemoveArgs(argc, argv, i);
-        } else if (starg == "-compiled") {
-            ExecMode = Compiled_Mode;
+        } else if (starg == "-inline") {
+            ExecMode = Inline_Mode;
             RemoveArgs(argc, argv, i);
         } else if (starg == "-sort") {
             SortParticles = true;

@@ -95,47 +95,41 @@ void PInternalState_t::ExecuteActionList(ActionList& AList)
     ParticleGroup& pg = PGroups[pgroup_id];
     in_call_list = true;
 
-    PASSERT((AList.ALFunc == NULL && AList.Params == P_INTERNAL_CODE) || (AList.ALFunc && AList.Params != P_INTERNAL_CODE), "ALFunc and Params mismatch.");
+    ActionList::iterator it = AList.begin();
+    while (it != AList.end()) {
+        // Make an action segment
+        ActionList::iterator abeg = it;
+        ActionList::iterator aend = it + 1;
 
-    if (AList.Params & P_CPU_CPP_CODE) {  // Compiled mode
-        AList.ALFunc(&AList, &pg, dt, 0); // We have a compiled AL for CPU so call that function
-    } else {                              // Internal mode
-        ActionList::iterator it = AList.begin();
-        while (it != AList.end()) {
-            // Make an action segment
-            ActionList::iterator abeg = it;
-            ActionList::iterator aend = it + 1;
+        // If the first one is connectable, try to connect some more.
+        if (!(*abeg)->GetKillsParticles() && !(*abeg)->GetDoNotSegment())
+            while (aend != AList.end() && !(*aend)->GetKillsParticles() && !(*aend)->GetDoNotSegment()) aend++;
 
-            // If the first one is connectable, try to connect some more.
-            if (!(*abeg)->GetKillsParticles() && !(*abeg)->GetDoNotSegment())
-                while (aend != AList.end() && !(*aend)->GetKillsParticles() && !(*aend)->GetDoNotSegment()) aend++;
-
-            // Found a sub-list that can be done together. Now do them.
-            ParticleList::iterator pbeg = pg.begin();
-            ParticleList::iterator pend = ((pg.end() - pbeg) <= PWorkingSetSize) ? pg.end() : (pbeg + PWorkingSetSize);
-            bool one_pass = false;
-            if (aend - abeg == 1) {
-                pend = pg.end(); // If a single action, do the whole thing in one whack.
-                one_pass = true;
-            }
-
-            ActionList::iterator ait = abeg;
-            do {
-                // For each chunk of particles, do all the actions in this sub-list
-                ait = abeg;
-                while (ait < aend) {
-                    (*ait)->dt = dt; // Provide the action with access to the current dt.
-                    (*ait)->Execute(pg, pbeg, pend);
-
-                    ait++;
-                }
-                if (!one_pass) { // If we're not one_pass then we know we didn't do any actions that mangle our iterators.
-                    pbeg = pend;
-                    pend = ((pg.end() - pbeg) <= PWorkingSetSize) ? pg.end() : (pbeg + PWorkingSetSize);
-                }
-            } while ((!one_pass) && pbeg != pg.end());
-            it = ait;
+        // Found a sub-list that can be done together. Now do them.
+        ParticleList::iterator pbeg = pg.begin();
+        ParticleList::iterator pend = ((pg.end() - pbeg) <= PWorkingSetSize) ? pg.end() : (pbeg + PWorkingSetSize);
+        bool one_pass = false;
+        if (aend - abeg == 1) {
+            pend = pg.end(); // If a single action, do the whole thing in one whack.
+            one_pass = true;
         }
+
+        ActionList::iterator ait = abeg;
+        do {
+            // For each chunk of particles, do all the actions in this sub-list
+            ait = abeg;
+            while (ait < aend) {
+                (*ait)->dt = dt; // Provide the action with access to the current dt.
+                (*ait)->Execute(pg, pbeg, pend);
+
+                ait++;
+            }
+            if (!one_pass) { // If we're not one_pass then we know we didn't do any actions that mangle our iterators.
+                pbeg = pend;
+                pend = ((pg.end() - pbeg) <= PWorkingSetSize) ? pg.end() : (pbeg + PWorkingSetSize);
+            }
+        } while ((!one_pass) && pbeg != pg.end());
+        it = ait;
     }
 
     in_call_list = false;

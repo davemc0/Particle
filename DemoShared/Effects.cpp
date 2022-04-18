@@ -65,30 +65,20 @@ Effect::Effect(EffectsManager& Efx)
     particleSize = 0.15f; // World space units
     particleLifetime = Efx.demoRunSec;
     particleRate = Efx.maxParticles / particleLifetime;
-
-    CompiledFunc = NULL;
-    BIND_KIND = P_INTERNAL_CODE;
 }
 
 void Effect::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
-    EASSERT(EM != Emit_Mode);
-
     ParticleContext_t& P = Efx.P;
 
-    if (EM == Varying_Mode) P.NewActionList(AList); // Create an action list to store current values of varying parameters
-
-    if (EM == Immediate_Mode || EM == Varying_Mode) {
+    if (EM == Immediate_Mode || EM == Inline_Mode) {
         Renderables.clear(); // DoActions fills in the Renderables, so clear it before calling DoActions
         DoActions(Efx);
     }
 
-    if (EM == Varying_Mode) P.EndActionList();
-
-    if (EM == Internal_Mode || EM == Compiled_Mode || EM == Varying_Mode) P.CallActionList(AList);
+    if (EM == ActionList_Mode) P.CallActionList(AList);
 }
 
-// Non-varying effects call directly to here without a per-effect overload.
 void Effect::CreateList(ExecMode_e EM, EffectsManager& Efx)
 {
     EASSERT(EM != Immediate_Mode);
@@ -101,21 +91,7 @@ void Effect::CreateList(ExecMode_e EM, EffectsManager& Efx)
     P.EndActionList();
 }
 
-// Non-varying effects call directly to here without a per-effect overload.
-void Effect::EmitList(EffectsManager& Efx)
-{
-    CreateList(Emit_Mode, Efx);
-    StartEffect(Efx); // Calls the derived class.
-}
-
 int Effect::NextEffect(EffectsManager& Efx) { return irand(Efx.getNumEffects()); }
-
-void Effect::BindEmitted(EffectsManager& Efx, P_PARTICLE_EMITTED_ACTION_LIST Func, EmitCodeParams_e Params)
-{
-    Efx.P.BindEmittedActionList(AList, Func, Params);
-    CompiledFunc = Func;
-    BIND_KIND = Params;
-}
 
 // A nonvirtual function to insert the renderable domain into this effect's renderable list
 const pDomain& Effect::Render(const pDomain& dom)
@@ -166,14 +142,6 @@ void Atom::DoActions(EffectsManager& Efx)
     PAEND
 }
 
-void Atom::EmitList(EffectsManager& Efx)
-{
-    particleRate = P_VARYING_FLOAT;
-    Effect::EmitList(Efx);
-}
-
-void Atom::PerFrame(ExecMode_e EM, EffectsManager& Efx) { Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx); }
-
 void Atom::StartEffect(EffectsManager& Efx)
 {
     particleRate = Efx.maxParticles / particleLifetime;
@@ -216,14 +184,6 @@ void Balloons::DoActions(EffectsManager& Efx)
 
     Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1)));
 }
-
-void Balloons::EmitList(EffectsManager& Efx)
-{
-    particleRate = P_VARYING_FLOAT;
-    Effect::EmitList(Efx);
-}
-
-void Balloons::PerFrame(ExecMode_e EM, EffectsManager& Efx) { Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx); }
 
 void Balloons::StartEffect(EffectsManager& Efx)
 {
@@ -275,7 +235,7 @@ void Boids::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 
     goalPoint = (fmod(time_since_start, 2.f * Efx.demoRunSec) > Efx.demoRunSec) ? pVec(-10.f, 0, 6.f) : pVec(10.f, 0, 6.f);
 
-    Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
+    Effect::PerFrame(EM, Efx);
 }
 
 void Boids::StartEffect(EffectsManager& Efx)
@@ -369,16 +329,10 @@ void Explosion::DoActions(EffectsManager& Efx)
     PAEND
 }
 
-void Explosion::EmitList(EffectsManager& Efx)
-{
-    time_since_start = P_VARYING_FLOAT;
-    Effect::EmitList(Efx);
-}
-
 void Explosion::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
     time_since_start += Efx.timeStep;
-    Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
+    Effect::PerFrame(EM, Efx);
 }
 
 void Explosion::StartEffect(EffectsManager& Efx)
@@ -445,19 +399,6 @@ void Fireworks::DoActions(EffectsManager& Efx)
     P.Sink(false, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
 }
 
-void Fireworks::EmitList(EffectsManager& Efx)
-{
-    EASSERT(0); // Just make sure this code isn't used for now.
-    // For emitting we have a constant max number of rockets and vary their params.
-    NumRockets = MaxRockets;
-    for (int i = 0; i < NumRockets; i++) {
-        rocketPos[i] = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
-        rocketColor[i] = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
-    }
-    particleRate = P_VARYING_FLOAT;
-    Effect::EmitList(Efx);
-}
-
 void Fireworks::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
@@ -484,7 +425,7 @@ void Fireworks::PerFrame(ExecMode_e EM, EffectsManager& Efx)
     // The actions for moving the sparks
     if (Efx.particleHandle >= 0) P.CurrentGroup(Efx.particleHandle);
 
-    Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
+    Effect::PerFrame(EM, Efx);
 }
 
 void Fireworks::StartEffect(EffectsManager& Efx)
@@ -512,8 +453,7 @@ void FlameThrower::DoActions(EffectsManager& Efx)
     ParticleContext_t& P = Efx.P;
     pSourceState S;
     S.Color(PDLine(pVec(0.8, 0, 0), pVec(1, 1, 0.3)));
-    pVec vvel(P_VARYING_FLOAT, P_VARYING_FLOAT, 0.f);
-    if (dirAng != P_VARYING_FLOAT) vvel = pVec(sin(dirAng), cos(dirAng), 0.f) * 18.f;
+    pVec vvel = pVec(sin(dirAng), cos(dirAng), 0.f) * 18.f;
     S.Velocity(PDBlob(vvel, 0.3f));
     S.StartingAge(0);
     S.Size(particleSize);
@@ -528,18 +468,11 @@ void FlameThrower::DoActions(EffectsManager& Efx)
     PAEND
 }
 
-void FlameThrower::EmitList(EffectsManager& Efx)
-{
-    particleRate = P_VARYING_FLOAT;
-    dirAng = P_VARYING_FLOAT;
-    Effect::EmitList(Efx);
-}
-
 void FlameThrower::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
     const float rotRateInRadPerSec = 1.f;
     dirAng += rotRateInRadPerSec * Efx.timeStep;
-    Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
+    Effect::PerFrame(EM, Efx);
 }
 
 void FlameThrower::StartEffect(EffectsManager& Efx)
@@ -574,14 +507,6 @@ void Fountain::DoActions(EffectsManager& Efx)
 
     Render(PDDisc(pVec(0, 0, 1.f), pVec(0, 0, 1.f), 5));
 }
-
-void Fountain::EmitList(EffectsManager& Efx)
-{
-    particleRate = P_VARYING_FLOAT;
-    Effect::EmitList(Efx);
-}
-
-void Fountain::PerFrame(ExecMode_e EM, EffectsManager& Efx) { Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx); }
 
 void Fountain::StartEffect(EffectsManager& Efx)
 {
@@ -666,17 +591,11 @@ void JetSpray::DoActions(EffectsManager& Efx)
     Render(PDPlane(pVec(0, 0, -10), pVec(0, 0, 1)));
 }
 
-void JetSpray::EmitList(EffectsManager& Efx)
-{
-    jet = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
-    Effect::EmitList(Efx);
-}
-
 void JetSpray::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
     BounceBox(jet, djet, Efx.timeStep, 10);
     djet.z() = 0;
-    Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
+    Effect::PerFrame(EM, Efx);
 }
 
 void JetSpray::StartEffect(EffectsManager& Efx)
@@ -712,17 +631,10 @@ void Orbit2::DoActions(EffectsManager& Efx)
     PAEND
 }
 
-void Orbit2::EmitList(EffectsManager& Efx)
-{
-    particleRate = P_VARYING_FLOAT;
-    jet = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
-    Effect::EmitList(Efx);
-}
-
 void Orbit2::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
     BounceBox(jet, djet, Efx.timeStep, 10);
-    Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
+    Effect::PerFrame(EM, Efx);
 }
 
 void Orbit2::StartEffect(EffectsManager& Efx)
@@ -807,14 +719,6 @@ void Rain::DoActions(EffectsManager& Efx)
     Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1)));
 }
 
-void Rain::EmitList(EffectsManager& Efx)
-{
-    particleRate = P_VARYING_FLOAT;
-    Effect::EmitList(Efx);
-}
-
-void Rain::PerFrame(ExecMode_e EM, EffectsManager& Efx) { Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx); }
-
 void Rain::StartEffect(EffectsManager& Efx)
 {
     particleRate = Efx.maxParticles / particleLifetime;
@@ -836,16 +740,10 @@ void Restore::DoActions(EffectsManager& Efx)
     PAEND
 }
 
-void Restore::EmitList(EffectsManager& Efx)
-{
-    time_left = P_VARYING_FLOAT;
-    Effect::EmitList(Efx);
-}
-
 void Restore::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
     time_left -= Efx.timeStep;
-    Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
+    Effect::PerFrame(EM, Efx);
 }
 
 void Restore::StartEffect(EffectsManager& Efx)
@@ -878,8 +776,6 @@ void Shower::DoActions(EffectsManager& Efx)
         PP.Avoid(PT 10.f, 1.f, 2.f, PREND(PDPlane(pVec(0, 0, 0.1f), pVec(0, 0, 1))));
     } else if (SteerShape == STEER_DISC) {
         PP.Avoid(PT 3.f, 0.1f, 2.f, PREND(PDDisc(pVec(0, 0, 0.1f), pVec(0, 0, 1), 1.f, 0.f)));
-    } else if (SteerShape == P_VARYING_INT) {
-        PP.Avoid(PT 3.f, 0.1f, 2.f, PDVarying());
     }
 
     PP.Move(PT true, false);
@@ -899,26 +795,19 @@ void Shower::DoActions(EffectsManager& Efx)
     }
 }
 
-void Shower::EmitList(EffectsManager& Efx)
-{
-    SteerShape = P_VARYING_INT;
-    jet = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
-    Effect::EmitList(Efx);
-}
-
 void Shower::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
     BounceBox(jet, djet, Efx.timeStep, 2);
     jet += djet;
     djet.z() = 0;
 
-    Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
+    Effect::PerFrame(EM, Efx);
 }
 
 void Shower::StartEffect(EffectsManager& Efx)
 {
     particleRate = min(100.f, Efx.maxParticles / particleLifetime);
-    SteerShape = irand(STEER_VARYING);
+    SteerShape = irand(STEER_CNT);
     jet = Efx.center;
     djet = pRandVec() * 0.02f;
     djet.z() = 0.0f;
@@ -967,8 +856,7 @@ void Sphere::DoActions(EffectsManager& Efx)
     ParticleContext_t& P = Efx.P;
     pSourceState S;
     S.Color(PDLine(pVec(0, 1, 0), pVec(0, 0, 1)));
-    pVec vvel(P_VARYING_FLOAT, P_VARYING_FLOAT, 0.f);
-    if (dirAng != P_VARYING_FLOAT) vvel = pVec(sin(dirAng), cos(dirAng), 0.f) * 12.f;
+    pVec vvel = pVec(sin(dirAng), cos(dirAng), 0.f) * 12.f;
     S.Velocity(PDBlob(vvel, 0.4f));
     S.StartingAge(0);
     S.Size(particleSize);
@@ -984,17 +872,11 @@ void Sphere::DoActions(EffectsManager& Efx)
     Render(PDSphere(Efx.center, 5));
 }
 
-void Sphere::EmitList(EffectsManager& Efx)
-{
-    dirAng = P_VARYING_FLOAT;
-    Effect::EmitList(Efx);
-}
-
 void Sphere::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
     const float rotRateInRadPerSec = 0.5f;
     dirAng += rotRateInRadPerSec * Efx.timeStep;
-    Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
+    Effect::PerFrame(EM, Efx);
 
     PrimType = PRIM_DISPLAY_LIST;
     WhiteBackground = true;
@@ -1034,17 +916,10 @@ void Swirl::DoActions(EffectsManager& Efx)
     PAEND
 }
 
-void Swirl::EmitList(EffectsManager& Efx)
-{
-    particleRate = P_VARYING_FLOAT;
-    jet = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
-    Effect::EmitList(Efx);
-}
-
 void Swirl::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 {
     BounceBox(jet, djet, Efx.timeStep, 10);
-    Effect::PerFrame(EM == Immediate_Mode ? EM : Varying_Mode, Efx);
+    Effect::PerFrame(EM, Efx);
 }
 
 void Swirl::StartEffect(EffectsManager& Efx)
@@ -1155,11 +1030,10 @@ void EffectsManager::SetPhoto(uc3Image* Im)
 }
 
 // EM specifies how you want to run (for different benchmark purposes, mostly).
-// Allowed values are Immediate_Mode, Internal_Mode, and Compiled_Mode.
 // Set demoNum to -2 to let NextEffect choose the next demo.
 void EffectsManager::ChooseDemo(int newDemoNum, ExecMode_e EM)
 {
-    EASSERT(EM == Immediate_Mode || EM == Internal_Mode || EM == Compiled_Mode);
+    EASSERT(EM == Immediate_Mode || EM == ActionList_Mode || EM == Inline_Mode);
 
     demoNum = newDemoNum;
     if (demoNum == -1) demoNum = getNumEffects() - 1;
@@ -1182,19 +1056,9 @@ void EffectsManager::ChooseDemo(int newDemoNum, ExecMode_e EM)
 // Allowed values are Immediate_Mode, Internal_Mode, and Compiled_Mode.
 void EffectsManager::RunDemoFrame(ExecMode_e EM)
 {
-    EASSERT(EM == Immediate_Mode || EM == Internal_Mode || EM == Compiled_Mode);
-
-    if (EM == Internal_Mode && Demo->CompiledFunc != NULL) {
-        // User requested internal mode but the AL is set up for compiled mode; need to switch it to internal mode
-        P.BindEmittedActionList(Demo->AList, NULL, P_INTERNAL_CODE);
-    }
+    EASSERT(EM == Immediate_Mode || EM == ActionList_Mode || EM == Inline_Mode);
 
     Demo->PerFrame(EM, *this);
-
-    if (EM == Internal_Mode && Demo->CompiledFunc != NULL) {
-        // We switched the AL to internal mode. Now switch it back.
-        P.BindEmittedActionList(Demo->AList, Demo->CompiledFunc, Demo->BIND_KIND);
-    }
 }
 
 void EffectsManager::MakeEffects()
@@ -1224,6 +1088,6 @@ void EffectsManager::MakeEffects()
 
 void EffectsManager::MakeActionLists(ExecMode_e EM)
 {
-    if (EM != Immediate_Mode)
+    if (EM == ActionList_Mode)
         for (auto e : Effects) { e->CreateList(EM, *this); }
 }

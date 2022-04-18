@@ -509,7 +509,7 @@ void Draw()
         float fps = 1.f / FPSClock.GetMean();
 
         int cnt = (int)P.GetGroupCount();
-        char exCh = (ExecMode == Immediate_Mode) ? 'I' : (ExecMode == Internal_Mode) ? 'N' : 'C';
+        char exCh = (ExecMode == Immediate_Mode) ? 'I' : (ExecMode == ActionList_Mode) ? 'N' : 'C';
 
         sprintf(msg, " %c%c%c%c%c%c%c%c n=%6d iters=%d fps=%02.2f %s %s t=%1.2f", exCh, MotionBlur ? 'M' : ' ', FreezeParticles ? 'F' : ' ',
                 UseEffectSettings ? 'A' : ' ', RandomDemo ? 'R' : ' ', DepthTest ? 'D' : ' ', camCtrl.CameraMotion ? 'C' : ' ', SortParticles ? 'S' : ' ', cnt,
@@ -577,13 +577,13 @@ void menu(int item)
         break;
     case 'i':
         if (ExecMode == Immediate_Mode)
-            ExecMode = Internal_Mode;
-        else if (ExecMode == Internal_Mode)
-            ExecMode = Compiled_Mode;
+            ExecMode = ActionList_Mode;
+        else if (ExecMode == ActionList_Mode)
+            ExecMode = Inline_Mode;
         else
             ExecMode = Immediate_Mode;
 
-        std::cerr << "Switching to " << ((ExecMode == Immediate_Mode) ? "Immediate" : (ExecMode == Internal_Mode) ? "Internal" : "Compiled") << " mode.\n";
+        std::cerr << "Switching to " << ((ExecMode == Immediate_Mode) ? "Immediate" : (ExecMode == ActionList_Mode) ? "ActionList" : "Inline") << " mode.\n";
         break;
     case 'm': MotionBlur = !MotionBlur; break;
     case 'a': UseEffectSettings = !UseEffectSettings; break;

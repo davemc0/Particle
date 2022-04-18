@@ -32,16 +32,6 @@ enum pDomainType_E {
     PDCone_e,
     PDSphere_e,
     PDBlob_e,
-    PDVarying_e = P_VARYING_INT // Used to tell the action list emitter that the whole domain is varying
-};
-
-/// Store the raw input parameters of one of the other domains.
-///
-/// This is necessary if any parameters are VARYING because it means that construction must happen in the kernel,
-/// not at action list creation time. Hence, the input parameters must be preserved.
-struct PDRaw {
-    pVec v0, v1, v2;
-    float f0, f1;
 };
 
 /// A representation of a region of space.
@@ -66,9 +56,6 @@ class pDomain {
 public:
 #define P_N_FLOATS_IN_DOMAIN 30
     pDomainType_E Which;
-    bool Varying;
-    PDRaw PDRaw_V; // XXX Double storage hack!!!
-
     virtual bool Within(const pVec&) const = 0; ///< Returns true if the given point is within the domain.
     virtual pVec Generate() const = 0;          ///< Returns a random point in the domain.
     virtual float Size() const = 0;             ///< Returns the size of the domain (length, area, or volume).
@@ -77,15 +64,6 @@ public:
 };
 
 namespace {
-///< These are for internal use for determining that the variable is meant to vary from one call to the next.
-PINLINE bool Varies(float v) { return (v == P_VARYING_FLOAT); }
-
-PINLINE bool Varies(int v) { return (v == P_VARYING_INT); }
-
-PINLINE bool Varies(bool v) { return (v == P_VARYING_BOOL); }
-
-PINLINE bool Varies(const pVec& v) { return (v.x() == P_VARYING_FLOAT || v.y() == P_VARYING_FLOAT || v.z() == P_VARYING_FLOAT); }
-
 // Compute the inverse matrix of the plane basis.
 PINLINE void NewBasis(const pVec& u, const pVec& v, pVec& s1, pVec& s2)
 {
@@ -119,14 +97,12 @@ struct PDUnion : public pDomain {
     PDUnion() /// Use this one to create an empty PDUnion then call .insert() to add each item to it.
     {
         Which = PDUnion_e;
-        Varying = false;
         TotalSize = 0.0f;
     }
 
     PDUnion(const pDomain& A, const pDomain& B)
     {
         Which = PDUnion_e;
-        Varying = false;
         TotalSize = A.Size() + B.Size();
         Doms.push_back(A.copy());
         Doms.push_back(B.copy());
@@ -135,7 +111,6 @@ struct PDUnion : public pDomain {
     PDUnion(const pDomain& A, const pDomain& B, const pDomain& C)
     {
         Which = PDUnion_e;
-        Varying = false;
         TotalSize = A.Size() + B.Size() + C.Size();
         Doms.push_back(A.copy());
         Doms.push_back(B.copy());
@@ -148,7 +123,6 @@ struct PDUnion : public pDomain {
     PDUnion(const std::vector<std::shared_ptr<pDomain>>& DomList)
     {
         Which = PDUnion_e;
-        Varying = false;
         TotalSize = 0.0f;
         for (std::vector<std::shared_ptr<pDomain>>::const_iterator it = DomList.begin(); it != DomList.end(); it++) {
             Doms.push_back((*it)->copy());
@@ -160,7 +134,6 @@ struct PDUnion : public pDomain {
     PDUnion(const PDUnion& P)
     {
         Which = PDUnion_e;
-        Varying = false;
         TotalSize = 0.0f;
         for (std::vector<std::shared_ptr<pDomain>>::const_iterator it = P.Doms.begin(); it != P.Doms.end(); it++) {
             Doms.push_back((*it)->copy());
@@ -206,12 +179,7 @@ struct PDPoint : public pDomain {
     PINLINE PDPoint(const pVec& p0)
     {
         Which = PDPoint_e;
-        Varying = Varies(p0);
-        if (Varying) {
-            PDRaw_V.v0 = p0;
-        } else {
-            PDPoint_Cons(p0);
-        }
+        PDPoint_Cons(p0);
     }
 
     PINLINE void PDPoint_Cons(const pVec& p0) { p = p0; }
@@ -243,13 +211,7 @@ struct PDLine : public pDomain {
     PINLINE PDLine(const pVec& e0, const pVec& e1)
     {
         Which = PDLine_e;
-        Varying = Varies(e0) || Varies(e1);
-        if (Varying) {
-            PDRaw_V.v0 = e0;
-            PDRaw_V.v1 = e1;
-        } else {
-            PDLine_Cons(e0, e1);
-        }
+        PDLine_Cons(e0, e1);
     }
 
     PINLINE void PDLine_Cons(const pVec& e0, const pVec& e1)
@@ -294,22 +256,11 @@ struct PDTriangle : public pDomain {
     PINLINE PDTriangle(const pVec& p0, const pVec& p1, const pVec& p2)
     {
         Which = PDTriangle_e;
-        Varying = Varies(p0) || Varies(p1) || Varies(p2);
-        if (Varying) {
-            PDRaw_V.v0 = p0;
-            PDRaw_V.v1 = p1;
-            PDRaw_V.v2 = p2;
-        } else {
-            PDTriangle_Cons(p0, p1, p2);
-        }
+        PDTriangle_Cons(p0, p1, p2);
     }
 
     PINLINE void PDTriangle_Cons(const pVec& p0, const pVec& p1, const pVec& p2)
     {
-        if (Varies(p0) || Varies(p1) || Varies(p2)) {
-            // Store the input variables
-        }
-
         p = p0;
         u = p1 - p0;
         v = p2 - p0;
@@ -378,14 +329,7 @@ struct PDRectangle : public pDomain {
     PINLINE PDRectangle(const pVec& p0, const pVec& u0, const pVec& v0)
     {
         Which = PDRectangle_e;
-        Varying = Varies(p0) || Varies(u0) || Varies(v0);
-        if (Varying) {
-            PDRaw_V.v0 = p0;
-            PDRaw_V.v1 = u0;
-            PDRaw_V.v2 = v0;
-        } else {
-            PDRectangle_Cons(p0, u0, v0);
-        }
+        PDRectangle_Cons(p0, u0, v0);
     }
 
     PINLINE void PDRectangle_Cons(const pVec& p0, const pVec& u0, const pVec& v0)
@@ -454,15 +398,7 @@ struct PDDisc : public pDomain {
         if (InnerRadius < 0 || OuterRadius < 0) throw PErrInvalidValue("Can't have negative radius.");
 
         Which = PDDisc_e;
-        Varying = Varies(Center) || Varies(Normal) || Varies(OuterRadius) || Varies(InnerRadius);
-        if (Varying) {
-            PDRaw_V.v0 = Center;
-            PDRaw_V.v1 = Normal;
-            PDRaw_V.f0 = OuterRadius;
-            PDRaw_V.f1 = InnerRadius;
-        } else {
-            PDDisc_Cons(Center, Normal, OuterRadius, InnerRadius);
-        }
+        PDDisc_Cons(Center, Normal, OuterRadius, InnerRadius);
     }
 
     PINLINE void PDDisc_Cons(const pVec& Center, const pVec Normal, const float OuterRadius, const float InnerRadius = 0.0f)
@@ -546,13 +482,7 @@ struct PDPlane : public pDomain {
     PINLINE PDPlane(const pVec& p0, const pVec& Normal)
     {
         Which = PDPlane_e;
-        Varying = Varies(p0) || Varies(Normal);
-        if (Varying) {
-            PDRaw_V.v0 = p0;
-            PDRaw_V.v1 = Normal;
-        } else {
-            PDPlane_Cons(p0, Normal);
-        }
+        PDPlane_Cons(p0, Normal);
     }
 
     PINLINE void PDPlane_Cons(const pVec& p0, const pVec& Normal)
@@ -598,13 +528,7 @@ struct PDBox : public pDomain {
     PINLINE PDBox(const pVec& e0, const pVec& e1)
     {
         Which = PDBox_e;
-        Varying = Varies(e0) || Varies(e1);
-        if (Varying) {
-            PDRaw_V.v0 = e0;
-            PDRaw_V.v1 = e1;
-        } else {
-            PDBox_Cons(e0, e1);
-        }
+        PDBox_Cons(e0, e1);
     }
 
     PINLINE void PDBox_Cons(const pVec& e0, const pVec& e1)
@@ -660,15 +584,7 @@ struct PDCylinder : public pDomain {
         if (InnerRadius < 0 || OuterRadius < 0) throw PErrInvalidValue("Can't have negative radius.");
 
         Which = PDCylinder_e;
-        Varying = Varies(e0) || Varies(e1) || Varies(OuterRadius) || Varies(InnerRadius);
-        if (Varying) {
-            PDRaw_V.v0 = e0;
-            PDRaw_V.v1 = e1;
-            PDRaw_V.f0 = OuterRadius;
-            PDRaw_V.f1 = InnerRadius;
-        } else {
-            PDCylinder_Cons(e0, e1, OuterRadius, InnerRadius);
-        }
+        PDCylinder_Cons(e0, e1, OuterRadius, InnerRadius);
     }
 
     PINLINE void PDCylinder_Cons(const pVec& e0, const pVec& e1, const float OuterRadius, const float InnerRadius = 0.0f)
@@ -781,15 +697,7 @@ struct PDCone : public pDomain {
         if (InnerRadius < 0 || OuterRadius < 0) throw PErrInvalidValue("Can't have negative radius.");
 
         Which = PDCone_e;
-        Varying = Varies(e0) || Varies(e1) || Varies(OuterRadius) || Varies(InnerRadius);
-        if (Varying) {
-            PDRaw_V.v0 = e0;
-            PDRaw_V.v1 = e1;
-            PDRaw_V.f0 = OuterRadius;
-            PDRaw_V.f1 = InnerRadius;
-        } else {
-            PDCone_Cons(e0, e1, OuterRadius, InnerRadius);
-        }
+        PDCone_Cons(e0, e1, OuterRadius, InnerRadius);
     }
 
     PINLINE void PDCone_Cons(const pVec& e0, const pVec& e1, const float OuterRadius, const float InnerRadius = 0.0f)
@@ -907,14 +815,7 @@ struct PDSphere : public pDomain {
         if (InnerRadius < 0 || OuterRadius < 0) throw PErrInvalidValue("Can't have negative radius.");
 
         Which = PDSphere_e;
-        Varying = Varies(Center) || Varies(OuterRadius) || Varies(InnerRadius);
-        if (Varying) {
-            PDRaw_V.v0 = Center;
-            PDRaw_V.f0 = OuterRadius;
-            PDRaw_V.f1 = InnerRadius;
-        } else {
-            PDSphere_Cons(Center, OuterRadius, InnerRadius);
-        }
+        PDSphere_Cons(Center, OuterRadius, InnerRadius);
     }
 
     PINLINE void PDSphere_Cons(const pVec& Center, const float OuterRadius, const float InnerRadius = 0.0f)
@@ -990,13 +891,7 @@ struct PDBlob : public pDomain {
     PINLINE PDBlob(const pVec& Center, const float StandardDev)
     {
         Which = PDBlob_e;
-        Varying = Varies(Center) || Varies(StandardDev);
-        if (Varying) {
-            PDRaw_V.v0 = Center;
-            PDRaw_V.f0 = StandardDev;
-        } else {
-            PDBlob_Cons(Center, StandardDev);
-        }
+        PDBlob_Cons(Center, StandardDev);
     }
 
     PINLINE void PDBlob_Cons(const pVec& Center, const float StandardDev)
@@ -1026,31 +921,6 @@ struct PDBlob : public pDomain {
     }
 
     std::shared_ptr<pDomain> copy() const { return std::shared_ptr<pDomain>(new PDBlob(*this)); }
-};
-
-// These are fake constructors for the domain classes.
-// They return a pDomain struct.
-
-/// A fake domain used to indicate to the action list emitter that the entire domain is varying.
-struct PDVarying : public pDomain {
-    PINLINE PDVarying()
-    {
-        Which = PDVarying_e;
-        Varying = true;
-        PDRaw_V.v0 = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
-        PDRaw_V.v1 = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
-        PDRaw_V.v2 = pVec(P_VARYING_FLOAT, P_VARYING_FLOAT, P_VARYING_FLOAT);
-        PDRaw_V.f0 = P_VARYING_FLOAT;
-        PDRaw_V.f1 = P_VARYING_FLOAT;
-    }
-
-    PINLINE bool Within(const pVec& pos) const { return false; }
-
-    PINLINE pVec Generate() const { return pVec(0.f); }
-
-    PINLINE float Size() const { return 1.0f; }
-
-    std::shared_ptr<pDomain> copy() const { return std::shared_ptr<pDomain>(new PDVarying(*this)); }
 };
 }; // namespace PAPI
 
