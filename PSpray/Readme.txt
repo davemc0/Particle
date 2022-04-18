@@ -3,8 +3,8 @@ PSpray.exe
 Particle System API
 by David McAllister
 http://www.particlesystems.org
-version 2.1
-November 30, 2006
+version 2.21
+2008
 
 Double-click to start the program. 
 
