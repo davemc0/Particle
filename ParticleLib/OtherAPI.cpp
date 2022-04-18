@@ -5,7 +5,7 @@
 /// This file implements the API calls that are not particle actions.
 
 #include "PInternalState.h"
-#include "Particle/pAPI.h"
+#include "Particle/pAPIContext.h"
 
 #include <string>
 
@@ -298,6 +298,6 @@ void PContextParticleGroup_t::DeathCallback(P_PARTICLE_CALLBACK callback, pdata_
     PS->PGroups[PS->pgroup_id].SetDeathCallback(callback, data);
 }
 
-/// Set the number of particles that fit in the CPU's cache
+// Set the number of particles that fit in the CPU's cache
 void PContextParticleGroup_t::SetWorkingSetSize(const int set_size_bytes) { PS->PWorkingSetSize = set_size_bytes / sizeof(Particle_t); }
 }; // namespace PAPI

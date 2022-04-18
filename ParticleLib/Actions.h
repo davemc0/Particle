@@ -88,8 +88,7 @@ struct PABounce : public PActionBase {
 
 struct PACallback : public PActionBase {
     P_PARTICLE_CALLBACK_ACTION callbackFunc;
-    std::string callbackStr;
-    pdata_t Data; // The action list number to call
+    pdata_t call_data;
 
     ACTION_DECLS;
 };
@@ -100,25 +99,29 @@ struct PACallActionList : public PActionBase {
     ACTION_DECLS;
 };
 
+struct PACommitKills : public PActionBase {
+    ACTION_DECLS;
+};
+
 struct PACopyVertexB : public PActionBase {
-    bool copy_pos; // True to copy pos to posB.
-    bool copy_vel; // True to copy vel to velB.
+    bool copy_pos; // True to copy pos to posB
+    bool copy_vel; // True to copy vel to velB
 
     ACTION_DECLS;
 };
 
 struct PADamping : public PActionBase {
-    pVec damping; // Damping constant applied to velocity
-    float vlow;   // Apply damping only if velocity is within vlow and vhigh
-    float vhigh;
+    pVec damping;  // Damping constant applied to velocity
+    float min_vel; // Apply damping only if velocity is within min_vel and max_vel
+    float max_vel;
 
     ACTION_DECLS;
 };
 
 struct PARotDamping : public PActionBase {
-    pVec damping; // Damping constant applied to velocity
-    float vlow;   // Apply damping only if velocity is within vlow and vhigh
-    float vhigh;
+    pVec damping;  // Damping constant applied to velocity
+    float min_vel; // Apply damping only if velocity is within min_vel and max_vel
+    float max_vel;
 
     ACTION_DECLS;
 };
@@ -243,15 +246,15 @@ struct PARestore : public PActionBase {
 };
 
 struct PASink : public PActionBase {
-    bool kill_inside;                  // True to dispose of particles *inside* domain
-    std::shared_ptr<pDomain> position; // Disposal region
+    bool kill_inside;                      // True to dispose of particles *inside* domain
+    std::shared_ptr<pDomain> kill_pos_dom; // Disposal region
 
     ACTION_DECLS;
 };
 
 struct PASinkVelocity : public PActionBase {
-    bool kill_inside;                  // True to dispose of particles with vel *inside* domain
-    std::shared_ptr<pDomain> velocity; // Disposal region
+    bool kill_inside;                      // True to dispose of particles with vel *inside* domain
+    std::shared_ptr<pDomain> kill_vel_dom; // Disposal region
 
     ACTION_DECLS;
 };
@@ -266,9 +269,9 @@ struct PASort : public PActionBase {
 };
 
 struct PASource : public PActionBase {
-    std::shared_ptr<pDomain> position; // Choose a position in this domain
-    float particle_rate;               // Particles to generate per unit time
-    pSourceState SrcSt;                // The state needed to create a new particle
+    std::shared_ptr<pDomain> gen_pos; // Choose a position in this domain
+    float particle_rate;              // Particles to generate per unit time
+    pSourceState SrcSt;               // The state needed to create a new particle
 
     ACTION_DECLS;
 };

@@ -9,8 +9,7 @@
 #ifndef ParticleGroup_h
 #define ParticleGroup_h
 
-// Particle.h includes pVec.h.
-#include "Particle.h"
+#include "Particle/pParticle.h"
 
 #include <vector>
 

@@ -16,13 +16,13 @@
 #include <string>
 
 namespace {
-const int PRINT_PERIOD = 100;
+const int PRINT_PERIOD = 100, NUM_REPORTS = 5;
 ExecMode_e ExecMode = Internal_Mode;
 ParticleContext_t P;
 EffectsManager Efx(P, 500000);
 StatTimer FPSClock(PRINT_PERIOD);
 bool SortParticles = false, ShowText = true;
-int demoNum = 2;
+int demoNum = -1;
 } // namespace
 
 void Report()
@@ -39,7 +39,6 @@ void Report()
 }
 
 // Optimize the working set size
-// 3 MB works for Q6300.
 void RunBenchmarkCache()
 {
     Efx.particleHandle = P.GenParticleGroups(1, Efx.maxParticles); // Make a particle group
@@ -62,7 +61,7 @@ void RunBenchmarkCache()
     }
 }
 
-void RunBenchmark()
+void RunBenchmark(int demoNum)
 {
     Efx.particleHandle = P.GenParticleGroups(1, Efx.maxParticles); // Make a particle group
 
@@ -72,12 +71,14 @@ void RunBenchmark()
 
     Efx.ChooseDemo(demoNum, ExecMode);
 
-    for (int i = 0; i < 1000000; i++) {
+    for (int i = 0; i < PRINT_PERIOD * NUM_REPORTS; i++) {
         Efx.RunDemoFrame(ExecMode);
         if (SortParticles) P.Sort(pVec(0, -19, 4), Efx.center);
         FPSClock.Event();
         Report();
     }
+
+    P.DeleteParticleGroups(Efx.particleHandle);
 }
 
 // Test implementation of domains.
@@ -206,7 +207,10 @@ int main(int argc, char** argv)
 {
     Args(argc, argv);
 
-    RunBenchmark();
+    if (demoNum >= 0)
+        RunBenchmark(demoNum);
+    else
+        for (demoNum = 0; demoNum < Efx.Effects.size(); demoNum++) { RunBenchmark(demoNum); }
 
     return 0;
 }

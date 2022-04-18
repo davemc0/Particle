@@ -10,6 +10,10 @@ using namespace PAPI;
 #include <iostream>
 #include <vector>
 
+// TODO:
+#include <algorithm>
+#include <execution>
+
 //////////////////////////////////////////////////////////////////////////////
 
 namespace {
@@ -122,6 +126,24 @@ const pDomain& Effect::Render(const pDomain& dom)
 
 //////////////////////////////////////////////////////////////////////////////
 
+// #define LEGACY_ACTIONS
+
+#ifdef LEGACY_ACTIONS
+#define PATOP
+#define PP P
+#define PT
+#define PREND
+#define PAEND
+#else
+#define PATOP  P.ParticleLoop(std::execution::par_unseq, [&](Particle_t& p_) {
+#define PP P.I
+#define PT p_,
+#define PREND
+#define PAEND \
+    });       \
+    P.CommitKills();
+#endif
+
 // Particles orbiting a center
 void Atom::DoActions(EffectsManager& Efx)
 {
@@ -131,15 +153,17 @@ void Atom::DoActions(EffectsManager& Efx)
     S.Color(PDBox(pVec(1, 0, 0), pVec(1, 0, 1)));
     S.Size(particleSize);
     S.StartingAge(0);
-
     P.Source(particleRate, PDSphere(Efx.center, 4.f, 3.f), S);
-    P.OrbitPoint(Efx.center, 100.f);
-    P.TargetColor(pVec(0, 1, 0), 1, 0.05);
-    P.Move(true, false);
+
+    PATOP
+    PP.OrbitPoint(PT Efx.center, 100.f);
+    PP.TargetColor(PT pVec(0, 1, 0), 1, 0.05);
+    PP.Move(PT true, false);
 
     // Keep orbits from being too eccentric.
-    P.Sink(true, PDSphere(Efx.center, 1.0));
-    P.Sink(false, PDSphere(Efx.center, 8.0));
+    PP.Sink(PT true, PDSphere(Efx.center, 1.0));
+    PP.Sink(PT false, PDSphere(Efx.center, 8.0));
+    PAEND
 }
 
 void Atom::EmitList(EffectsManager& Efx)
@@ -181,13 +205,16 @@ void Balloons::DoActions(EffectsManager& Efx)
     float BBOX = 2.5;
     P.Source(particleRate, PDBox(Efx.center - pVec(BBOX), Efx.center + pVec(BBOX)), S);
 
-    P.Gravity(pVec(0.03f, -0.03f, 0.3f));
-    P.Damping(pVec(0.9, 0.9, 0.67));
-    float BOX = 12.0f;
-    P.RandomAccel(PDBox(pVec(-BOX), pVec(BOX)));
-    P.Move(true, false);
-    P.KillOld(7.f);
-    P.Sink(false, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
+    PATOP
+    PP.Gravity(PT pVec(0.03f, -0.03f, 0.3f));
+    PP.Damping(PT pVec(0.9, 0.9, 0.67));
+    PP.RandomAccel(PT PDBox(pVec(-12.f), pVec(12.f)));
+    PP.Move(PT true, false);
+    PP.KillOld(PT 7.f);
+    PP.Sink(PT false, PDPlane(pVec(0, 0, 0), pVec(0, 0, 1)));
+    PAEND
+
+    Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1)));
 }
 
 void Balloons::EmitList(EffectsManager& Efx)
@@ -221,25 +248,25 @@ void Boids::DoActions(EffectsManager& Efx)
     S.Size(particleSize);
     P.Source(particleRate, PDSphere(pVec(0, 15, 25), 10.f, 0.f), S);
 
-    // P.Gravity(Efx.GravityVec * 0.2f);
-    P.OrbitPoint(goalPoint, 300.f, 10.f); // Follow goal
+    PATOP
+    PP.OrbitPoint(PT goalPoint, 300.f, 10.f); // Follow goal
+    PP.Damping(PT 0.98f, minSpeed, P_MAXFLOAT);
+    PP.Gravitate(PT 0.15f, 0.005f);          // Flock centering
+    PP.MatchVelocity(PT 0.3f, 0.5f, radius); // Velocity matching
+    PP.Gravitate(PT - 1.f, 0.1f, radius);    // Neighbor collision avoidance
+    PP.Avoid(PT 5.f, 0.1f, 1.5f, PREND(PDRectangle(pVec(0, -8, 2), pVec(0, 0, 8), pVec(0, 16, 0))));
+    PP.Avoid(PT 5.f, 0.1f, 1.5f, PREND(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
+    PP.SpeedClamp(PT minSpeed, maxSpeed);
+    PP.TargetColor(PT pVec(0, 0, 0), 1, 0.04f);
+    PP.Move(PT true, false);
+    PP.Sink(PT false, PREND(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
+    PP.Sink(PT false, PDSphere(pVec(0.f), 40.f));
+    PAEND
+
     Render(PDSphere(goalPoint, 0.25f));
-    P.Damping(0.98f, minSpeed, P_MAXFLOAT);
-
-    P.Gravitate(0.15f, 0.005f); // Flock centering
-
-    P.MatchVelocity(0.3f, 0.5f, radius); // Velocity matching
-
-    P.Gravitate(-1.f, 0.1f, radius); // Neighbor collision avoidance
-
-    P.Avoid(5.f, 0.1f, 1.5f, Render(PDRectangle(pVec(0, -8, 2), pVec(0, 0, 8), pVec(0, 16, 0))));
-    P.Avoid(5.f, 0.1f, 1.5f, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
-
-    P.SpeedClamp(minSpeed, maxSpeed);
-    P.TargetColor(pVec(0, 0, 0), 1, 0.04f);
-    P.Move(true, false);
-    P.Sink(false, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
-    P.Sink(false, PDSphere(pVec(0.f), 40.f));
+    Render(PDRectangle(pVec(0, -8, 2), pVec(0, 0, 8), pVec(0, 16, 0)));
+    Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1)));
+    Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1)));
 }
 
 void Boids::PerFrame(ExecMode_e EM, EffectsManager& Efx)
@@ -254,9 +281,9 @@ void Boids::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 void Boids::StartEffect(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
-    if (Efx.particleHandle >= 0 && P.GetMaxParticles() > 3000) {
+    if (Efx.particleHandle >= 0 && P.GetMaxParticles() > 4000) {
         size_t pmax = P.GetMaxParticles();
-        P.SetMaxParticles(3000);
+        P.SetMaxParticles(4000);
         P.SetMaxParticles(pmax);
     }
 
@@ -286,24 +313,36 @@ void BounceToy::DoActions(EffectsManager& Efx)
     S.Size(particleSize);
     P.Source(particleRate, PDLine(C + pVec(-5, 0, 10), C + pVec(5, 0, 10)), S);
 
-    P.Gravity(Efx.GravityVec);
+    PATOP
+    PP.Gravity(PT Efx.GravityVec);
+    PP.Bounce(PT Fric, Res, FricMinTanVel, PREND(PDRectangle(C + pVec(-4, -2, 6), pVec(4, 0, 1), Side)));
+    PP.Bounce(PT Fric, Res, FricMinTanVel, PREND(PDRectangle(C + pVec(4, -2, 8), pVec(4, 0, -3), Side)));
+    PP.Bounce(PT Fric, Res, FricMinTanVel, PREND(PDRectangle(C + pVec(-1, -2, 6), pVec(2, 0, -2), Side)));
+    PP.Bounce(PT Fric, Res, FricMinTanVel, PREND(PDRectangle(C + pVec(1, -2, 2), pVec(4, 0, 2), Side)));
+    PP.Bounce(PT Fric, Res, FricMinTanVel, PREND(PDRectangle(C + pVec(-6, -2, 6), pVec(3, 0, -5), Side)));
+    PP.Bounce(PT Fric, Res, FricMinTanVel, PREND(PDRectangle(C + pVec(6, -2, 2), pVec(5, 0, 3), Side)));
+    PP.Bounce(PT Fric, Res, FricMinTanVel, PREND(PDRectangle(C + pVec(4, -2, -1), pVec(5, 0, 1.5), Side)));
+    PP.Bounce(PT Fric, Res, FricMinTanVel, PREND(PDRectangle(C + pVec(-3, -2, -1), pVec(5, 0, -1), Side)));
+    PP.Bounce(PT 0.05f, Res, 0, PREND(PDRectangle(C + pVec(-8, -2, -4.1), pVec(14, 0, 2), Side)));
+    PP.Bounce(PT Fric, Res, FricMinTanVel, PREND(PDRectangle(C + pVec(-10, -2, 5), pVec(4, 0, 5), Side)));
+    PP.Jet(PT PREND(PDBox(C + pVec(-10, -2, -6), C + pVec(-8, 2, -1))), PDPoint(pVec(0.0, 0.0, 100.f)));
+    PP.TargetColor(PT pVec(0, 0, 1), 1, 0.04);
+    PP.Move(PT true, false);
+    PP.Sink(PT false, PREND(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
+    PAEND
 
-    P.Bounce(Fric, Res, FricMinTanVel, Render(PDRectangle(C + pVec(-4, -2, 6), pVec(4, 0, 1), Side)));
-    P.Bounce(Fric, Res, FricMinTanVel, Render(PDRectangle(C + pVec(4, -2, 8), pVec(4, 0, -3), Side)));
-    P.Bounce(Fric, Res, FricMinTanVel, Render(PDRectangle(C + pVec(-1, -2, 6), pVec(2, 0, -2), Side)));
-    P.Bounce(Fric, Res, FricMinTanVel, Render(PDRectangle(C + pVec(1, -2, 2), pVec(4, 0, 2), Side)));
-    P.Bounce(Fric, Res, FricMinTanVel, Render(PDRectangle(C + pVec(-6, -2, 6), pVec(3, 0, -5), Side)));
-    P.Bounce(Fric, Res, FricMinTanVel, Render(PDRectangle(C + pVec(6, -2, 2), pVec(5, 0, 3), Side)));
-    P.Bounce(Fric, Res, FricMinTanVel, Render(PDRectangle(C + pVec(4, -2, -1), pVec(5, 0, 1.5), Side)));
-    P.Bounce(Fric, Res, FricMinTanVel, Render(PDRectangle(C + pVec(-3, -2, -1), pVec(5, 0, -1), Side)));
-    P.Bounce(0.05f, Res, 0, Render(PDRectangle(C + pVec(-8, -2, -4.1), pVec(14, 0, 2), Side)));
-    P.Bounce(Fric, Res, FricMinTanVel, Render(PDRectangle(C + pVec(-10, -2, 5), pVec(4, 0, 5), Side)));
-
-    P.Jet(Render(PDBox(C + pVec(-10, -2, -6), C + pVec(-8, 2, -1))), PDPoint(pVec(0.0, 0.0, 100.f)));
-    P.TargetColor(pVec(0, 0, 1), 1, 0.04);
-    P.Move(true, false);
-
-    P.Sink(false, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
+    Render(PDRectangle(C + pVec(-4, -2, 6), pVec(4, 0, 1), Side));
+    Render(PDRectangle(C + pVec(4, -2, 8), pVec(4, 0, -3), Side));
+    Render(PDRectangle(C + pVec(-1, -2, 6), pVec(2, 0, -2), Side));
+    Render(PDRectangle(C + pVec(1, -2, 2), pVec(4, 0, 2), Side));
+    Render(PDRectangle(C + pVec(-6, -2, 6), pVec(3, 0, -5), Side));
+    Render(PDRectangle(C + pVec(6, -2, 2), pVec(5, 0, 3), Side));
+    Render(PDRectangle(C + pVec(4, -2, -1), pVec(5, 0, 1.5), Side));
+    Render(PDRectangle(C + pVec(-3, -2, -1), pVec(5, 0, -1), Side));
+    Render(PDRectangle(C + pVec(-8, -2, -4.1), pVec(14, 0, 2), Side));
+    Render(PDRectangle(C + pVec(-10, -2, 5), pVec(4, 0, 5), Side));
+    Render(PDBox(C + pVec(-10, -2, -6), C + pVec(-8, 2, -1)));
+    Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1)));
 }
 
 void BounceToy::StartEffect(EffectsManager& Efx)
@@ -320,11 +359,14 @@ void BounceToy::StartEffect(EffectsManager& Efx)
 void Explosion::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
-    P.Damping(pVec(0.999f));
-    P.OrbitPoint(Efx.center, 30.f, 1.5);
-    P.Explosion(Efx.center, time_since_start * 30.f, 1000.f, 3.f, 0.1);
-    P.Move(true, false);
-    // P.Sink(false, PDSphere(Efx.center, 50.f));
+
+    PATOP
+    PP.Damping(PT pVec(0.999f));
+    PP.OrbitPoint(PT Efx.center, 30.f, 1.5);
+    PP.Explosion(PT Efx.center, time_since_start * 30.f, 1000.f, 3.f, 0.1);
+    PP.Move(PT true, false);
+    // PP.Sink(PT false, PDSphere(Efx.center, 50.f));
+    PAEND
 }
 
 void Explosion::EmitList(EffectsManager& Efx)
@@ -356,11 +398,14 @@ void Fireflies::DoActions(EffectsManager& Efx)
     S.Size(particleSize);
     P.Source(particleRate, PDBox(Efx.center - pVec(150, 25, 5), Efx.center + pVec(150, 150, 5)), S);
 
-    P.RandomAccel(PDSphere(pVec(0.f, 0.f, 3.6f), 25.f));
-    P.Move(true, false);
+    PATOP
+    PP.RandomAccel(PT PDSphere(pVec(0.f, 0.f, 3.6f), 25.f));
+    PP.Move(PT true, false);
+    PP.KillOld(PT 101.7f);
+    PP.Sink(PT false, PREND(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
+    PAEND
 
-    P.KillOld(101.7f);
-    P.Sink(false, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
+    Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1)));
 }
 
 void Fireflies::StartEffect(EffectsManager& Efx)
@@ -373,6 +418,8 @@ void Fireflies::StartEffect(EffectsManager& Efx)
     SortParticles = true;
 }
 
+// TODO: Port this to inline actions
+//
 // Rocket-style fireworks
 void Fireworks::DoActions(EffectsManager& Efx)
 {
@@ -472,14 +519,13 @@ void FlameThrower::DoActions(EffectsManager& Efx)
     S.Size(particleSize);
     P.Source(particleRate, PDSphere(Efx.center, 0.5f), S);
 
-    P.Gravity(pVec(0, 0, .6));
-    P.Damping(pVec(0.5, 0.5, 0.97));
-
-    const float BOX = 1.7;
-    P.RandomAccel(PDBox(pVec(-BOX), pVec(BOX)));
-
-    P.Move(true, false);
-    P.KillOld(particleLifetime);
+    PATOP
+    PP.Gravity(PT pVec(0, 0, .6));
+    PP.Damping(PT pVec(0.5, 0.5, 0.97));
+    PP.RandomAccel(PT PDBox(pVec(-1.7), pVec(1.7)));
+    PP.Move(PT true, false);
+    PP.KillOld(PT particleLifetime);
+    PAEND
 }
 
 void FlameThrower::EmitList(EffectsManager& Efx)
@@ -518,12 +564,15 @@ void Fountain::DoActions(EffectsManager& Efx)
     S.Size(particleSize);
     P.Source(particleRate, PDLine(pVec(0.0, 0.0, 1.f), pVec(0.0, 0.0, 1.4f)), S);
 
-    P.Gravity(Efx.GravityVec);
-    P.Bounce(0.f, 0.5f, 0.f, Render(PDDisc(pVec(0, 0, 1.f), pVec(0, 0, 1.f), 5)));
-    P.Move(true, false);
+    PATOP
+    PP.Gravity(PT Efx.GravityVec);
+    PP.Bounce(PT 0.f, 0.5f, 0.f, PREND(PDDisc(pVec(0, 0, 1.f), pVec(0, 0, 1.f), 5)));
+    PP.Move(PT true, false);
+    PP.Sink(PT false, PDPlane(pVec(0, 0, -3), pVec(0, 0, 1)));
+    PP.SinkVelocity(PT true, PDSphere(pVec(0, 0, 0), 0.01));
+    PAEND
 
-    P.Sink(false, Render(PDPlane(pVec(0, 0, -3), pVec(0, 0, 1))));
-    P.SinkVelocity(true, PDSphere(pVec(0, 0, 0), 0.01));
+    Render(PDDisc(pVec(0, 0, 1.f), pVec(0, 0, 1.f), 5));
 }
 
 void Fountain::EmitList(EffectsManager& Efx)
@@ -601,16 +650,20 @@ void JetSpray::DoActions(EffectsManager& Efx)
     S.Size(particleSize);
     S.Color(PDSphere(pVec(.8, .4, .1), .1));
     P.Source(60, PDRectangle(pVec(-1, -1, 0.1), pVec(2, 0, 0), pVec(0, 2, 0)), S);
-
     S.Color(PDSphere(pVec(.5, .4, .1), .1));
     P.Source(particleRate, PDRectangle(pVec(-10, -10, 0.1), pVec(20, 0, 0), pVec(0, 20, 0)), S);
 
-    P.Gravity(Efx.GravityVec);
+    PATOP
+    PP.Gravity(PT Efx.GravityVec);
+    PP.Jet(PT PREND(PDSphere(jet, 1.5)), PDBlob(pVec(0, 0, 200.f), 40.f));
+    PP.Bounce(PT 0.1, 0.3, 0.1, PREND(PDRectangle(pVec(-10, -10, 0.0), pVec(20, 0, 0), pVec(0, 20, 0))));
+    PP.Sink(PT false, PREND(PDPlane(pVec(0, 0, -10), pVec(0, 0, 1))));
+    PP.Move(PT true, false);
+    PAEND
 
-    P.Jet(Render(PDSphere(jet, 1.5)), PDBlob(pVec(0, 0, 200.f), 40.f));
-    P.Bounce(0.1, 0.3, 0.1, Render(PDRectangle(pVec(-10, -10, 0.0), pVec(20, 0, 0), pVec(0, 20, 0))));
-    P.Sink(false, Render(PDPlane(pVec(0, 0, -10), pVec(0, 0, 1))));
-    P.Move(true, false);
+    Render(PDSphere(jet, 1.5)), PDBlob(pVec(0, 0, 200.f), 40.f);
+    Render(PDRectangle(pVec(-10, -10, 0.0), pVec(20, 0, 0), pVec(0, 20, 0)));
+    Render(PDPlane(pVec(0, 0, -10), pVec(0, 0, 1)));
 }
 
 void JetSpray::EmitList(EffectsManager& Efx)
@@ -650,12 +703,13 @@ void Orbit2::DoActions(EffectsManager& Efx)
     S.Color(PDSphere(tjet, 0.1));
     P.Source(particleRate, PDPoint(jet), S);
 
-    P.OrbitPoint(pVec(2, 0, 3), 100.f, 1.5f);
-    P.OrbitPoint(pVec(-2, 0, 3), 100.f, 1.5f);
-    P.Damping(pVec(0.994));
-    P.Move(true, false);
-
-    P.KillOld(particleLifetime);
+    PATOP
+    PP.OrbitPoint(PT pVec(2, 0, 3), 100.f, 1.5f);
+    PP.OrbitPoint(PT pVec(-2, 0, 3), 100.f, 1.5f);
+    PP.Damping(PT pVec(0.994f));
+    PP.Move(PT true, false);
+    PP.KillOld(PT particleLifetime);
+    PAEND
 }
 
 void Orbit2::EmitList(EffectsManager& Efx)
@@ -742,11 +796,15 @@ void Rain::DoActions(EffectsManager& Efx)
     S.StartingAge(0, 5);
     float D = 200;
     P.Source(particleRate, PDRectangle(pVec(-D / 2, -D / 2, 15), pVec(D, 0, 0), pVec(0, D, 0)), S);
-    P.Gravity(Efx.GravityVec);
-    P.Bounce(0.3, 0.3, 0, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
-    P.Move(true, false);
 
-    P.KillOld(particleLifetime);
+    PATOP
+    PP.Gravity(PT Efx.GravityVec);
+    PP.Bounce(PT 0.3, 0.3, 0, PREND(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
+    PP.Move(PT true, false);
+    PP.KillOld(PT particleLifetime);
+    PAEND
+
+    Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1)));
 }
 
 void Rain::EmitList(EffectsManager& Efx)
@@ -771,8 +829,11 @@ void Rain::StartEffect(EffectsManager& Efx)
 void Restore::DoActions(EffectsManager& Efx)
 {
     ParticleContext_t& P = Efx.P;
-    P.Restore(time_left);
-    P.Move(true, false);
+
+    PATOP
+    PP.Restore(PT time_left);
+    PP.Move(PT true, false);
+    PAEND
 }
 
 void Restore::EmitList(EffectsManager& Efx)
@@ -804,27 +865,38 @@ void Shower::DoActions(EffectsManager& Efx)
     S.Color(PDBlob(pVec(.7, .7, .2), .2));
     P.Source(particleRate, PDPoint(jet), S);
 
-    P.Gravity(Efx.GravityVec * 0.1f);
-
-    const float lookAheadTime = 2.f;
+    PATOP
+    PP.Gravity(PT Efx.GravityVec * 0.1f);
 
     if (SteerShape == STEER_SPHERE) {
-        P.Avoid(3.f, 0.1f, lookAheadTime, Render(PDSphere(pVec(0, 0, 0), 1.f)));
+        PP.Avoid(PT 3.f, 0.1f, 2.f, PREND(PDSphere(pVec(0, 0, 0), 1.f)));
     } else if (SteerShape == STEER_TRIANGLE) {
-        P.Avoid(3.f, 0.1f, lookAheadTime, Render(PDTriangle(pVec(0, -1, 0.1f), pVec(2, 0, 0.1f), pVec(0, 2, 0.1f))));
+        PP.Avoid(PT 3.f, 0.1f, 2.f, PREND(PDTriangle(pVec(0, -1, 0.1f), pVec(2, 0, 0.1f), pVec(0, 2, 0.1f))));
     } else if (SteerShape == STEER_RECTANGLE) {
-        P.Avoid(3.f, 0.1f, lookAheadTime, Render(PDRectangle(pVec(0, -1, 0.1f), pVec(2, 1, 0), pVec(0, 2, 0))));
+        PP.Avoid(PT 3.f, 0.1f, 2.f, PREND(PDRectangle(pVec(0, -1, 0.1f), pVec(2, 1, 0), pVec(0, 2, 0))));
     } else if (SteerShape == STEER_PLANE) {
-        P.Avoid(10.f, 1.f, lookAheadTime, Render(PDPlane(pVec(0, 0, 0.1f), pVec(0, 0, 1))));
+        PP.Avoid(PT 10.f, 1.f, 2.f, PREND(PDPlane(pVec(0, 0, 0.1f), pVec(0, 0, 1))));
     } else if (SteerShape == STEER_DISC) {
-        P.Avoid(3.f, 0.1f, lookAheadTime, Render(PDDisc(pVec(0, 0, 0.1f), pVec(0, 0, 1), 1.f, 0.f)));
+        PP.Avoid(PT 3.f, 0.1f, 2.f, PREND(PDDisc(pVec(0, 0, 0.1f), pVec(0, 0, 1), 1.f, 0.f)));
     } else if (SteerShape == P_VARYING_INT) {
-        P.Avoid(3.f, 0.1f, lookAheadTime, PDVarying());
+        PP.Avoid(PT 3.f, 0.1f, 2.f, PDVarying());
     }
 
-    P.Move(true, false);
+    PP.Move(PT true, false);
+    PP.KillOld(PT particleLifetime);
+    PAEND
 
-    P.KillOld(particleLifetime);
+    if (SteerShape == STEER_SPHERE) {
+        Render(PDSphere(pVec(0, 0, 0), 1.f));
+    } else if (SteerShape == STEER_TRIANGLE) {
+        Render(PDTriangle(pVec(0, -1, 0.1f), pVec(2, 0, 0.1f), pVec(0, 2, 0.1f)));
+    } else if (SteerShape == STEER_RECTANGLE) {
+        Render(PDRectangle(pVec(0, -1, 0.1f), pVec(2, 1, 0), pVec(0, 2, 0)));
+    } else if (SteerShape == STEER_PLANE) {
+        Render(PDPlane(pVec(0, 0, 0.1f), pVec(0, 0, 1)));
+    } else if (SteerShape == STEER_DISC) {
+        Render(PDDisc(pVec(0, 0, 0.1f), pVec(0, 0, 1), 1.f, 0.f));
+    }
 }
 
 void Shower::EmitList(EffectsManager& Efx)
@@ -854,7 +926,7 @@ void Shower::StartEffect(EffectsManager& Efx)
     PrimType = PRIM_LINE;
     WhiteBackground = true;
     DepthTest = true;
-    MotionBlur = false;
+    MotionBlur = true;
     SortParticles = false;
 }
 
@@ -870,11 +942,13 @@ void Snake::DoActions(EffectsManager& Efx)
     float BOX = .5f;
     P.Source(particleRate, Render(PDBox(pVec(-BOX), pVec(BOX))), S);
 
-    P.Follow(10.f, 1.0f);
-    // P.Gravitate(10.f, 1.0f); // Gives an interesting effect, but very slow
-    P.Damping(pVec(0.9));
-    P.Move(true, false);
-    P.Sink(false, PDSphere(pVec(0, 0, 0), 25));
+    PATOP
+    PP.Follow(PT 10.f, 1.0f);
+    // PP.Gravitate(PT 10.f, 1.0f); // Gives an interesting effect, but very slow
+    PP.Damping(PT pVec(0.9));
+    PP.Move(PT true, false);
+    PP.Sink(PT false, PDSphere(pVec(0, 0, 0), 25));
+    PAEND
 }
 
 void Snake::StartEffect(EffectsManager& Efx)
@@ -883,7 +957,7 @@ void Snake::StartEffect(EffectsManager& Efx)
     PrimType = PRIM_DISPLAY_LIST;
     WhiteBackground = true;
     DepthTest = true;
-    MotionBlur = false;
+    MotionBlur = true;
     SortParticles = false;
 }
 
@@ -900,11 +974,14 @@ void Sphere::DoActions(EffectsManager& Efx)
     S.Size(particleSize);
     P.Source(particleRate, PDPoint(pVec(1, 0, 8)), S);
 
-    P.Gravity(Efx.GravityVec);
-    P.Bounce(0, 0.55, 0, Render(PDSphere(Efx.center, 5)));
-    P.Move(true, false);
+    PATOP
+    PP.Gravity(PT Efx.GravityVec);
+    PP.Bounce(PT 0, 0.55, 0, PREND(PDSphere(Efx.center, 5)));
+    PP.Move(PT true, false);
+    PP.KillOld(PT particleLifetime);
+    PAEND
 
-    P.KillOld(particleLifetime);
+    Render(PDSphere(Efx.center, 5));
 }
 
 void Sphere::EmitList(EffectsManager& Efx)
@@ -948,12 +1025,13 @@ void Swirl::DoActions(EffectsManager& Efx)
     S.Color(PDSphere(tjet, 0.1));
     P.Source(particleRate, PDPoint(jet), S);
 
-    P.OrbitLine(pVec(2, 0, 3), pVec(1.f, 0.f, 0.f), 100.f, 1.5f);
-    P.Damping(pVec(0.995f));
-    P.Move(true, false);
-
-    P.Sink(false, PDSphere(Efx.center, 25.f));
-    P.KillOld(particleLifetime);
+    PATOP
+    PP.OrbitLine(PT pVec(2, 0, 3), pVec(1.f, 0.f, 0.f), 100.f, 1.5f);
+    PP.Damping(PT pVec(0.995f));
+    PP.Move(PT true, false);
+    PP.Sink(PT false, PDSphere(Efx.center, 25.f));
+    PP.KillOld(PT particleLifetime);
+    PAEND
 }
 
 void Swirl::EmitList(EffectsManager& Efx)
@@ -994,13 +1072,16 @@ void Tornado::DoActions(EffectsManager& Efx)
     S.Size(particleSize);
     P.Source(particleRate, Render(PDBox(pVec(-7, 0, 12), pVec(7, 0, 16))), S);
 
-    P.Damping(pVec(.95));
-    P.Gravity(Efx.GravityVec);
-    P.Vortex(Efx.center + pVec(0, 0, -5.f), pVec(0, 0, 11), 1.8f, 7.f, 80.f, -200.f, 1000.0f);
-    P.Move(true, false);
+    PATOP
+    PP.Damping(PT pVec(.95));
+    PP.Gravity(PT Efx.GravityVec);
+    PP.Vortex(PT Efx.center + pVec(0, 0, -5.f), pVec(0, 0, 11), 1.8f, 7.f, 80.f, -200.f, 1000.0f);
+    PP.Move(PT true, false);
+    PP.KillOld(PT particleLifetime);
+    PP.Sink(PT false, PREND(PDPlane(pVec(0, 0, -2), pVec(0, 0, 1))));
+    PAEND
 
-    P.KillOld(particleLifetime);
-    P.Sink(false, Render(PDPlane(pVec(0, 0, -2), pVec(0, 0, 1))));
+    Render(PDPlane(pVec(0, 0, -2), pVec(0, 0, 1)));
 }
 
 void Tornado::StartEffect(EffectsManager& Efx)
@@ -1024,16 +1105,23 @@ void Waterfall::DoActions(EffectsManager& Efx)
     S.Size(particleSize);
     P.Source(particleRate, Render(PDLine(pVec(-5, -1, 8), pVec(-5, 1, 8))), S);
 
-    P.Gravity(Efx.GravityVec);
-    P.Bounce(0, 0.3, 0, Render(PDRectangle(pVec(-7, -2, 7), pVec(3, 0, 0), pVec(0, 4, 0))));
-    P.Bounce(0, 0.5, 0, Render(PDSphere(pVec(-3.7, 1, 6), 0.5)));
-    P.Bounce(0, 0.5, 0, Render(PDSphere(pVec(-3.5, 0, 2), 2)));
-    P.Bounce(0, 0.5, 0, Render(PDSphere(pVec(3.8, 0, 0), 2)));
-    P.Bounce(-0.01, 0.35, 0, Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
-    P.Move(true, false);
+    PATOP
+    PP.Gravity(PT Efx.GravityVec);
+    PP.Bounce(PT 0, 0.3, 0, PREND(PDRectangle(pVec(-7, -2, 7), pVec(3, 0, 0), pVec(0, 4, 0))));
+    PP.Bounce(PT 0, 0.5, 0, PREND(PDSphere(pVec(-3.7, 1, 6), 0.5)));
+    PP.Bounce(PT 0, 0.5, 0, PREND(PDSphere(pVec(-3.5, 0, 2), 2)));
+    PP.Bounce(PT 0, 0.5, 0, PREND(PDSphere(pVec(3.8, 0, 0), 2)));
+    PP.Bounce(PT - 0.01, 0.35, 0, PREND(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
+    PP.Move(PT true, false);
+    PP.KillOld(PT particleLifetime);
+    PP.Sink(PT false, PDSphere(pVec(0, 0, 0), 25));
+    PAEND
 
-    P.KillOld(particleLifetime);
-    P.Sink(false, PDSphere(pVec(0, 0, 0), 25));
+    Render(PDRectangle(pVec(-7, -2, 7), pVec(3, 0, 0), pVec(0, 4, 0)));
+    Render(PDSphere(pVec(-3.7, 1, 6), 0.5));
+    Render(PDSphere(pVec(-3.5, 0, 2), 2));
+    Render(PDSphere(pVec(3.8, 0, 0), 2));
+    Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1)));
 }
 
 void Waterfall::StartEffect(EffectsManager& Efx)

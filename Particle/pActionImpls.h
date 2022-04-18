@@ -17,12 +17,14 @@
 // Actions that kill particles
 // Actions that use domains (maybe not difficult)
 // Actions that refer to other particles
-// Actions that call out
+// Actions that call callbacks
+// Actions that call action lists
 
 #ifndef implactions_h
 #define implactions_h
 
-#include "Particle.h"
+#include "Particle/pDeclarations.h"
+#include "Particle/pParticle.h"
 #include "Particle/pSourceState.h"
 
 using namespace PAPI;
@@ -254,6 +256,8 @@ PINLINE void PAAvoidDisc_Impl(Particle_t& m, const float dt, const PDDisc& dom, 
     pVec dir = (S * (magdt / (fsqr(t) + epsilon))) + Vn;
     m.vel = dir * (vlen / dir.length()); // Speed of m.vel, but in direction dir.
 }
+
+// TODO: Could I implement a generic bounce function that works on any domain, given the domain's Within function and its surface normal at the hit location?
 
 // Bounce() doesn't work correctly with small time step sizes for particles sliding along a surface.
 // The friction and resilience parameters should not be scaled by dt, since a bounce happens instantaneously.
@@ -517,29 +521,29 @@ PINLINE void PACopyVertexB_Impl(Particle_t& m, const float dt, const bool copy_p
 }
 
 // Dampen velocities
-PINLINE void PADamping_Impl(Particle_t& m, const float dt, const pVec damping, const float vlow, const float vhigh)
+PINLINE void PADamping_Impl(Particle_t& m, const float dt, const pVec damping, const float min_vel, const float max_vel)
 {
     pVec scale(pVec(1.f) - ((pVec(1.f) - damping) * dt)); // This is important if dt is != 1.
-    float vlowSqr = fsqr(vlow);
-    float vhighSqr = fsqr(vhigh);
+    float min_vel_sqr = fsqr(min_vel);
+    float max_vel_sqr = fsqr(max_vel);
     // ^^^ Above values do not vary per particle.
 
     float vSqr = m.vel.lenSqr();
 
-    if (vSqr >= vlowSqr && vSqr <= vhighSqr) { m.vel = CompMult(m.vel, scale); }
+    if (vSqr >= min_vel_sqr && vSqr <= max_vel_sqr) { m.vel = CompMult(m.vel, scale); }
 }
 
 // Dampen rotational velocities
-PINLINE void PARotDamping_Impl(Particle_t& m, const float dt, const pVec damping, const float vlow, const float vhigh)
+PINLINE void PARotDamping_Impl(Particle_t& m, const float dt, const pVec damping, const float min_vel, const float max_vel)
 {
     pVec scale(pVec(1.f) - ((pVec(1.f) - damping) * dt)); // This is important if dt is != 1.
-    float vlowSqr = fsqr(vlow);
-    float vhighSqr = fsqr(vhigh);
+    float min_vel_sqr = fsqr(min_vel);
+    float max_vel_sqr = fsqr(max_vel);
     // ^^^ Above values do not vary per particle.
 
     float vSqr = m.rvel.lenSqr();
 
-    if (vSqr >= vlowSqr && vSqr <= vhighSqr) { m.rvel = CompMult(m.rvel, scale); }
+    if (vSqr >= min_vel_sqr && vSqr <= max_vel_sqr) { m.rvel = CompMult(m.rvel, scale); }
 }
 
 // Exert force on each particle away from explosion center
@@ -563,47 +567,6 @@ PINLINE void PAExplosion_Impl(Particle_t& m, const float dt, const pVec center, 
     m.vel += acc;
 }
 
-// Follow the next particle in the list
-PINLINE void PAFollow_Impl(Particle_t& m, const float dt, const float magnitude, const float epsilon, const float max_radius)
-{
-#if 0
- // XXX Need to do something special in the caller to get the other particle.
-
- // Accelerate toward the particle after me in the list.
- pVec toHim((*next).pos - m.pos); // toHim = p1 - p0
- float toHimlenSqr = toHim.lenSqr();
-
- if (toHimlenSqr < max_radiusSqr) {
- // Compute force exerted between the two bodies
- m.vel += toHim * (magdt / (sqrtf(toHimlenSqr) * (toHimlenSqr + epsilon)));
- }
-#endif
-}
-
-// Inter-particle gravitation
-PINLINE void PAGravitate_Impl(Particle_t& m, const float dt, const float magnitude, const float epsilon, const float max_radius)
-{
-#if 0
- // XXX Need access to all the particles.
- float magdt = magnitude * dt;
- float max_radiusSqr = fsqr(max_radius);
-
- // Add interactions with other particles
- for (ParticleList::iterator j = ibegin; j != iend; ++j) {
- Particle_t& mj = (*j);
-
- pVec toHim(mj.pos - m.pos); // toHim = p1 - p0
- float toHimlenSqr = toHim.lenSqr();
- if (toHimlenSqr > 0.f && toHimlenSqr < max_radiusSqr) {
- // Compute force exerted between the two bodies
- pVec acc(toHim * (magdt / (sqrtf(toHimlenSqr) * (toHimlenSqr + epsilon))));
-
- m.vel += acc;
- }
- }
-#endif
-}
-
 // Acceleration in a constant direction
 PINLINE void PAGravity_Impl(Particle_t& m, const float dt, const pVec direction)
 {
@@ -613,69 +576,13 @@ PINLINE void PAGravity_Impl(Particle_t& m, const float dt, const pVec direction)
 }
 
 // For particles in the domain of influence, accelerate them with a domain.
-PINLINE void PAJet_Impl(Particle_t& m, const float dt, const std::shared_ptr<pDomain> dom, const std::shared_ptr<pDomain> acc)
+PINLINE void PAJet_Impl(Particle_t& m, const float dt, const pDomain& dom, const pDomain& acc)
 {
-    if (dom->Within(m.pos)) {
-        pVec accel = acc->Generate();
+    if (dom.Within(m.pos)) {
+        pVec accel = acc.Generate();
 
         m.vel += accel * dt;
     }
-}
-
-// Get rid of older particles
-PINLINE void PAKillOld_Impl(Particle_t& m, const float dt, const float age_limit, const bool kill_less_than)
-{
-    if (!((m.age < age_limit) ^ kill_less_than)) { m.tmp0 = 1.0f; }
-}
-
-// Match velocity to near neighbors
-PINLINE void PAMatchVelocity_Impl(Particle_t& m, const float dt, const float magnitude, const float epsilon, const float max_radius)
-{
-#if 0
- // XXX Need to handle N squared here.
- float magdt = magnitude * dt;
- float max_radiusSqr = fsqr(max_radius);
-
- // Add interactions with other particles
- for (ParticleList::iterator j = ibegin; j != iend; ++j) {
- Particle_t& mj = (*j);
-
- pVec toHim(mj.pos - m.pos); // toHim = p1 - p0
- float toHimlenSqr = toHim.lenSqr();
- if (toHimlenSqr > 0.f && toHimlenSqr < max_radiusSqr) {
- // Compute force exerted between the two bodies
- pVec veltoHim(mj.vel - m.vel);
- pVec acc(veltoHim * (magdt / (toHimlenSqr + epsilon)));
-
- m.vel += acc;
- }
- }
-#endif
-}
-
-// Match Rotational velocity to near neighbors
-PINLINE void PAMatchRotVelocity_Impl(Particle_t& m, const float dt, const float magnitude, const float epsilon, const float max_radius)
-{
-#if 0
- // XXX Need to handle N squared here.
- float magdt = magnitude * dt;
- float max_radiusSqr = fsqr(max_radius);
-
- // Add interactions with other particles
- for (ParticleList::iterator j = ibegin; j != iend; ++j) {
- Particle_t& mj = (*j);
-
- pVec toHim(mj.pos - m.pos); // toHim = p1 - p0
- float toHimlenSqr = toHim.lenSqr();
- if (toHimlenSqr > 0.f && toHimlenSqr < max_radiusSqr) {
- // Compute force exerted between the two bodies
- pVec rveltoHim(mj.rvel - m.rvel);
- pVec acc(rveltoHim * (magdt / (toHimlenSqr + epsilon)));
-
- m.rvel += acc;
- }
- }
-#endif
 }
 
 // Apply the particles' velocities to their positions, and age the particles
@@ -729,9 +636,9 @@ PINLINE void PAOrbitPoint_Impl(Particle_t& m, const float dt, const pVec center,
 }
 
 // Accelerate in random direction each time step
-PINLINE void PARandomAccel_Impl(Particle_t& m, const float dt, const std::shared_ptr<pDomain> gen_acc)
+PINLINE void PARandomAccel_Impl(Particle_t& m, const float dt, const pDomain& gen_acc)
 {
-    pVec accel = gen_acc->Generate();
+    pVec accel = gen_acc.Generate();
 
     // Dt will affect this by making a higher probability of being near the original velocity after unit time.
     // Smaller dt approach a normal distribution instead of a square wave.
@@ -739,9 +646,9 @@ PINLINE void PARandomAccel_Impl(Particle_t& m, const float dt, const std::shared
 }
 
 // Immediately displace position randomly
-PINLINE void PARandomDisplace_Impl(Particle_t& m, const float dt, const std::shared_ptr<pDomain> gen_disp)
+PINLINE void PARandomDisplace_Impl(Particle_t& m, const float dt, const pDomain& gen_disp)
 {
-    pVec disp = gen_disp->Generate();
+    pVec disp = gen_disp.Generate();
 
     // Dt will affect this by making a higher probability of being near the original position after unit time.
     // Smaller dt approach a normal distribution instead of a square wave.
@@ -749,19 +656,19 @@ PINLINE void PARandomDisplace_Impl(Particle_t& m, const float dt, const std::sha
 }
 
 // Immediately assign a random velocity
-PINLINE void PARandomVelocity_Impl(Particle_t& m, const float dt, const std::shared_ptr<pDomain> gen_vel)
+PINLINE void PARandomVelocity_Impl(Particle_t& m, const float dt, const pDomain& gen_vel)
 {
-    pVec velocity = gen_vel->Generate();
+    pVec velocity = gen_vel.Generate();
 
     // Don't multiply by dt because velocities are invariant of dt.
     m.vel = velocity;
 }
 
 // Immediately assign a random rotational velocity
-PINLINE void PARandomRotVelocity_Impl(Particle_t& m, const float dt, const std::shared_ptr<pDomain> gen_vel)
+PINLINE void PARandomRotVelocity_Impl(Particle_t& m, const float dt, const pDomain& gen_vel)
 
 {
-    pVec velocity = gen_vel->Generate();
+    pVec velocity = gen_vel.Generate();
 
     // Don't multiply by dt because velocities are invariant of dt.
     m.rvel = velocity;
@@ -797,71 +704,6 @@ PINLINE void PARestore_Impl(Particle_t& m, const float dt, const float time_left
         if (restore_velocity) doRestore(m.vel, m.posB, m.pos, t, dtSqr, ttInv6dt, tttInv3dtSqr);
         if (restore_rvelocity) doRestore(m.rvel, m.upB, m.up, t, dtSqr, ttInv6dt, tttInv3dtSqr);
     }
-}
-
-// Kill particles with positions on wrong side of the specified domain
-PINLINE void PASink_Impl(Particle_t& m, const float dt, const bool kill_inside, const std::shared_ptr<pDomain> position)
-{
-    // Remove if inside/outside flag matches object's flag
-    if (!(position->Within(m.pos) ^ kill_inside)) { m.tmp0 = 1.0f; }
-}
-
-// Kill particles with velocities on wrong side of the specified domain
-PINLINE void PASinkVelocity_Impl(Particle_t& m, const float dt, const bool kill_inside, const std::shared_ptr<pDomain> velocity)
-{
-    // Remove if inside/outside flag matches object's flag
-    if (!(velocity->Within(m.vel) ^ kill_inside)) { m.tmp0 = 1.0f; }
-}
-
-// Sort the particles by their projection onto the Look vector
-PINLINE void PASort_Impl(Particle_t& m, const float dt, const pVec Eye, const pVec Look, const bool front_to_back, const bool clamp_negative)
-{
-#if 0
- // XXX Need access to all particles.
-
- float Scale = front_to_back ? -1.0f : 1.0f;
-
- // First compute projection of particle onto view vector
- for (ParticleList::iterator it = ibegin; it != iend; it++) {
- Particle_t &m = (*it);
- pVec ToP = m.pos - Eye;
- m.tmp0 = dot(ToP, Look) * Scale;
- if(clamp_negative && m.tmp0 < 0) m.tmp0 = 0.0f;
- }
-
- std::sort<ParticleList::iterator>(ibegin, iend);
-#endif
-}
-
-// Return how many particles to add to the group right now
-PINLINE size_t SourceQuantity(const float particle_rate, const float dt, const size_t group_size, const size_t group_cap)
-{
-    size_t rate = size_t(floor(particle_rate * dt));
-
-    // Dither the fractional particle in time.
-    if (pRandf() < particle_rate * dt - float(rate)) rate++;
-
-    // Don't emit more than it can hold.
-    if (group_size + rate > group_cap) rate = group_cap - group_size;
-
-    return rate;
-}
-
-// Create a single particle
-PINLINE void PASource_Impl(Particle_t& m, const float dt, const std::shared_ptr<pDomain> position, const pSourceState& SrcSt)
-{
-    m.pos = position->Generate();
-    m.posB = SrcSt.vertexB_tracks_ ? m.pos : SrcSt.VertexB_->Generate();
-    m.up = SrcSt.Up_->Generate();
-    m.vel = SrcSt.Vel_->Generate();
-    m.rvel = SrcSt.RotVel_->Generate();
-    m.size = SrcSt.Size_->Generate();
-    m.color = SrcSt.Color_->Generate();
-    m.alpha = SrcSt.Alpha_->Generate().x();
-    m.age = SrcSt.Age_ + pNRandf(SrcSt.AgeSigma_);
-    m.mass = SrcSt.Mass_;
-    m.tmp0 = 0;
-    m.data = SrcSt.Data_;
 }
 
 // Clamp particle velocities to the given range
@@ -911,12 +753,12 @@ PINLINE void PATargetVelocity_Impl(Particle_t& m, const float dt, const pVec vel
 }
 
 // Change velocity of all particles toward the specified velocity
-PINLINE void PATargetRotVelocity_Impl(Particle_t& m, const float dt, const pVec velocity, const float scale)
+PINLINE void PATargetRotVelocity_Impl(Particle_t& m, const float dt, const pVec rot_velocity, const float scale)
 {
     float scaleFac = scale * dt;
     // ^^^ Above values do not vary per particle.
 
-    m.rvel += (velocity - m.rvel) * scaleFac;
+    m.rvel += (rot_velocity - m.rvel) * scaleFac;
 }
 
 // This one just rotates a particle around the axis. Amount is based on radius, magnitude, and mass.
@@ -974,6 +816,165 @@ PINLINE void PAVortex_Impl(Particle_t& m, const float dt, const pVec tip, const 
     pVec RotDir = Cross(axisN, parToAxis);
     pVec AccelAround = RotDir * (aroundSpeed * dtOverMass);
     m.vel = AccelUp + AccelAround; // NOT += because we want to stop its inward travel.
+}
+
+//////////////////////////////////////////////////////////////////
+// Inter-particle actions
+
+// These actions read from multiple particles but only write to their own particle.
+
+// Follow the next particle in the list
+PINLINE void PAFollow_Impl(Particle_t& m, const float dt, const float magnitude, const float epsilon, const float max_radius, const Particle_t* ibegin,
+                           const Particle_t* iend)
+{
+    float magdt = magnitude * dt;
+    float max_radiusSqr = fsqr(max_radius);
+    // ^^^ Above values do not vary per particle.
+
+    const Particle_t* p1 = (&m) + 1;
+    if (p1 == iend) p1 = ibegin;
+
+    // Accelerate toward the particle after me in the list.
+    pVec toHim(p1->pos - m.pos);
+    float toHimlenSqr = toHim.lenSqr();
+
+    if (toHimlenSqr < max_radiusSqr) {
+        // Compute force exerted between the two bodies
+        m.vel += toHim * (magdt / (sqrtf(toHimlenSqr) * (toHimlenSqr + epsilon)));
+    }
+}
+
+// Inter-particle gravitation
+PINLINE void PAGravitate_Impl(Particle_t& m, const float dt, const float magnitude, const float epsilon, const float max_radius, const Particle_t* ibegin,
+                              const Particle_t* iend)
+{
+    float magdt = magnitude * dt;
+    float max_radiusSqr = fsqr(max_radius);
+    // ^^^ Above values do not vary per particle.
+
+    // Add interactions with other particles
+    for (const Particle_t* p1 = ibegin; p1 != iend; ++p1) {
+        pVec toHim(p1->pos - m.pos);
+        float toHimlenSqr = toHim.lenSqr();
+        if (toHimlenSqr > 0.f && toHimlenSqr < max_radiusSqr) {
+            // Compute force exerted between the two bodies
+            pVec acc(toHim * (magdt / (sqrtf(toHimlenSqr) * (toHimlenSqr + epsilon))));
+
+            m.vel += acc;
+        }
+    }
+}
+
+// Match velocity to near neighbors
+PINLINE void PAMatchVelocity_Impl(Particle_t& m, const float dt, const float magnitude, const float epsilon, const float max_radius, const Particle_t* ibegin,
+                                  const Particle_t* iend)
+{
+    float magdt = magnitude * dt;
+    float max_radiusSqr = fsqr(max_radius);
+    // ^^^ Above values do not vary per particle.
+
+    // Add interactions with other particles
+    for (const Particle_t* p1 = ibegin; p1 != iend; ++p1) {
+        pVec toHim(p1->pos - m.pos);
+        float toHimlenSqr = toHim.lenSqr();
+        if (toHimlenSqr > 0.f && toHimlenSqr < max_radiusSqr) {
+            // Compute force exerted between the two bodies
+            pVec veltoHim(p1->vel - m.vel);
+            pVec acc(veltoHim * (magdt / (toHimlenSqr + epsilon)));
+
+            m.vel += acc;
+        }
+    }
+}
+
+// Match Rotational velocity to near neighbors
+PINLINE void PAMatchRotVelocity_Impl(Particle_t& m, const float dt, const float magnitude, const float epsilon, const float max_radius,
+                                     const Particle_t* ibegin, const Particle_t* iend)
+{
+    float magdt = magnitude * dt;
+    float max_radiusSqr = fsqr(max_radius);
+    // ^^^ Above values do not vary per particle.
+
+    // Add interactions with other particles
+    for (const Particle_t* p1 = ibegin; p1 != iend; ++p1) {
+        pVec toHim(p1->pos - m.pos);
+        float toHimlenSqr = toHim.lenSqr();
+        if (toHimlenSqr > 0.f && toHimlenSqr < max_radiusSqr) {
+            // Compute force exerted between the two bodies
+            pVec rveltoHim(p1->rvel - m.rvel);
+            pVec acc(rveltoHim * (magdt / (toHimlenSqr + epsilon)));
+
+            m.rvel += acc;
+        }
+    }
+}
+
+//////////////////////////////////////////////////////////////////
+// Other exceptional actions
+
+// These actions that kill particles actually just tag them for killing py setting m.tmp0 == P_MAXFLOAT.
+// Actual killing needs to happen outside the per-particle inline functions.
+
+// Get rid of older particles
+PINLINE void PAKillOld_Impl(Particle_t& m, const float dt, const float age_limit, const bool kill_less_than)
+{
+    // TODO: Not sure whether this straight-line code is more efficient than branching and only writing when killing.
+    m.tmp0 = ((m.age < age_limit) ^ kill_less_than) ? m.tmp0 : P_MAXFLOAT;
+}
+
+// Kill particles with positions on wrong side of the specified domain
+PINLINE void PASink_Impl(Particle_t& m, const float dt, const bool kill_inside, const pDomain& kill_pos_dom)
+{
+    m.tmp0 = (kill_pos_dom.Within(m.pos) ^ kill_inside) ? m.tmp0 : P_MAXFLOAT;
+}
+
+// Kill particles with velocities on wrong side of the specified domain
+// PINLINE void PASinkVelocity_Impl(Particle_t& m, const float dt, const bool kill_inside, const pDomain& kill_vel_dom)
+PINLINE void PASinkVelocity_Impl(Particle_t& m, const float dt, const bool kill_inside, const pDomain& kill_vel_dom)
+{
+    m.tmp0 = (kill_vel_dom.Within(m.vel) ^ kill_inside) ? m.tmp0 : P_MAXFLOAT;
+}
+
+// Project the particle onto the Look vector to get sort key and store it in tmp0
+PINLINE void PASort_Impl(Particle_t& m, const float dt, const pVec Eye, const pVec Look, const bool front_to_back, const bool clamp_negative)
+{
+    float scale = front_to_back ? -1.0f : 1.0f;
+    // ^^^ Above values do not vary per particle.
+
+    pVec toP = m.pos - Eye;
+    float sortKey = m.tmp0 == P_MAXFLOAT ? P_MAXFLOAT : (dot(toP, Look) * scale); // Don't rescue particles slated for killing
+    m.tmp0 = (clamp_negative && sortKey < 0.f) ? 0.f : sortKey;
+}
+
+// Compute how many particles to add to the group right now
+PINLINE size_t SourceQuantity(const float particle_rate, const float dt, const size_t group_size, const size_t group_cap)
+{
+    size_t rate = size_t(floor(particle_rate * dt));
+
+    // Dither the fractional particle in time.
+    if (pRandf() < particle_rate * dt - float(rate)) rate++;
+
+    // Don't emit more than it can hold.
+    if (group_size + rate > group_cap) rate = group_cap - group_size;
+
+    return rate;
+}
+
+// Fill in a single particle
+PINLINE void PASource_Impl(Particle_t& m, const float dt, const pDomain& gen_pos, const pSourceState& SrcSt)
+{
+    m.pos = gen_pos.Generate();
+    m.posB = SrcSt.vertexB_tracks_ ? m.pos : SrcSt.VertexB_->Generate();
+    m.up = SrcSt.Up_->Generate();
+    m.vel = SrcSt.Vel_->Generate();
+    m.rvel = SrcSt.RotVel_->Generate();
+    m.size = SrcSt.Size_->Generate();
+    m.color = SrcSt.Color_->Generate();
+    m.alpha = SrcSt.Alpha_->Generate().x();
+    m.age = SrcSt.Age_ + pNRandf(SrcSt.AgeSigma_);
+    m.mass = SrcSt.Mass_;
+    m.tmp0 = 0;
+    m.data = SrcSt.Data_;
 }
 
 #endif
