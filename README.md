@@ -3,11 +3,29 @@
 *Since 1999, using C++, OpenGL, GLUT, and CMake*
 
 by David McAllister
-version 2.3 alpha
-April 2, 2022
+version 2.3.0
+April 18, 2022
 
 Was previously hosted at: http://www.particlesystems.org.
 Now here on https://github.com/davemc0/Particle.git.
+
+Welcome to the Particle System API
+==================================
+
+The Particle System API has served as a resource for building all sorts of interesting particle system-based special effects, mostly for games and other 3D graphics.
+Version 2.2 was used in about 600 projects. I dropped maintenance of the library in 2009 but without effectively hosting the library publicly. (GitHub was not yet on my radar.)
+
+I have recently revisited the API and added many enhancements:
+* The build system is now CMake.
+* The project is hosted on GitHub. Your collaboration is invited.
+* Fixed multiple bugs in particle dynamics.
+* Bounce works on the inside and outside of boxes.
+* The sample effects are much more elegant and unified.
+* The sample effect particle dynamics are framerate independent by varying dt with frame time.
+* I made a good flocking behavior effect, based on Boids by Craig Reynolds.
+* See full [ChangeLog](./ChangeLog.html).
+
+And there is still [plenty to do](./ToDo.html).
 
 Building the Program
 ====================
@@ -67,16 +85,6 @@ If you get bored, press 'space' to cause an explosion.
 Press 'm' to make cool motion blur.
 Press 's' to sort the particles back-to-front for more correct but slower rendering.
 Press 'p' to change what each particle is rendered as.
-
-Boids
------
-An attempt to implement Craig Reynolds' Boids algorithm in the Particle System API
-
-This one has a flock of birds flying around.
-
-It can read in a 3D model file of polygons to steer to avoid.
-
-This code never worked well and has not been maintained, as you can see.
 
 Benchmark
 ---------

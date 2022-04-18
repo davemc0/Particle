@@ -14,7 +14,7 @@
 
 namespace PAPI {
 /// This is the version number of this release of the API.
-const int P_VERSION = 300;
+const int P_VERSION = 230;
 
 /// A very large float value used as a default arg passed into functions
 const float P_MAXFLOAT = 1.0e16f; // Actually this must be < sqrt(MAXFLOAT) since we store this value squared.
