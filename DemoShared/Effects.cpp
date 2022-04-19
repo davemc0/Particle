@@ -81,7 +81,7 @@ void Effect::PerFrame(ExecMode_e EM, EffectsManager& Efx)
 
 void Effect::CreateList(ExecMode_e EM, EffectsManager& Efx)
 {
-    EASSERT(EM != Immediate_Mode);
+    PASSERT(EM == ActionList_Mode, "Only ActionList_Mode");
 
     ParticleContext_t& P = Efx.P;
     if (AList < 0) AList = P.GenActionLists();
@@ -123,6 +123,7 @@ const pDomain& Effect::Render(const pDomain& dom)
 // Particles orbiting a center
 void Atom::DoActions(EffectsManager& Efx)
 {
+    // printf("Atom\n");
     ParticleContext_t& P = Efx.P;
     pSourceState S;
     S.Velocity(PDSphere(pVec(0, 0, 0), 60));
@@ -248,7 +249,7 @@ void Boids::StartEffect(EffectsManager& Efx)
     }
 
     time_since_start = 0;
-    particleRate = 100;
+    particleRate = 200;
     PrimType = PRIM_DISPLAY_LIST;
     WhiteBackground = true;
     DepthTest = true;
@@ -353,7 +354,7 @@ void Fireflies::DoActions(EffectsManager& Efx)
     P.Source(particleRate, PDBox(Efx.center - pVec(150, 25, 5), Efx.center + pVec(150, 150, 5)), S);
 
     PATOP
-    PP.RandomAccel(PT PDSphere(pVec(0.f, 0.f, 3.6f), 25.f));
+    PP.RandomAccel(PT PDSphere(pVec(0.f, 0.f, 1.8f), 13.f));
     PP.Move(PT true, false);
     PP.KillOld(PT 101.7f);
     PP.Sink(PT false, PREND(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
@@ -364,7 +365,7 @@ void Fireflies::DoActions(EffectsManager& Efx)
 
 void Fireflies::StartEffect(EffectsManager& Efx)
 {
-    particleRate = 5000.f;
+    particleRate = 50000.f;
     PrimType = PRIM_GAUSSIAN_SPRITE;
     WhiteBackground = false;
     DepthTest = true;
@@ -707,7 +708,7 @@ void Rain::DoActions(EffectsManager& Efx)
     S.Size(particleSize);
     S.StartingAge(0, 5);
     float D = 200;
-    P.Source(particleRate, PDRectangle(pVec(-D / 2, -D / 2, 15), pVec(D, 0, 0), pVec(0, D, 0)), S);
+    P.Source(particleRate, PDRectangle(pVec(-D / 2, -D / 2, 20), pVec(D, 0, 0), pVec(0, D, 0)), S);
 
     PATOP
     PP.Gravity(PT Efx.GravityVec);
@@ -926,7 +927,7 @@ void Swirl::StartEffect(EffectsManager& Efx)
 {
     particleRate = Efx.maxParticles / particleLifetime;
     jet = pVec(-4, 0, 2.4);
-    djet = pRandVec() * 20.f;
+    djet = pRandVec() * 5.f;
     PrimType = PRIM_GAUSSIAN_SPRITE;
     WhiteBackground = true;
     DepthTest = false;
@@ -1026,14 +1027,14 @@ EffectsManager::EffectsManager(ParticleContext_t& P_, int mp) : P(P_)
 void EffectsManager::SetPhoto(uc3Image* Im)
 {
     Img = Im;
-    EASSERT(Img != NULL && Img->size() > 0);
+    PASSERT(Img != NULL && Img->size() > 0, "Bad image");
 }
 
 // EM specifies how you want to run (for different benchmark purposes, mostly).
 // Set demoNum to -2 to let NextEffect choose the next demo.
 void EffectsManager::ChooseDemo(int newDemoNum, ExecMode_e EM)
 {
-    EASSERT(EM == Immediate_Mode || EM == ActionList_Mode || EM == Inline_Mode);
+    PASSERT(EM == Immediate_Mode || EM == ActionList_Mode || EM == Inline_Mode, "Bad ExecMode");
 
     demoNum = newDemoNum;
     if (demoNum == -1) demoNum = getNumEffects() - 1;
@@ -1045,7 +1046,7 @@ void EffectsManager::ChooseDemo(int newDemoNum, ExecMode_e EM)
         else
             demoNum = irand(getNumEffects());
 
-    EASSERT(demoNum >= 0 && demoNum < getNumEffects());
+    PASSERT(demoNum >= 0 && demoNum < getNumEffects(), "Bad demoNum");
     Demo = Effects[demoNum];
 
     std::cerr << Demo->GetName() << '\n';
@@ -1056,7 +1057,7 @@ void EffectsManager::ChooseDemo(int newDemoNum, ExecMode_e EM)
 // Allowed values are Immediate_Mode, Internal_Mode, and Compiled_Mode.
 void EffectsManager::RunDemoFrame(ExecMode_e EM)
 {
-    EASSERT(EM == Immediate_Mode || EM == ActionList_Mode || EM == Inline_Mode);
+    PASSERT(EM == Immediate_Mode || EM == ActionList_Mode || EM == Inline_Mode, "Bad ExecMode");
 
     Demo->PerFrame(EM, *this);
 }

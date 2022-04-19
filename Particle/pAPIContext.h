@@ -8,6 +8,7 @@
 #define particle_api_classes_h
 
 #include "Particle/pDeclarations.h"
+#include "Particle/pError.h"
 #include "Particle/pParticle.h"
 #include "Particle/pSourceState.h"
 
@@ -373,11 +374,17 @@ public:
 
     template <class UnaryFunction> void ParticleLoop(UnaryFunction f)
     {
+        PASSERT(!PS->in_new_list && !PS->in_call_list, "Can't call ParticleLoop in an action list");
+        PS->in_particle_loop = true;
         std::for_each(PS->PGroups[PS->pgroup_id].begin(), PS->PGroups[PS->pgroup_id].end(), f);
+        PS->in_particle_loop = false;
     }
     template <class ExPol, class UnaryFunction> void ParticleLoop(ExPol&& policy, UnaryFunction f)
     {
+        PASSERT(!PS->in_new_list && !PS->in_call_list, "Can't call ParticleLoop in an action list");
+        PS->in_particle_loop = true;
         std::for_each(policy, PS->PGroups[PS->pgroup_id].begin(), PS->PGroups[PS->pgroup_id].end(), f);
+        PS->in_particle_loop = false;
     }
 
 protected:

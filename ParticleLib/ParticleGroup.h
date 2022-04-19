@@ -9,8 +9,10 @@
 #ifndef ParticleGroup_h
 #define ParticleGroup_h
 
+#include "LibHelpers.h"
 #include "Particle/pParticle.h"
 
+#include <algorithm>
 #include <vector>
 
 namespace PAPI {
@@ -135,6 +137,18 @@ public:
         return it;
     }
 
+    // Delete whole range of particles
+    inline void RemoveRange(ParticleList::iterator ibegin, ParticleList::iterator iend)
+    {
+        LIB_ASSERT(iend == list.end(), "For now, can only delete a range at the end of the list");
+
+        if (cb_death) { // Call death callback, if any
+            std::for_each(/* Could parallelize */ ibegin, iend, [&](Particle_t& m) { (*cb_death)(m, group_death_data); });
+        }
+
+        list.resize(ibegin - list.begin()); // Delete particles by resizing down to only keep living ones
+    }
+
     inline bool Add(const Particle_t& P)
     {
         if (list.size() >= max_particles)
@@ -146,8 +160,6 @@ public:
             return true;
         }
     }
-
-    void FreeDeviceMemory() {}
 };
 }; // namespace PAPI
 

@@ -8,11 +8,6 @@
 
 using namespace PAPI;
 
-#define EASSERT(x)                                           \
-    {                                                        \
-        if (!(x)) { throw PErrInternalError("Bad effect"); } \
-    }
-
 class EffectsManager;
 
 enum ExecMode_e {

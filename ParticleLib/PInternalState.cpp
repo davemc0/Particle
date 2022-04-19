@@ -43,6 +43,7 @@ PInternalState_t::PInternalState_t()
 {
     in_call_list = false;
     in_new_list = false;
+    in_particle_loop = false;
 
     dt = 1.0f;
 

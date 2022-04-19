@@ -199,7 +199,7 @@ void RenderEffectGeometry()
             glVertex3fv((GLfloat*)&(v = dom->p));
             glEnd();
         } else {
-            EASSERT(0);
+            PASSERT(0, "Bad domain");
         }
     }
 }
@@ -333,7 +333,7 @@ void InitOpenGL()
     if (didInit) return;
     didInit = true;
 
-    if (glewInit() != GLEW_OK) throw PError_t("No GLEW");
+    PASSERT(glewInit() == GLEW_OK, "No GLEW");
 
     std::cerr << glGetString(GL_VENDOR) << " " << glGetString(GL_RENDERER) << " " << glGetString(GL_VERSION) << '\n';
 
@@ -491,7 +491,7 @@ void Draw()
     case PRIM_NONE:
         // Don't draw.
         break;
-    default: EASSERT(0);
+    default: PASSERT(0, "Bad PrimType");
     }
 
     GL_ASSERT();
@@ -515,9 +515,9 @@ void Draw()
                 UseEffectSettings ? 'A' : ' ', RandomDemo ? 'R' : ' ', DepthTest ? 'D' : ' ', camCtrl.CameraMotion ? 'C' : ' ', SortParticles ? 'S' : ' ', cnt,
                 Efx.simStepsPerFrame, fps, PrimTypeNames[PrimType], Efx.GetCurEffectName().c_str(), RandomDemoClock.Read());
 
-        glColor3f(1, 1, 1);
+        glColor4fv(WhiteBackground ? whiteColor : blackColor);
         showBitmapMessage(100, 50, msg);
-        glColor3f(0, 0, 0);
+        glColor4fv(WhiteBackground ? blackColor : whiteColor);
         showBitmapMessage(99, 49, msg);
     }
 

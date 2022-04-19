@@ -8,6 +8,7 @@ set(LIB_SOURCES
     Actions.cpp
     Actions.h
     ActionsAPI.cpp
+    LibHelpers.h
     OtherAPI.cpp
     PInternalState.cpp
     PInternalState.h

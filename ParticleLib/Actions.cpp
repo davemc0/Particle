@@ -175,7 +175,7 @@ void PABounce::Exec(const PDPlane& dom, ParticleGroup& group, ParticleList::iter
 
 void PABounce::Exec(const PDSphere& dom, ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    PASSERT(dom.radIn == 0.0f, "Bouncing doesn't work on thick shells. radIn must be 0.");
+    LIB_ASSERT(dom.radIn == 0.0f, "Bouncing doesn't work on thick shells. radIn must be 0.");
 
     std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PABounceSphere_Impl(m, dt, dom, friction, resilience, fric_min_vel); });
 }
@@ -329,7 +329,7 @@ void PAVortex::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Part
 // Follow the next particle in the list
 void PAFollow::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
+    LIB_ASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
     if (group.size() < 2) return;
     const Particle_t* endp = &*ibegin + (iend - ibegin);
     std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PAFollow_Impl(m, dt, magnitude, epsilon, max_radius, &*ibegin, endp); });
@@ -338,7 +338,7 @@ void PAFollow::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Part
 // Inter-particle gravitation
 void PAGravitate::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
+    LIB_ASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
     if (group.size() < 2) return;
     const Particle_t* endp = &*ibegin + (iend - ibegin);
     std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PAGravitate_Impl(m, dt, magnitude, epsilon, max_radius, &*ibegin, endp); });
@@ -347,7 +347,7 @@ void PAGravitate::Execute(ParticleGroup& group, ParticleList::iterator ibegin, P
 // Match velocity to near neighbors
 void PAMatchVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
+    LIB_ASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
     if (group.size() < 2) return;
     const Particle_t* endp = &*ibegin + (iend - ibegin);
     std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PAMatchVelocity_Impl(m, dt, magnitude, epsilon, max_radius, &*ibegin, endp); });
@@ -356,7 +356,7 @@ void PAMatchVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegi
 // Match rotational velocity to near neighbors
 void PAMatchRotVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
+    LIB_ASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
     if (group.size() < 2) return;
     const Particle_t* endp = &*ibegin + (iend - ibegin);
     std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PAMatchRotVelocity_Impl(m, dt, magnitude, epsilon, max_radius, &*ibegin, endp); });
@@ -368,7 +368,7 @@ void PAMatchRotVelocity::Execute(ParticleGroup& group, ParticleList::iterator ib
 // An action list within an action list
 void PACallActionList::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
+    LIB_ASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
 
     // Execute the specified action list.
     PS->ExecuteActionList(PS->ALists[action_list_num]);
@@ -388,12 +388,13 @@ void PACallback::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Pa
 // Delete particles tagged to be killed by inline P.I.KillOld(), P.I.Sink(), and P.I.SinkVelocity()
 void PACommitKills::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    // TODO: Would it be faster to use a partition() to move killed particles to the end
-    // Call death callback of each particle, then delete them?
-    // Maybe it depends on how many are to be deleted.
+    LIB_ASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
 
-    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
-
+#if 0
+    // Slower on Fountain and Waterfall and maybe all
+    ParticleList::iterator first_goner = std::partition(P_EXPOLP, ibegin, iend, [](Particle_t& m) { return m.tmp0 != P_MAXFLOAT; });
+    group.RemoveRange(first_goner, iend);
+#else
     // Must traverse list carefully so Remove will work
     for (ParticleList::iterator it = ibegin; it != iend;) {
         Particle_t& m = (*it);
@@ -403,12 +404,14 @@ void PACommitKills::Execute(ParticleGroup& group, ParticleList::iterator ibegin,
         } else
             ++it;
     }
+
+#endif
 }
 
 // Get rid of older particles
 void PAKillOld::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
+    LIB_ASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
 
     // Must traverse list carefully so Remove will work
     for (ParticleList::iterator it = ibegin; it != iend;) {
@@ -425,7 +428,7 @@ void PAKillOld::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Par
 // Kill particles with positions on wrong side of the specified domain
 void PASink::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
+    LIB_ASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
 
     // Must traverse list carefully so Remove will work
     // TODO: Would it be faster to parallelize the loop over the predicate and then do a partition?
@@ -443,7 +446,7 @@ void PASink::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Partic
 // Kill particles with velocities on wrong side of the specified domain
 void PASinkVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
+    LIB_ASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
 
     // Must traverse list carefully so Remove will work
     for (ParticleList::iterator it = ibegin; it != iend;) {
@@ -460,7 +463,7 @@ void PASinkVelocity::Execute(ParticleGroup& group, ParticleList::iterator ibegin
 // Sort the particles by their projection onto the Look vector
 void PASort::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
+    LIB_ASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
 
     std::for_each(P_EXPOL, ibegin, iend, [&](Particle_t& m) { PASort_Impl(m, dt, Eye, Look, front_to_back, clamp_negative); });
 
@@ -470,7 +473,7 @@ void PASort::Execute(ParticleGroup& group, ParticleList::iterator ibegin, Partic
 // Randomly add particles to the system
 void PASource::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
 {
-    PASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
+    LIB_ASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
 
     size_t rate = SourceQuantity(particle_rate, dt, group.size(), group.GetMaxParticles());
 

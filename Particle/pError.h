@@ -42,4 +42,9 @@ struct PErrInvalidValue : PError_t /// An invalid value was passed to an API cal
 };
 }; // namespace PAPI
 
+#define PASSERT(x, msg)                    \
+    {                                      \
+        if (!(x)) { throw PError_t(msg); } \
+    }
+
 #endif

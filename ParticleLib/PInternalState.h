@@ -8,16 +8,12 @@
 #define PInternalState_h
 
 #include "Actions.h"
+#include "LibHelpers.h"
 #include "Particle/pAPIContext.h"
 #include "ParticleGroup.h"
 
 #include <string>
 #include <vector>
-
-#define PASSERT(x, msg)                             \
-    {                                               \
-        if (!(x)) { throw PErrInternalError(msg); } \
-    }
 
 namespace PAPI {
 
@@ -34,6 +30,7 @@ public:
     float dt;
     bool in_call_list;
     bool in_new_list;
+    bool in_particle_loop;
 
     std::vector<ParticleGroup> PGroups;
     int pgroup_id;

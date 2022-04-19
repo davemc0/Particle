@@ -19,23 +19,22 @@ namespace {
 const int PRINT_PERIOD = 100, NUM_REPORTS = 5;
 ExecMode_e ExecMode = ActionList_Mode;
 ParticleContext_t P;
-EffectsManager Efx(P, 500000);
+EffectsManager Efx(P, 500'000);
 StatTimer FPSClock(PRINT_PERIOD);
 bool SortParticles = false, ShowText = true;
 int demoNum = -1;
 } // namespace
 
-void Report()
+void Report(int reportIter)
 {
-    static int FrameCountForClock = 0;
-    if (++FrameCountForClock >= PRINT_PERIOD) {
-        int cnt = (int)P.GetGroupCount();
-
-        char exCh = (ExecMode == Immediate_Mode) ? 'I' : (ExecMode == ActionList_Mode) ? 'N' : 'C';
-        printf("%c%c n=%5d time=%02.4f %s\n", exCh, SortParticles ? 'S' : ' ', cnt, (float)FPSClock.GetMean(), Efx.GetCurEffectName().c_str());
-        fflush(stdout);
-        FrameCountForClock = 0;
-    }
+    int cnt = (int)P.GetGroupCount();
+    std::string exStr = (ExecMode == Immediate_Mode) ? "Immediate_Mode"
+        : (ExecMode == ActionList_Mode)              ? "ActionList_Mode"
+        : (ExecMode == Inline_Mode)                  ? "Inline_Mode"
+                                                     : "Unknown";
+    printf("%d,%s,%s,count,%5d,time,%02.4f,%s\n", reportIter, exStr.c_str(), SortParticles ? "sort" : "nosort", cnt, (float)FPSClock.GetMean(),
+           Efx.GetCurEffectName().c_str());
+    fflush(stdout);
 }
 
 // Optimize the working set size
@@ -51,13 +50,13 @@ void RunBenchmarkCache()
 
     for (int CacheSize = 1024 * 16; CacheSize < 8 * 1024 * 1024; CacheSize += (16 * 1024)) {
         P.SetWorkingSetSize(CacheSize);
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < PRINT_PERIOD; i++) {
             Efx.RunDemoFrame(ExecMode);
             if (SortParticles) P.Sort(pVec(0, -19, 15), pVec(0, 0, 3));
             FPSClock.Event();
-            if (ShowText) Report();
         }
-        printf("%d,%f\n", CacheSize, (float)FPSClock.GetMean());
+        if (ShowText) Report(CacheSize);
+        printf("%s,CacheSize,%d,time,%f,\n", Efx.GetCurEffectName().c_str(), CacheSize, (float)FPSClock.GetMean());
     }
 }
 
@@ -71,11 +70,13 @@ void RunBenchmark(int demoNum)
 
     Efx.ChooseDemo(demoNum, ExecMode);
 
-    for (int i = 0; i < PRINT_PERIOD * NUM_REPORTS; i++) {
-        Efx.RunDemoFrame(ExecMode);
-        if (SortParticles) P.Sort(pVec(0, -19, 4), Efx.center);
-        FPSClock.Event();
-        Report();
+    for (int i = 0; i < NUM_REPORTS; i++) {
+        for (int j = 0; j < PRINT_PERIOD; j++) {
+            Efx.RunDemoFrame(ExecMode);
+            if (SortParticles) P.Sort(pVec(0, -19, 4), Efx.center);
+            FPSClock.Event();
+        }
+        Report(i);
     }
 
     P.DeleteParticleGroups(Efx.particleHandle);
@@ -150,7 +151,7 @@ int findDemoByName(char* demoName)
     for (int d = 0; d < Efx.Effects.size(); d++) {
         if (Efx.Effects[d]->GetName() == demoName) return d;
     }
-    EASSERT(0 && "Unknown demo name");
+    PASSERT(0, "Unknown demo name");
     return 0;
 }
 
@@ -205,12 +206,22 @@ static void Args(int argc, char** argv)
 
 int main(int argc, char** argv)
 {
-    Args(argc, argv);
+    try {
+        Args(argc, argv);
 
-    if (demoNum >= 0)
-        RunBenchmark(demoNum);
-    else
-        for (demoNum = 0; demoNum < Efx.Effects.size(); demoNum++) { RunBenchmark(demoNum); }
+        if (demoNum >= 0)
+            RunBenchmark(demoNum);
+        else
+            for (demoNum = 0; demoNum < Efx.Effects.size(); demoNum++) { RunBenchmark(demoNum); }
+    }
+    catch (PError_t& Er) {
+        std::cerr << "Particle API exception: " << Er.ErrMsg << std::endl;
+        throw Er;
+    }
+    catch (...) {
+        std::cerr << "Non-Particle-API exception caught. Bye.\n";
+        throw;
+    }
 
     return 0;
 }

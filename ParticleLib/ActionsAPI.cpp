@@ -37,7 +37,7 @@ void PContextActions_t::Bounce(const float friction, const float resilience, con
     A->SetKillsParticles(false);
     A->SetDoNotSegment(false);
 
-    if (dom.Which == PDSphere_e) { PASSERT(dynamic_cast<const PDSphere*>(&dom)->radIn == 0.0f, "Bouncing doesn't work on thick shells. radIn must be 0."); }
+    if (dom.Which == PDSphere_e) { LIB_ASSERT(dynamic_cast<const PDSphere*>(&dom)->radIn == 0.0f, "Bouncing doesn't work on thick shells. radIn must be 0."); }
 
     PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
