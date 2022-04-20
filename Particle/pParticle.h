@@ -9,6 +9,7 @@
 #ifndef Particle_h
 #define Particle_h
 
+#include "Particle/pDeclarations.h"
 #include "Particle/pVec.h"
 
 namespace PAPI {

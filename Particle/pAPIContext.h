@@ -127,8 +127,8 @@ public:
     void NewActionList(const int action_list_num);
 
 protected:
-    std::shared_ptr<PInternalState_t> PS;                       // The internal API data for this context is stored here.
-    void InternalSetup(std::shared_ptr<PInternalState_t> Sr);   // Calls this after construction to set up the PS pointer
+    std::shared_ptr<PInternalState_t> PS;                     // The internal API data for this context is stored here.
+    void InternalSetup(std::shared_ptr<PInternalState_t> Sr); // Calls this after construction to set up the PS pointer
 };
 
 /// This class contains the API calls that operate on particle groups.

@@ -7,9 +7,9 @@ using namespace PAPI;
 #include "Image/ImageAlgorithms.h"
 #include "Math/Random.h"
 
+#include <execution>
 #include <iostream>
 #include <vector>
-#include <execution>
 
 //////////////////////////////////////////////////////////////////////////////
 

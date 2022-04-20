@@ -9,6 +9,7 @@
 #define PInternalsIface_h
 
 namespace PAPI {
+struct Particle_t;
 
 // Shadow copy of some information from PInternalState_t that is used by the inline actions API
 // It is owned by pContextActions_t.
