@@ -11,11 +11,11 @@ April 18, 2022
 Hosted at https://github.com/davemc0/Particle.git.
 (Previously hosted for 15 years at: http://www.particlesystems.org.)
 
-Documentation is [here](./ParticleHelp.html), but is out-of-date.
+Documentation is [here](./ParticleLib/doc/html/index.html).
 
 Change log is [here](./ChangeLog.html).
 
-And there is still [plenty to do](./ToDo.html).
+Future work is [here](./ToDo.html).
 
 Welcome back to the Particle System API!
 ==================================

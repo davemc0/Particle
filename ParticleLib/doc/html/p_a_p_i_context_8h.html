@@ -21,7 +21,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">ParticleAPI<span id="projectnumber">&#160;3.00</span>
+   <div id="projectname">ParticleAPI<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Performant particle system API in C++ for interactive graphics</div>
   </td>
@@ -69,7 +69,8 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
-<a href="#namespaces">Namespaces</a>  </div>
+<a href="#namespaces">Namespaces</a> &#124;
+<a href="#define-members">Macros</a>  </div>
   <div class="headertitle"><div class="title">pAPIContext.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -79,6 +80,7 @@ $(function() {
 <code>#include &quot;<a class="el" href="p_particle_8h_source.html">Particle/pParticle.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="p_source_state_8h_source.html">Particle/pSourceState.h</a>&quot;</code><br />
 <code>#include &lt;string&gt;</code><br />
+<code>#include &quot;Particle/pActionDecls.h&quot;</code><br />
 </div>
 <p><a href="p_a_p_i_context_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
@@ -102,7 +104,49 @@ Namespaces</h2></td></tr>
 <tr class="memitem:namespace_p_a_p_i"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_p_a_p_i.html">PAPI</a></td></tr>
 <tr class="memdesc:namespace_p_a_p_i"><td class="mdescLeft">&#160;</td><td class="mdescRight">PAPIClasses.h. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:a2c254ab6557fca6df7f69f6d09983747"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="p_a_p_i_context_8h.html#a2c254ab6557fca6df7f69f6d09983747">PARG</a>&#160;&#160;&#160;Particle_t &amp;m,</td></tr>
+<tr class="memdesc:a2c254ab6557fca6df7f69f6d09983747"><td class="mdescLeft">&#160;</td><td class="mdescRight">The inline actions API calls take a Particle_t as the first argument. Otherwise the call signatures match those of the legacy API.  <a href="p_a_p_i_context_8h.html#a2c254ab6557fca6df7f69f6d09983747">More...</a><br /></td></tr>
+<tr class="separator:a2c254ab6557fca6df7f69f6d09983747"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c254ab6557fca6df7f69f6d09983747"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="p_a_p_i_context_8h.html#a2c254ab6557fca6df7f69f6d09983747">PARG</a></td></tr>
+<tr class="memdesc:a2c254ab6557fca6df7f69f6d09983747"><td class="mdescLeft">&#160;</td><td class="mdescRight">The inline actions API calls take a Particle_t as the first argument. Otherwise the call signatures match those of the legacy API.  <a href="p_a_p_i_context_8h.html#a2c254ab6557fca6df7f69f6d09983747">More...</a><br /></td></tr>
+<tr class="separator:a2c254ab6557fca6df7f69f6d09983747"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="a2c254ab6557fca6df7f69f6d09983747" name="a2c254ab6557fca6df7f69f6d09983747"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2c254ab6557fca6df7f69f6d09983747">&#9670;&nbsp;</a></span>PARG <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define PARG&#160;&#160;&#160;Particle_t &amp;m,</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The inline actions API calls take a Particle_t as the first argument. Otherwise the call signatures match those of the legacy API. </p>
+
+</div>
+</div>
+<a id="a2c254ab6557fca6df7f69f6d09983747" name="a2c254ab6557fca6df7f69f6d09983747"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2c254ab6557fca6df7f69f6d09983747">&#9670;&nbsp;</a></span>PARG <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define PARG</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The inline actions API calls take a Particle_t as the first argument. Otherwise the call signatures match those of the legacy API. </p>
+
+</div>
+</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

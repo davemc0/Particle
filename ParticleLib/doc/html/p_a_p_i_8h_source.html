@@ -21,7 +21,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">ParticleAPI<span id="projectnumber">&#160;3.00</span>
+   <div id="projectname">ParticleAPI<span id="projectnumber">&#160;3.0.0</span>
    </div>
    <div id="projectbrief">Performant particle system API in C++ for interactive graphics</div>
   </td>
@@ -70,21 +70,44 @@ $(function() {
   <div class="headertitle"><div class="title">pAPI.h</div></div>
 </div><!--header-->
 <div class="contents">
-<a href="p_a_p_i_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><span class="lineno">    1</span><span class="comment">/// PAPI.h</span></div>
-<div class="line"><span class="lineno">    2</span><span class="comment">///</span></div>
-<div class="line"><span class="lineno">    3</span><span class="comment">/// Copyright 1997-2007, 2022 by David K. McAllister</span></div>
-<div class="line"><span class="lineno">    4</span><span class="comment">///</span></div>
-<div class="line"><span class="lineno">    5</span><span class="comment">/// Include this file in all applications that use the Particle System API.</span></div>
-<div class="line"><span class="lineno">    6</span> </div>
-<div class="line"><span class="lineno">    7</span><span class="preprocessor">#</span><span class="preprocessor">ifndef</span> <span class="preprocessor">particle_api_h</span></div>
-<div class="line"><span class="lineno">    8</span><span class="preprocessor">#</span><span class="preprocessor">define</span> <span class="preprocessor">particle_api_h</span></div>
-<div class="line"><span class="lineno">    9</span> </div>
-<div class="line"><span class="lineno">   10</span><span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&quot;Particle/pAPIContext.h&quot;</span></div>
-<div class="line"><span class="lineno">   11</span> </div>
-<div class="line"><span class="lineno">   12</span><span class="comment">// Only application code should include this. It contains the definitions of the inline action API functions.</span></div>
-<div class="line"><span class="lineno">   13</span><span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&quot;Particle/pInlineActionsAPI.h&quot;</span></div>
-<div class="line"><span class="lineno">   14</span> </div>
-<div class="line"><span class="lineno">   15</span><span class="preprocessor">#</span><span class="preprocessor">endif</span></div>
+<a href="p_a_p_i_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">// PAPI.h</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment">//</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment">// Copyright 1997-2007, 2022 by David K. McAllister</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="comment">//</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="comment">// Include this file in all applications that use the Particle System API.</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span><span class="preprocessor">#ifndef particle_api_h</span></div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span><span class="preprocessor">#define particle_api_h</span></div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span> </div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span><span class="preprocessor">#include &quot;<a class="code" href="p_a_p_i_context_8h.html">Particle/pAPIContext.h</a>&quot;</span></div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span> </div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span><span class="comment">// Only application code should include this. It contains the definitions of the inline action API functions.</span></div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span><span class="preprocessor">#include &quot;<a class="code" href="p_inline_actions_a_p_i_8h.html">Particle/pInlineActionsAPI.h</a>&quot;</span></div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span> </div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span> </div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span> </div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span> </div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span> </div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span> </div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span> </div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span> </div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span> </div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span> </div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span> </div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span> </div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span> </div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span> </div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span> </div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span> </div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span> </div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span> </div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span> </div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span> </div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span> </div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span> </div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span><span class="preprocessor">#endif</span></div>
+<div class="ttc" id="ap_a_p_i_context_8h_html"><div class="ttname"><a href="p_a_p_i_context_8h.html">pAPIContext.h</a></div></div>
+<div class="ttc" id="ap_inline_actions_a_p_i_8h_html"><div class="ttname"><a href="p_inline_actions_a_p_i_8h.html">pInlineActionsAPI.h</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

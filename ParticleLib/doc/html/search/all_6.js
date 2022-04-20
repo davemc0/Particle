@@ -7,7 +7,5 @@ var searchData=
   ['getmaxparticles_4',['GetMaxParticles',['../class_p_a_p_i_1_1_p_context_particle_group__t.html#ab94327f011a4f3713cb0941abe0da63f',1,'PAPI::PContextParticleGroup_t']]],
   ['getparticlepointer_5',['GetParticlePointer',['../class_p_a_p_i_1_1_p_context_particle_group__t.html#a75cdf009111297f02b803ac08d0a4213',1,'PAPI::PContextParticleGroup_t']]],
   ['getparticles_6',['GetParticles',['../class_p_a_p_i_1_1_p_context_particle_group__t.html#af589e7bdf0c3280bce5442782563ae6b',1,'PAPI::PContextParticleGroup_t']]],
-  ['gettimestep_7',['GetTimeStep',['../class_p_a_p_i_1_1_p_context_action_list__t.html#a777e90940cf960323ed04aace37315b8',1,'PAPI::PContextActionList_t']]],
-  ['gravitate_8',['Gravitate',['../class_p_a_p_i_1_1_p_context_actions__t.html#a8d430f578ef3e36db807984e7eac2255',1,'PAPI::PContextActions_t::Gravitate(Particle_t &amp;m, const float magnitude=1.0f, const float epsilon=P_EPS, const float max_radius=P_MAXFLOAT)'],['../class_p_a_p_i_1_1_p_context_actions__t.html#ad218927aef97bb32de9ad91b3b984670',1,'PAPI::PContextActions_t::Gravitate(const float magnitude=1.0f, const float epsilon=P_EPS, const float max_radius=P_MAXFLOAT)']]],
-  ['gravity_9',['Gravity',['../class_p_a_p_i_1_1_p_context_actions__t.html#a8c43d58ba73f2d90ea896e5f360283aa',1,'PAPI::PContextActions_t::Gravity(Particle_t &amp;m, const pVec &amp;dir)'],['../class_p_a_p_i_1_1_p_context_actions__t.html#afd33f95bbc38e128ccae51a658321be3',1,'PAPI::PContextActions_t::Gravity(const pVec &amp;dir)']]]
+  ['gettimestep_7',['GetTimeStep',['../class_p_a_p_i_1_1_p_context_action_list__t.html#a777e90940cf960323ed04aace37315b8',1,'PAPI::PContextActionList_t']]]
 ];

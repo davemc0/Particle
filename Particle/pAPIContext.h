@@ -302,7 +302,7 @@ protected:
 /// applied to each particle group once (or more) per rendered frame.
 ///
 /// Remember that the amount of effect of an action call depends on the time step size,
-/// dt, as set by TimeStep. See TimeStep() for an explanation of time steps.
+/// dt, as set by \ref TimeStep. See TimeStep() for an explanation of time steps.
 ///
 /// Some functions have parameters with a default value of the constant P_EPS. P_EPS is a very small
 /// floating point constant that is most often used as the default value of the epsilon
