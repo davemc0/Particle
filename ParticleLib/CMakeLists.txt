@@ -5,13 +5,13 @@ cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 project(Particle)
 
 set(LIB_SOURCES
-    Actions.cpp
-    Actions.h
+    ActionExecute.cpp
+    ActionStructs.h
     ActionsAPI.cpp
     LibHelpers.h
     OtherAPI.cpp
-    PInternalState.cpp
     PInternalState.h
+    PInternalState.cpp
     ParticleGroup.h
 )
 
@@ -24,6 +24,7 @@ set(API_SOURCES
     ../Particle/pDomain.h
     ../Particle/pError.h
     ../Particle/pInlineActionsAPI.h
+    ../Particle/pInternalsIface.h
     ../Particle/pParticle.h
     ../Particle/pSourceState.h
     ../Particle/pVec.h

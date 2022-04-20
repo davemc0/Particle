@@ -9,6 +9,7 @@
 
 #include "Particle/pDeclarations.h"
 #include "Particle/pError.h"
+#include "Particle/pInternalsIface.h"
 #include "Particle/pParticle.h"
 #include "Particle/pSourceState.h"
 
@@ -128,7 +129,6 @@ public:
 protected:
     std::shared_ptr<PInternalState_t> PS;                       // The internal API data for this context is stored here.
     void InternalSetup(std::shared_ptr<PInternalState_t> Sr);   // Calls this after construction to set up the PS pointer
-    std::shared_ptr<PInternalState_t> getInternalState() const; // Return a pointer to the internal state
 };
 
 /// This class contains the API calls that operate on particle groups.
@@ -260,8 +260,7 @@ public:
     /// with the particle group that is current at the time you make the BirthCallback() call. You can optionally pass a 32-bit value
     /// that could be a handle to arbitrary data of your own, which is returned to your callback.
     ///
-    /// The API's internal Particle_t struct is passed back to your callback function, so your application will have to include
-    /// "ParticleLib/Particle.h", which it normally should not do.
+    /// The API's internal Particle_t struct is passed back to your callback function, so your application will have to include "Particle/Particle.h".
     void BirthCallback(P_PARTICLE_CALLBACK callback, ///< Pointer to function of yours to call
                        pdata_t group_data = 0        ///< Arbitrary per-group data of yours to pass into your function
     );
@@ -272,8 +271,7 @@ public:
     /// with the particle group that is current at the time you make the DeathCallback() call. You can optionally pass a pointer to arbitrary
     /// data of your own, which is returned to your callback.
     ///
-    /// The API's internal Particle_t struct is passed back to your callback function, so your application will have to include
-    /// "ParticleLib/Particle.h", which it normally should not do.
+    /// The API's internal Particle_t struct is passed back to your callback function, so your application will have to include "Particle/Particle.h".
     void DeathCallback(P_PARTICLE_CALLBACK callback, ///< Pointer to function of yours to call
                        pdata_t group_data = 0        ///< Arbitrary per-group data of yours to pass into your function
     );
@@ -292,22 +290,10 @@ protected:
     void InternalSetup(std::shared_ptr<PInternalState_t> Sr); // Calls this after construction to set up the PS pointer
 };
 
-/// The inline actions API allows an action to be applied to a particle using a function call that will be inlined.
+/// This class contains the Action API. It includes the legacy, less performant, but perhaps more elegant Action API.
+/// It also includes the inline actions API. This allows an action to be applied to a particle using a function call that will be inlined.
 /// This enables a new programming model with a normally parallel for_each loop around a per-particle list of actions.
 /// It also enables the inline actions functions to be called from CUDA threads, or equivalent, allowing GPU acceleration.
-class PContextInlineActions_t {
-public:
-#define PARG Particle_t &m,
-#include "Particle/pActionDecls.h"
-#undef PARG
-
-    void InternalSetup(std::shared_ptr<PInternalState_t> Sr); // Calls this after construction to set up the PS pointer
-
-protected:
-    std::shared_ptr<PInternalState_t> PS; // The internal API data for this context is stored here.
-};
-
-/// This class contains the legacy, less performant, but perhaps more elegant Action API.
 ///
 /// Actions modify the position, color, velocity, size, age, and other attributes of
 /// particles. All actions apply to the current particle group, as set by CurrentGroup().
@@ -329,12 +315,29 @@ protected:
 /// what is reasonable. Larger epsilon make particles accelerate less.
 class PContextActions_t {
 public:
+    /// The inline actions API calls take a Particle_t as the first argument. Otherwise the call signatures match those of the legacy API.
+#define PARG Particle_t &m,
+#include "Particle/pActionDecls.h"
+#undef PARG
+
 #define PARG
 #include "Particle/pActionDecls.h"
 #undef PARG
 
     /// Delete particles tagged to be killed by inline P.I.KillOld(), P.I.Sink(), and P.I.SinkVelocity()
     void CommitKills();
+
+    /// Sort the particles by their projection onto the look vector.
+    ///
+    /// Many rendering systems require rendering transparent particles in back-to-front order. The ordering is defined by the eye point and the
+    /// look vector. These are the same vectors you pass into gluLookAt(), for example. The vector from the eye point to each particle's
+    /// position is computed, then projected onto the look vector. Particles are sorted back-to-front by the result of this dot product.
+    /// Setting clamp_negative to true speeds up sorting time. Particles behind the viewer won't be visible so their relative order doesn't matter.
+    void Sort(const pVec& eye,                  ///< eye point is a point on the line the particles project onto
+              const pVec& look_dir,             ///< direction vector of projection line; does not need to be normalized
+              const bool front_to_back = false, ///< true to sort in front-to-back order instead of back-to-front
+              const bool clamp_negative = false ///< true to set negative dot product values to zero before sorting
+    );
 
     /// Add particles with positions in the specified domain.
     ///
@@ -374,36 +377,31 @@ public:
 
     template <class UnaryFunction> void ParticleLoop(UnaryFunction f)
     {
-        PASSERT(!PS->in_new_list && !PS->in_call_list, "Can't call ParticleLoop in an action list");
-        PS->in_particle_loop = true;
-        std::for_each(PS->PGroups[PS->pgroup_id].begin(), PS->PGroups[PS->pgroup_id].end(), f);
-        PS->in_particle_loop = false;
+        StartParticleLoop(PS, PSh);
+        std::for_each(PSh.get_pgroup_begin(), PSh.get_pgroup_end(), f);
+        EndParticleLoop(PS, PSh);
     }
     template <class ExPol, class UnaryFunction> void ParticleLoop(ExPol&& policy, UnaryFunction f)
     {
-        PASSERT(!PS->in_new_list && !PS->in_call_list, "Can't call ParticleLoop in an action list");
-        PS->in_particle_loop = true;
-        std::for_each(policy, PS->PGroups[PS->pgroup_id].begin(), PS->PGroups[PS->pgroup_id].end(), f);
-        PS->in_particle_loop = false;
+        StartParticleLoop(PS, PSh);
+        std::for_each(policy, PSh.get_pgroup_begin(), PSh.get_pgroup_end(), f);
+        EndParticleLoop(PS, PSh);
     }
 
 protected:
+    PInternalShadow_t PSh;                                    // Shadow copy of some information from PInternalState_t that is used by the inline actions API
     std::shared_ptr<PInternalState_t> PS;                     // The internal API data for this context is stored here.
     void InternalSetup(std::shared_ptr<PInternalState_t> Sr); // Calls this after construction to set up the PS pointer
-
-    // typedef std::vector<Particle_t> ParticleList;
 };
 
-/// The Particle System API - Your app should have one of these.
+/// The Particle System API Context - Your app should have one of these per host thread that will do particle systems concurrently.
 ///
 /// This is a complete instance of the Particle API. All API state is stored in the context.
 ///
 /// See the documentation of the base classes for the description of all the API entry points.
-class ParticleContext_t : public PContextParticleGroup_t, public PContextActionList_t, public PContextActions_t /* The legacy actions */ {
+class ParticleContext_t : public PContextParticleGroup_t, public PContextActionList_t, public PContextActions_t {
 public:
     ParticleContext_t(); /// The context's default constructor
-
-    PContextInlineActions_t I; /// The inline actions
 };
 }; // namespace PAPI
 

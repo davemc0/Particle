@@ -11,8 +11,9 @@
         If anyone would like to do one of these, go for it! I might get to them eventually.</p>
     <h2>API</h2>
     <ul>
+        <li>Make Source and Vertex work in inline mode
         <li>Bouncing off multiple nearby or intersecting domains is broken (see Waterfall). Solve with constraints.     
-        <li>Bouncing and avoiding of PDUnion domains. This may be the answer for obstacle avoidance.
+        <li>Bouncing and avoiding of PDUnion domains.
         <li>Bounce off cylinders
         <li>Way points - like OrbitPoint, but once a particle is close enough, it is attracted to the next way point
         <li>Voxelized vector fields
@@ -26,12 +27,12 @@
         <li>RandomColor - random domain is added to color
         <li>VelocityColor - color is f(velocity)
         <li>VelocitySize - size is f(velocity)
-        <li>Organize particle groups as structures of arrays for stream processing
+        <li>Organize particle groups as structures of arrays instead of arrays of structures for stream processing
     </ul>
     <h2>
         Demos</h2>
     <ul>
-        <li>Get rid of kill-old
+        <li>Get rid of KillOld so all the particles don't just disappear when changing demos
         <li>Smiley face image restore default
         <li>Add resiliency cutoff so it bounces 100% if below cutoff and clean up friction
         <li>Force inside / outside a 3D domain

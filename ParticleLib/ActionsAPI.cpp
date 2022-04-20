@@ -5,13 +5,20 @@
 /// This file implements the action API calls by creating action class instances,
 /// which are either executed or added to an action list.
 
+#include "ActionStructs.h"
 #include "PInternalState.h"
 #include "Particle/pAPIContext.h"
 
 namespace PAPI {
+#ifdef _DEBUG
+#define P_CHECK_ERR PASSERT(!PS->in_particle_loop, "Cannot call this non-inline action while inside ParticleLoop")
+#else
+#define P_CHECK_ERR
+#endif
 
 void PContextActions_t::Avoid(const float magnitude, const float epsilon, const float look_ahead, const pDomain& dom)
 {
+    P_CHECK_ERR;
     PAAvoid* A = new PAAvoid;
 
     A->position = dom.copy();
@@ -27,6 +34,7 @@ void PContextActions_t::Avoid(const float magnitude, const float epsilon, const 
 
 void PContextActions_t::Bounce(const float friction, const float resilience, const float fric_min_vel, const pDomain& dom)
 {
+    P_CHECK_ERR;
     PABounce* A = new PABounce;
 
     A->position = dom.copy();
@@ -44,6 +52,7 @@ void PContextActions_t::Bounce(const float friction, const float resilience, con
 
 void PContextActions_t::Callback(P_PARTICLE_CALLBACK_ACTION callbackFunc, const pdata_t call_data)
 {
+    P_CHECK_ERR;
     PACallback* A = new PACallback;
     A->callbackFunc = callbackFunc;
     A->call_data = call_data;
@@ -56,6 +65,7 @@ void PContextActions_t::Callback(P_PARTICLE_CALLBACK_ACTION callbackFunc, const 
 
 void PContextActions_t::CommitKills()
 {
+    P_CHECK_ERR;
     PACommitKills* A = new PACommitKills;
 
     A->SetKillsParticles(true);
@@ -66,6 +76,7 @@ void PContextActions_t::CommitKills()
 
 void PContextActions_t::CopyVertexB(const bool copy_pos, const bool copy_vel)
 {
+    P_CHECK_ERR;
     PACopyVertexB* A = new PACopyVertexB;
 
     A->copy_pos = copy_pos;
@@ -79,6 +90,7 @@ void PContextActions_t::CopyVertexB(const bool copy_pos, const bool copy_vel)
 
 void PContextActions_t::Damping(const pVec& damping, const float min_vel, const float max_vel)
 {
+    P_CHECK_ERR;
     PADamping* A = new PADamping;
 
     A->damping = damping;
@@ -93,6 +105,7 @@ void PContextActions_t::Damping(const pVec& damping, const float min_vel, const 
 
 void PContextActions_t::RotDamping(const pVec& damping, const float min_vel, const float max_vel)
 {
+    P_CHECK_ERR;
     PARotDamping* A = new PARotDamping;
 
     A->damping = damping;
@@ -107,6 +120,7 @@ void PContextActions_t::RotDamping(const pVec& damping, const float min_vel, con
 
 void PContextActions_t::Explosion(const pVec& center, const float radius, const float magnitude, const float stdev, const float epsilon)
 {
+    P_CHECK_ERR;
     PAExplosion* A = new PAExplosion;
 
     A->center = center;
@@ -123,6 +137,7 @@ void PContextActions_t::Explosion(const pVec& center, const float radius, const 
 
 void PContextActions_t::Follow(const float magnitude, const float epsilon, const float max_radius)
 {
+    P_CHECK_ERR;
     PAFollow* A = new PAFollow;
 
     A->magnitude = magnitude;
@@ -137,6 +152,7 @@ void PContextActions_t::Follow(const float magnitude, const float epsilon, const
 
 void PContextActions_t::Gravitate(const float magnitude, const float epsilon, const float max_radius)
 {
+    P_CHECK_ERR;
     PAGravitate* A = new PAGravitate;
 
     A->magnitude = magnitude;
@@ -151,6 +167,7 @@ void PContextActions_t::Gravitate(const float magnitude, const float epsilon, co
 
 void PContextActions_t::Gravity(const pVec& dir)
 {
+    P_CHECK_ERR;
     PAGravity* A = new PAGravity;
 
     A->direction = dir;
@@ -163,6 +180,7 @@ void PContextActions_t::Gravity(const pVec& dir)
 
 void PContextActions_t::Jet(const pDomain& dom, const pDomain& accel)
 {
+    P_CHECK_ERR;
     PAJet* A = new PAJet;
 
     A->dom = dom.copy();
@@ -176,6 +194,7 @@ void PContextActions_t::Jet(const pDomain& dom, const pDomain& accel)
 
 void PContextActions_t::KillOld(const float age_limit, const bool kill_less_than)
 {
+    P_CHECK_ERR;
     PAKillOld* A = new PAKillOld;
 
     A->age_limit = age_limit;
@@ -189,6 +208,7 @@ void PContextActions_t::KillOld(const float age_limit, const bool kill_less_than
 
 void PContextActions_t::MatchVelocity(const float magnitude, const float epsilon, const float max_radius)
 {
+    P_CHECK_ERR;
     PAMatchVelocity* A = new PAMatchVelocity;
 
     A->magnitude = magnitude;
@@ -203,6 +223,7 @@ void PContextActions_t::MatchVelocity(const float magnitude, const float epsilon
 
 void PContextActions_t::MatchRotVelocity(const float magnitude, const float epsilon, const float max_radius)
 {
+    P_CHECK_ERR;
     PAMatchRotVelocity* A = new PAMatchRotVelocity;
 
     A->magnitude = magnitude;
@@ -217,6 +238,7 @@ void PContextActions_t::MatchRotVelocity(const float magnitude, const float epsi
 
 void PContextActions_t::Move(const bool move_velocity, const bool move_rotational_velocity)
 {
+    P_CHECK_ERR;
     PAMove* A = new PAMove;
 
     A->move_velocity = move_velocity;
@@ -230,6 +252,7 @@ void PContextActions_t::Move(const bool move_velocity, const bool move_rotationa
 
 void PContextActions_t::OrbitLine(const pVec& p, const pVec& axis, const float magnitude, const float epsilon, const float max_radius)
 {
+    P_CHECK_ERR;
     PAOrbitLine* A = new PAOrbitLine;
 
     A->p = p;
@@ -246,6 +269,7 @@ void PContextActions_t::OrbitLine(const pVec& p, const pVec& axis, const float m
 
 void PContextActions_t::OrbitPoint(const pVec& center, const float magnitude, const float epsilon, const float max_radius)
 {
+    P_CHECK_ERR;
     PAOrbitPoint* A = new PAOrbitPoint;
 
     A->center = center;
@@ -261,6 +285,7 @@ void PContextActions_t::OrbitPoint(const pVec& center, const float magnitude, co
 
 void PContextActions_t::RandomAccel(const pDomain& dom)
 {
+    P_CHECK_ERR;
     PARandomAccel* A = new PARandomAccel;
 
     A->gen_acc = dom.copy();
@@ -272,6 +297,7 @@ void PContextActions_t::RandomAccel(const pDomain& dom)
 
 void PContextActions_t::RandomDisplace(const pDomain& dom)
 {
+    P_CHECK_ERR;
     PARandomDisplace* A = new PARandomDisplace;
 
     A->gen_disp = dom.copy();
@@ -283,6 +309,7 @@ void PContextActions_t::RandomDisplace(const pDomain& dom)
 
 void PContextActions_t::RandomVelocity(const pDomain& dom)
 {
+    P_CHECK_ERR;
     PARandomVelocity* A = new PARandomVelocity;
 
     A->gen_vel = dom.copy();
@@ -294,6 +321,7 @@ void PContextActions_t::RandomVelocity(const pDomain& dom)
 
 void PContextActions_t::RandomRotVelocity(const pDomain& dom)
 {
+    P_CHECK_ERR;
     PARandomRotVelocity* A = new PARandomRotVelocity;
 
     A->gen_vel = dom.copy();
@@ -305,6 +333,7 @@ void PContextActions_t::RandomRotVelocity(const pDomain& dom)
 
 void PContextActions_t::Restore(const float time_left, const bool vel, const bool rvel)
 {
+    P_CHECK_ERR;
     PARestore* A = new PARestore;
 
     A->time_left = time_left;
@@ -319,6 +348,7 @@ void PContextActions_t::Restore(const float time_left, const bool vel, const boo
 
 void PContextActions_t::Sink(const bool kill_inside, const pDomain& kill_pos_dom)
 {
+    P_CHECK_ERR;
     PASink* A = new PASink;
 
     A->kill_pos_dom = kill_pos_dom.copy();
@@ -332,6 +362,7 @@ void PContextActions_t::Sink(const bool kill_inside, const pDomain& kill_pos_dom
 
 void PContextActions_t::SinkVelocity(const bool kill_inside, const pDomain& kill_vel_dom)
 {
+    P_CHECK_ERR;
     PASinkVelocity* A = new PASinkVelocity;
 
     A->kill_vel_dom = kill_vel_dom.copy();
@@ -345,6 +376,7 @@ void PContextActions_t::SinkVelocity(const bool kill_inside, const pDomain& kill
 
 void PContextActions_t::Sort(const pVec& eye, const pVec& look, const bool front_to_back, const bool clamp_negative)
 {
+    P_CHECK_ERR;
     PASort* A = new PASort;
 
     A->Eye = eye;
@@ -360,6 +392,7 @@ void PContextActions_t::Sort(const pVec& eye, const pVec& look, const bool front
 
 void PContextActions_t::Source(const float particle_rate, const pDomain& dom, const pSourceState& SrcSt)
 {
+    P_CHECK_ERR;
     PASource* A = new PASource;
 
     A->gen_pos = dom.copy();
@@ -374,6 +407,7 @@ void PContextActions_t::Source(const float particle_rate, const pDomain& dom, co
 
 void PContextActions_t::SpeedClamp(const float min_speed, const float max_speed)
 {
+    P_CHECK_ERR;
     PASpeedClamp* A = new PASpeedClamp;
 
     A->min_speed = min_speed;
@@ -387,6 +421,7 @@ void PContextActions_t::SpeedClamp(const float min_speed, const float max_speed)
 
 void PContextActions_t::TargetColor(const pVec& color, const float alpha, const float scale)
 {
+    P_CHECK_ERR;
     PATargetColor* A = new PATargetColor;
 
     A->color = color;
@@ -401,6 +436,7 @@ void PContextActions_t::TargetColor(const pVec& color, const float alpha, const 
 
 void PContextActions_t::TargetSize(const pVec& size, const pVec& scale)
 {
+    P_CHECK_ERR;
     PATargetSize* A = new PATargetSize;
 
     A->size = size;
@@ -414,6 +450,7 @@ void PContextActions_t::TargetSize(const pVec& size, const pVec& scale)
 
 void PContextActions_t::TargetVelocity(const pVec& vel, const float scale)
 {
+    P_CHECK_ERR;
     PATargetVelocity* A = new PATargetVelocity;
 
     A->velocity = vel;
@@ -427,6 +464,7 @@ void PContextActions_t::TargetVelocity(const pVec& vel, const float scale)
 
 void PContextActions_t::TargetRotVelocity(const pVec& vel, const float scale)
 {
+    P_CHECK_ERR;
     PATargetRotVelocity* A = new PATargetRotVelocity;
 
     A->velocity = vel;
@@ -442,7 +480,8 @@ void PContextActions_t::TargetRotVelocity(const pVec& vel, const float scale)
 // If building an action list, call Source().
 void PContextActions_t::Vertex(const pVec& pos, const pSourceState& SrcSt, const pdata_t data)
 {
-    if (PS->in_new_list) {
+    P_CHECK_ERR;
+    if (PS->get_in_new_list()) {
         pSourceState TmpSrcSt(SrcSt);
         TmpSrcSt.Data_ = data;
         Source(1, PDPoint(pos), TmpSrcSt);
@@ -466,12 +505,13 @@ void PContextActions_t::Vertex(const pVec& pos, const pSourceState& SrcSt, const
     // Note that we pass in the particle user data of the Vertex call, even if it's the default value.
     // We don't pass the SrcSt data. Note that this creates an inconsistency if building an action list.
 
-    PS->PGroups[PS->pgroup_id].Add(P);
+    PS->getPGroups()[PS->get_pgroup_id()].Add(P);
 }
 
 void PContextActions_t::Vortex(const pVec& center, const pVec& axis, const float tightnessExponent, const float max_radius, const float inSpeed,
                                const float upSpeed, const float aroundSpeed)
 {
+    P_CHECK_ERR;
     PAVortex* A = new PAVortex;
 
     A->tip = center;
@@ -487,4 +527,6 @@ void PContextActions_t::Vortex(const pVec& center, const pVec& axis, const float
 
     PS->SendAction(std::shared_ptr<PActionBase>(A));
 }
+
+#undef P_CHECK_ERR
 }; // namespace PAPI

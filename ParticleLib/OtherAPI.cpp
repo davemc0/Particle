@@ -4,6 +4,7 @@
 ///
 /// This file implements the API calls that are not particle actions.
 
+#include "ActionStructs.h"
 #include "PInternalState.h"
 #include "Particle/pAPIContext.h"
 
@@ -16,7 +17,7 @@ namespace PAPI {
 
 int PContextActionList_t::GenActionLists(const int action_list_count)
 {
-    if (PS->in_new_list) throw PErrInNewActionList("Can't call GenActionLists while in NewActionList.");
+    if (PS->get_in_new_list()) throw PErrInNewActionList("Can't call GenActionLists while in NewActionList.");
 
     int ind = PS->GenerateALists(action_list_count);
 
@@ -25,40 +26,40 @@ int PContextActionList_t::GenActionLists(const int action_list_count)
 
 void PContextActionList_t::NewActionList(const int action_list_num)
 {
-    if (PS->in_new_list) throw PErrInNewActionList("Can't call NewActionList while in NewActionList.");
+    if (PS->get_in_new_list()) throw PErrInNewActionList("Can't call NewActionList while in NewActionList.");
 
-    PS->alist_id = action_list_num;
-    if (PS->alist_id < 0 || PS->alist_id >= (int)PS->ALists.size()) throw PErrParticleGroup("Invalid action list number");
+    PS->set_alist_id(action_list_num);
+    if (PS->get_alist_id() < 0 || PS->get_alist_id() >= (int)PS->getALists().size()) throw PErrParticleGroup("Invalid action list number");
 
-    PS->in_new_list = true;
-    PS->ALists[PS->alist_id].resize(0); // Remove any old actions
+    PS->set_in_new_list(true);
+    PS->getALists()[PS->get_alist_id()].resize(0); // Remove any old actions
 }
 
 void PContextActionList_t::EndActionList()
 {
-    if (!PS->in_new_list) throw PErrInNewActionList("Can't call EndActionList while not in NewActionList.");
+    if (!PS->get_in_new_list()) throw PErrInNewActionList("Can't call EndActionList while not in NewActionList.");
 
-    PS->in_new_list = false;
+    PS->set_in_new_list(false);
 
-    PS->alist_id = -1;
+    PS->set_alist_id(-1);
 }
 
 void PContextActionList_t::DeleteActionLists(const int action_list_num, const int action_list_count)
 {
-    if (PS->in_new_list) throw PErrInNewActionList("Can't call DeleteActionLists while in NewActionList.");
+    if (PS->get_in_new_list()) throw PErrInNewActionList("Can't call DeleteActionLists while in NewActionList.");
 
     if (action_list_num < 0) throw PErrActionList("Invalid action list number.");
 
-    if (action_list_num + action_list_count > (int)PS->ALists.size()) throw PErrActionList("Invalid action list number.");
+    if (action_list_num + action_list_count > (int)PS->getALists().size()) throw PErrActionList("Invalid action list number.");
 
-    for (int i = action_list_num; i < action_list_num + action_list_count; i++) { PS->ALists[i].resize(0); }
+    for (int i = action_list_num; i < action_list_num + action_list_count; i++) { PS->getALists()[i].resize(0); }
 }
 
 void PContextActionList_t::CallActionList(const int action_list_num)
 {
-    if (action_list_num < 0 || action_list_num >= (int)PS->ALists.size()) throw PErrActionList("Invalid action list number.");
+    if (action_list_num < 0 || action_list_num >= (int)PS->getALists().size()) throw PErrActionList("Invalid action list number.");
 
-    if (PS->in_new_list) {
+    if (PS->get_in_new_list()) {
         // Add this call as an action to the current list.
         PACallActionList* S = new PACallActionList;
         S->action_list_num = action_list_num;
@@ -66,13 +67,13 @@ void PContextActionList_t::CallActionList(const int action_list_num)
         PS->SendAction(std::shared_ptr<PActionBase>(S));
     } else {
         // Execute the specified action list.
-        PS->ExecuteActionList(PS->ALists[action_list_num]);
+        PS->ExecuteActionList(PS->getALists()[action_list_num]);
     }
 }
 
-void PContextActionList_t::TimeStep(const float newDT) { PS->dt = newDT; }
+void PContextActionList_t::TimeStep(const float newDT) { PS->set_dt(newDT); }
 
-float PContextActionList_t::GetTimeStep() const { return PS->dt; }
+float PContextActionList_t::GetTimeStep() const { return PS->get_dt(); }
 
 // Sets the random seed. Unfortunately, it currently sets it for all contexts in this thread.
 void PContextActionList_t::Seed(const unsigned int seed) { pSRandf(seed); }
@@ -83,60 +84,60 @@ void PContextActionList_t::Seed(const unsigned int seed) { pSRandf(seed); }
 // Create p_group_count particle groups, each with max_particles allocated.
 int PContextParticleGroup_t::GenParticleGroups(const int p_group_count, const size_t max_particles)
 {
-    if (PS->in_new_list) throw PErrInNewActionList("Can't call GenParticleGroups while in NewActionList.");
+    if (PS->get_in_new_list()) throw PErrInNewActionList("Can't call GenParticleGroups while in NewActionList.");
     if (p_group_count < 0) throw PErrParticleGroup("Invalid particle group number 0");
     if (max_particles < 0) throw PErrParticleGroup("Invalid max_particles");
 
     int ind = PS->GeneratePGroups(p_group_count);
 
-    for (int i = ind; i < ind + p_group_count; i++) { PS->PGroups[i].SetMaxParticles(max_particles); }
+    for (int i = ind; i < ind + p_group_count; i++) { PS->getPGroups()[i].SetMaxParticles(max_particles); }
 
     return ind;
 }
 
 void PContextParticleGroup_t::DeleteParticleGroups(const int p_group_num, const int p_group_count)
 {
-    if (PS->in_new_list) throw PErrInNewActionList("Can't call DeleteParticleGroups while in NewActionList.");
+    if (PS->get_in_new_list()) throw PErrInNewActionList("Can't call DeleteParticleGroups while in NewActionList.");
     if (p_group_num < 0) throw PErrParticleGroup("Invalid particle group number 1");
     if (p_group_count < 1) throw PErrParticleGroup("Invalid p_group_count");
-    if (p_group_num + p_group_count > (int)PS->PGroups.size()) throw PErrParticleGroup("Invalid particle group number 2");
+    if (p_group_num + p_group_count > (int)PS->getPGroups().size()) throw PErrParticleGroup("Invalid particle group number 2");
 
     for (int i = p_group_num; i < p_group_num + p_group_count; i++) {
-        PS->PGroups[i].SetMaxParticles(0);
-        PS->PGroups[i].GetList().resize(0);
+        PS->getPGroups()[i].SetMaxParticles(0);
+        PS->getPGroups()[i].GetList().resize(0);
     }
 }
 
 // Change which group is current.
 void PContextParticleGroup_t::CurrentGroup(const int p_group_num)
 {
-    if (PS->in_new_list) throw PErrInNewActionList("Can't call CurrentGroup while in NewActionList.");
-    if (p_group_num < 0 || p_group_num >= (int)PS->PGroups.size()) throw PErrParticleGroup("Invalid particle group number 3");
+    if (PS->get_in_new_list()) throw PErrInNewActionList("Can't call CurrentGroup while in NewActionList.");
+    if (p_group_num < 0 || p_group_num >= (int)PS->getPGroups().size()) throw PErrParticleGroup("Invalid particle group number 3");
 
-    PS->pgroup_id = p_group_num;
+    PS->set_pgroup_id(p_group_num);
 }
 
 // Change the maximum number of particles in the current group.
 void PContextParticleGroup_t::SetMaxParticles(const size_t max_count)
 {
-    if (PS->in_new_list) throw PErrInNewActionList("Can't call SetMaxParticles while in NewActionList.");
+    if (PS->get_in_new_list()) throw PErrInNewActionList("Can't call SetMaxParticles while in NewActionList.");
     if (max_count < 0) throw PErrParticleGroup("Invalid max_count.");
-    if (PS->pgroup_id < 0 || PS->pgroup_id >= (int)PS->PGroups.size()) throw PErrParticleGroup("Invalid particle group number 9");
+    if (PS->get_pgroup_id() < 0 || PS->get_pgroup_id() >= (int)PS->getPGroups().size()) throw PErrParticleGroup("Invalid particle group number 9");
 
     // This can kill them and call their death callback.
-    PS->PGroups[PS->pgroup_id].SetMaxParticles(max_count);
+    PS->getPGroups()[PS->get_pgroup_id()].SetMaxParticles(max_count);
 }
 
 // Copy from the specified group to the current group.
 void PContextParticleGroup_t::CopyGroup(const int p_src_group_num, const size_t index, const size_t copy_count)
 {
-    if (PS->in_new_list) throw PErrInNewActionList("Can't call CopyGroup while in NewActionList.");
+    if (PS->get_in_new_list()) throw PErrInNewActionList("Can't call CopyGroup while in NewActionList.");
     if (index < 0) throw PErrInNewActionList("index invalid in CopyGroup.");
-    if (p_src_group_num < 0 || p_src_group_num >= (int)PS->PGroups.size()) throw PErrParticleGroup("Invalid particle group number 4");
+    if (p_src_group_num < 0 || p_src_group_num >= (int)PS->getPGroups().size()) throw PErrParticleGroup("Invalid particle group number 4");
 
-    ParticleGroup& srcgrp = PS->PGroups[p_src_group_num];
+    ParticleGroup& srcgrp = PS->getPGroups()[p_src_group_num];
 
-    ParticleGroup& destgrp = PS->PGroups[PS->pgroup_id];
+    ParticleGroup& destgrp = PS->getPGroups()[PS->get_pgroup_id()];
 
     // Find out exactly how many to copy.
     size_t ccount = copy_count;
@@ -152,11 +153,11 @@ void PContextParticleGroup_t::CopyGroup(const int p_src_group_num, const size_t 
 size_t PContextParticleGroup_t::GetParticles(const size_t index, const size_t cnt, float* verts, const bool getAlpha, float* color, float* vel, float* size,
                                              float* age)
 {
-    if (PS->in_new_list) throw PErrInNewActionList("Can't call GetParticles while in NewActionList.");
-    if (PS->pgroup_id < 0 || PS->pgroup_id >= (int)PS->PGroups.size()) throw PErrParticleGroup("GetParticles: Invalid pgroup_id");
+    if (PS->get_in_new_list()) throw PErrInNewActionList("Can't call GetParticles while in NewActionList.");
+    if (PS->get_pgroup_id() < 0 || PS->get_pgroup_id() >= (int)PS->getPGroups().size()) throw PErrParticleGroup("GetParticles: Invalid pgroup_id");
     if (index < 0 || cnt < 0) throw PErrParticleGroup("GetParticles: Invalid index or count.");
 
-    ParticleGroup& pg = PS->PGroups[PS->pgroup_id];
+    ParticleGroup& pg = PS->getPGroups()[PS->get_pgroup_id()];
 
     size_t count = cnt;
 
@@ -214,10 +215,10 @@ size_t PContextParticleGroup_t::GetParticlePointer(const float*& ptr, size_t& st
                                                    size_t& velB3Ofs, size_t& color3Ofs, size_t& alpha1Ofs, size_t& age1Ofs, size_t& up3Ofs, size_t& rvel3Ofs,
                                                    size_t& upB3Ofs, size_t& mass1Ofs, size_t& data1Ofs)
 {
-    ParticleGroup& pg = PS->PGroups[PS->pgroup_id];
+    ParticleGroup& pg = PS->getPGroups()[PS->get_pgroup_id()];
 
     if (pg.size() < 1) throw PErrParticleGroup("GetParticlePointer called on empty particle group.");
-    if (PS->in_new_list) throw PErrInNewActionList("Can't call GetParticlePointer while in NewActionList.");
+    if (PS->get_in_new_list()) throw PErrInNewActionList("Can't call GetParticlePointer while in NewActionList.");
 
     ParticleList::iterator it = pg.begin();
     Particle_t* p0 = &(*it);
@@ -251,33 +252,34 @@ size_t PContextParticleGroup_t::GetParticlePointer(const float*& ptr, size_t& st
 // Returns the number of particles currently in the group.
 size_t PContextParticleGroup_t::GetGroupCount()
 {
-    if (PS->pgroup_id < 0 || PS->pgroup_id >= (int)PS->PGroups.size()) throw PErrParticleGroup("GetGroupCount: Invalid particle group number");
+    if (PS->get_pgroup_id() < 0 || PS->get_pgroup_id() >= (int)PS->getPGroups().size()) throw PErrParticleGroup("GetGroupCount: Invalid particle group number");
 
-    return PS->PGroups[PS->pgroup_id].size();
+    return PS->getPGroups()[PS->get_pgroup_id()].size();
 }
 
 // Returns the maximum number of allowed particles
 size_t PContextParticleGroup_t::GetMaxParticles()
 {
-    if (PS->pgroup_id < 0 || PS->pgroup_id >= (int)PS->PGroups.size()) throw PErrParticleGroup("GetMaxParticles: Invalid particle group number");
+    if (PS->get_pgroup_id() < 0 || PS->get_pgroup_id() >= (int)PS->getPGroups().size())
+        throw PErrParticleGroup("GetMaxParticles: Invalid particle group number");
 
-    return PS->PGroups[PS->pgroup_id].GetMaxParticles();
+    return PS->getPGroups()[PS->get_pgroup_id()].GetMaxParticles();
 }
 
 void PContextParticleGroup_t::BirthCallback(P_PARTICLE_CALLBACK callback, pdata_t data)
 {
-    if (PS->in_new_list) throw PErrInNewActionList("Can't call BirthCallback while in NewActionList.");
+    if (PS->get_in_new_list()) throw PErrInNewActionList("Can't call BirthCallback while in NewActionList.");
 
-    PS->PGroups[PS->pgroup_id].SetBirthCallback(callback, data);
+    PS->getPGroups()[PS->get_pgroup_id()].SetBirthCallback(callback, data);
 }
 
 void PContextParticleGroup_t::DeathCallback(P_PARTICLE_CALLBACK callback, pdata_t data)
 {
-    if (PS->in_new_list) throw PErrInNewActionList("Can't call DeathCallback while in NewActionList.");
+    if (PS->get_in_new_list()) throw PErrInNewActionList("Can't call DeathCallback while in NewActionList.");
 
-    PS->PGroups[PS->pgroup_id].SetDeathCallback(callback, data);
+    PS->getPGroups()[PS->get_pgroup_id()].SetDeathCallback(callback, data);
 }
 
-// Set the number of particles that fit in the CPU's cache
-void PContextParticleGroup_t::SetWorkingSetSize(const int set_size_bytes) { PS->PWorkingSetSize = set_size_bytes / sizeof(Particle_t); }
+// Set the size in bytes of the CPU's cache to imply the number of particles that fit in it
+void PContextParticleGroup_t::SetWorkingSetSize(const int set_size_bytes) { PS->set_working_set_size(set_size_bytes / sizeof(Particle_t)); }
 }; // namespace PAPI

@@ -339,15 +339,3 @@ void Sink(PARG const bool kill_inside, ///< true to kill particles inside the do
 void SinkVelocity(PARG const bool kill_inside, ///< true to kill particles with velocities inside the domain
                   const pDomain& kill_vel_dom  ///< kill particles with velocities in this domain
 );
-
-/// Sort the particles by their projection onto the look vector.
-///
-/// Many rendering systems require rendering transparent particles in back-to-front order. The ordering is defined by the eye point and the
-/// look vector. These are the same vectors you pass into gluLookAt(), for example. The vector from the eye point to each particle's
-/// position is computed, then projected onto the look vector. Particles are sorted back-to-front by the result of this dot product.
-/// Setting clamp_negative to true speeds up sorting time. Particles behind the viewer won't be visible so their relative order doesn't matter.
-void Sort(PARG const pVec& eye,             ///< eye point is a point on the line the particles project onto
-          const pVec& look_dir,             ///< direction vector of projection line; does not need to be normalized
-          const bool front_to_back = false, ///< true to sort in front-to-back order instead of back-to-front
-          const bool clamp_negative = false ///< true to set negative dot product values to zero before sorting
-);

@@ -1,11 +1,11 @@
-/// Actions.h
+/// ActionStructs.h
 ///
 /// Copyright 1997-2007, 2022 by David K. McAllister
 ///
 /// These structures store the details of actions for action lists
 
-#ifndef _Actions_h
-#define _Actions_h
+#ifndef _ActionStructs_h
+#define _ActionStructs_h
 
 #include "Particle/pSourceState.h"
 #include "ParticleGroup.h"
@@ -56,10 +56,10 @@ protected:
 // Data types derived from PActionBase.
 
 struct PAAvoid : public PActionBase {
-    std::shared_ptr<pDomain> position; // Avoid region
-    float look_ahead;                  // How many time units ahead to look
-    float magnitude;                   // What percent of the way to go each time
-    float epsilon;                     // Add to r^2 for softening
+    std::shared_ptr<pDomain> position;
+    float look_ahead;
+    float magnitude;
+    float epsilon;
 
     ACTION_DECLS;
 
@@ -71,10 +71,10 @@ struct PAAvoid : public PActionBase {
 };
 
 struct PABounce : public PActionBase {
-    std::shared_ptr<pDomain> position; // Bounce region
-    float friction;                    // Friction tangent to surface
-    float resilience;                  // Resilence perpendicular to surface
-    float fric_min_vel;                // fric_min_vel velocity; friction applies iff v > fric_min_vel
+    std::shared_ptr<pDomain> position;
+    float friction;
+    float resilience;
+    float fric_min_vel;
 
     ACTION_DECLS;
 
@@ -94,7 +94,7 @@ struct PACallback : public PActionBase {
 };
 
 struct PACallActionList : public PActionBase {
-    int action_list_num; // The action list number to call
+    int action_list_num;
 
     ACTION_DECLS;
 };
@@ -104,86 +104,86 @@ struct PACommitKills : public PActionBase {
 };
 
 struct PACopyVertexB : public PActionBase {
-    bool copy_pos; // True to copy pos to posB
-    bool copy_vel; // True to copy vel to velB
+    bool copy_pos;
+    bool copy_vel;
 
     ACTION_DECLS;
 };
 
 struct PADamping : public PActionBase {
-    pVec damping;  // Damping constant applied to velocity
-    float min_vel; // Apply damping only if velocity is within min_vel and max_vel
+    pVec damping;
+    float min_vel;
     float max_vel;
 
     ACTION_DECLS;
 };
 
 struct PARotDamping : public PActionBase {
-    pVec damping;  // Damping constant applied to velocity
-    float min_vel; // Apply damping only if velocity is within min_vel and max_vel
+    pVec damping;
+    float min_vel;
     float max_vel;
 
     ACTION_DECLS;
 };
 
 struct PAExplosion : public PActionBase {
-    pVec center;     // The center of the explosion
-    float radius;    // Of shock wave peak
-    float magnitude; // At unit radius
-    float stdev;     // Sharpness or width of shock wave
-    float epsilon;   // Softening parameter
+    pVec center;
+    float radius;
+    float magnitude;
+    float stdev;
+    float epsilon;
 
     ACTION_DECLS;
 };
 
 struct PAFollow : public PActionBase {
-    float magnitude;  // The grav of each particle
-    float epsilon;    // Softening parameter
-    float max_radius; // Only influence particles within max_radius
+    float magnitude;
+    float epsilon;
+    float max_radius;
 
     ACTION_DECLS;
 };
 
 struct PAGravitate : public PActionBase {
-    float magnitude;  // The grav of each particle
-    float epsilon;    // Softening parameter
-    float max_radius; // Only influence particles within max_radius
+    float magnitude;
+    float epsilon;
+    float max_radius;
 
     ACTION_DECLS;
 };
 
 struct PAGravity : public PActionBase {
-    pVec direction; // Amount to increment velocity
+    pVec direction;
 
     ACTION_DECLS;
 };
 
 struct PAJet : public PActionBase {
-    std::shared_ptr<pDomain> dom; // Accelerate particles that are within this domain
-    std::shared_ptr<pDomain> acc; // Acceleration vector domain
+    std::shared_ptr<pDomain> dom;
+    std::shared_ptr<pDomain> acc;
 
     ACTION_DECLS;
 };
 
 struct PAKillOld : public PActionBase {
-    float age_limit;     // Exact age at which to kill particles.
-    bool kill_less_than; // True to kill particles less than limit.
+    float age_limit;
+    bool kill_less_than;
 
     ACTION_DECLS;
 };
 
 struct PAMatchVelocity : public PActionBase {
-    float magnitude;  // The grav of each particle
-    float epsilon;    // Softening parameter
-    float max_radius; // Only influence particles within max_radius
+    float magnitude;
+    float epsilon;
+    float max_radius;
 
     ACTION_DECLS;
 };
 
 struct PAMatchRotVelocity : public PActionBase {
-    float magnitude;  // The grav of each particle
-    float epsilon;    // Softening parameter
-    float max_radius; // Only influence particles within max_radius
+    float magnitude;
+    float epsilon;
+    float max_radius;
 
     ACTION_DECLS;
 };
@@ -196,49 +196,49 @@ struct PAMove : public PActionBase {
 };
 
 struct PAOrbitLine : public PActionBase {
-    pVec p, axis;     // Endpoints of line to which particles are attracted
-    float magnitude;  // Scales acceleration
-    float epsilon;    // Softening parameter
-    float max_radius; // Only influence particles within max_radius
+    pVec p, axis;
+    float magnitude;
+    float epsilon;
+    float max_radius;
 
     ACTION_DECLS;
 };
 
 struct PAOrbitPoint : public PActionBase {
-    pVec center;      // Point to which particles are attracted
-    float magnitude;  // Scales acceleration
-    float epsilon;    // Softening parameter
-    float max_radius; // Only influence particles within max_radius
+    pVec center;
+    float magnitude;
+    float epsilon;
+    float max_radius;
 
     ACTION_DECLS;
 };
 
 struct PARandomAccel : public PActionBase {
-    std::shared_ptr<pDomain> gen_acc; // The domain of random accelerations.
+    std::shared_ptr<pDomain> gen_acc;
 
     ACTION_DECLS;
 };
 
 struct PARandomDisplace : public PActionBase {
-    std::shared_ptr<pDomain> gen_disp; // The domain of random displacements.
+    std::shared_ptr<pDomain> gen_disp;
 
     ACTION_DECLS;
 };
 
 struct PARandomVelocity : public PActionBase {
-    std::shared_ptr<pDomain> gen_vel; // The domain of random velocities.
+    std::shared_ptr<pDomain> gen_vel;
 
     ACTION_DECLS;
 };
 
 struct PARandomRotVelocity : public PActionBase {
-    std::shared_ptr<pDomain> gen_vel; // The domain of random velocities.
+    std::shared_ptr<pDomain> gen_vel;
 
     ACTION_DECLS;
 };
 
 struct PARestore : public PActionBase {
-    float time_left; // Time remaining until they should be in position.
+    float time_left;
     bool restore_velocity;
     bool restore_rvelocity;
 
@@ -246,80 +246,80 @@ struct PARestore : public PActionBase {
 };
 
 struct PASink : public PActionBase {
-    bool kill_inside;                      // True to dispose of particles *inside* domain
-    std::shared_ptr<pDomain> kill_pos_dom; // Disposal region
+    bool kill_inside;
+    std::shared_ptr<pDomain> kill_pos_dom;
 
     ACTION_DECLS;
 };
 
 struct PASinkVelocity : public PActionBase {
-    bool kill_inside;                      // True to dispose of particles with vel *inside* domain
-    std::shared_ptr<pDomain> kill_vel_dom; // Disposal region
+    bool kill_inside;
+    std::shared_ptr<pDomain> kill_vel_dom;
 
     ACTION_DECLS;
 };
 
 struct PASort : public PActionBase {
-    pVec Eye;            // A point on the line to project onto
-    pVec Look;           // The direction for which to sort particles
-    bool front_to_back;  // True to sort front_to_back
-    bool clamp_negative; // True to clamp negative dot products to zero
+    pVec Eye;
+    pVec Look;
+    bool front_to_back;
+    bool clamp_negative;
 
     ACTION_DECLS;
 };
 
 struct PASource : public PActionBase {
-    std::shared_ptr<pDomain> gen_pos; // Choose a position in this domain
-    float particle_rate;              // Particles to generate per unit time
-    pSourceState SrcSt;               // The state needed to create a new particle
+    std::shared_ptr<pDomain> gen_pos;
+    float particle_rate;
+    pSourceState SrcSt;
 
     ACTION_DECLS;
 };
 
 struct PASpeedClamp : public PActionBase {
-    float min_speed; // Clamp speed to this minimum.
-    float max_speed; // Clamp speed to this maximum.
+    float min_speed;
+    float max_speed;
 
     ACTION_DECLS;
 };
 
 struct PATargetColor : public PActionBase {
-    pVec color;  // Color to shift towards
-    float alpha; // Alpha value to shift towards
-    float scale; // Amount to shift by (1 == all the way)
+    pVec color;
+    float alpha;
+    float scale;
 
     ACTION_DECLS;
 };
 
 struct PATargetSize : public PActionBase {
-    pVec size;  // Size to shift towards
-    pVec scale; // Amount to shift by per frame (1 == all the way)
+    pVec size;
+    pVec scale;
 
     ACTION_DECLS;
 };
 
 struct PATargetVelocity : public PActionBase {
-    pVec velocity; // Velocity to shift towards
-    float scale;   // Amount to shift by (1 == all the way)
+    pVec velocity;
+    float scale;
 
     ACTION_DECLS;
 };
 
 struct PATargetRotVelocity : public PActionBase {
-    pVec velocity; // Velocity to shift towards
-    float scale;   // Amount to shift by (1 == all the way)
+    pVec velocity;
+    float scale;
 
     ACTION_DECLS;
 };
 
 struct PAVortex : public PActionBase {
-    pVec tip;                // Tip of vortex
-    pVec axis;               // Axis around which vortex is applied
-    float tightnessExponent; // Raise radius to this power to create vortex-like silhouette
-    float max_radius;        // Only influence particles within max_radius of axis
-    float inSpeed;           // Inward acceleration of particles outside the vortex
-    float upSpeed;           // Vertical acceleration of particles inside the vortex
-    float aroundSpeed;       // Acceleration around vortex of particles inside the vortex
+    pVec tip;
+    pVec axis;
+    float tightnessExponent;
+    float max_radius;
+    float inSpeed;
+    float upSpeed;
+    float aroundSpeed;
 
     ACTION_DECLS;
 };

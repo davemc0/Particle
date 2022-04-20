@@ -6,10 +6,11 @@
 /// Each action has its own loop over all the particles.
 /// This is inefficient, both in terms of minimal opportunities for code optimization, and in terms of memory access.
 
-#include "Actions.h"
+#include "ActionStructs.h"
 
-#include "PInternalState.h"
+// TODO: Fix PInternalState.
 #include "Particle/pActionImpls.h"
+#include "ParticleLib/PInternalState.h"
 
 #include <algorithm>
 #include <execution>
@@ -18,7 +19,6 @@
 #include <typeinfo>
 
 // Remove these if not C++17.
-// #define P_EXPOL std::execution::par
 // #define P_EXPOL std::execution::par_unseq
 #define P_EXPOL std::execution::seq
 
@@ -371,7 +371,7 @@ void PACallActionList::Execute(ParticleGroup& group, ParticleList::iterator ibeg
     LIB_ASSERT(ibegin == group.begin() && iend == group.end(), "Can only be done on whole list");
 
     // Execute the specified action list.
-    PS->ExecuteActionList(PS->ALists[action_list_num]);
+    PS->ExecuteActionList(PS->getALists()[action_list_num]);
 }
 
 void PACallback::Execute(ParticleGroup& group, ParticleList::iterator ibegin, ParticleList::iterator iend)
