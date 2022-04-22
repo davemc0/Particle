@@ -13,8 +13,6 @@
 #include "Particle/pParticle.h"
 #include "Particle/pSourceState.h"
 
-#include <string>
-
 namespace PAPI {
 
 class PInternalState_t; // The API-internal struct containing the context's state. Don't try to use it.
@@ -260,7 +258,7 @@ public:
     /// with the particle group that is current at the time you make the BirthCallback() call. You can optionally pass a 32-bit value
     /// that could be a handle to arbitrary data of your own, which is returned to your callback.
     ///
-    /// The API's internal Particle_t struct is passed back to your callback function, so your application will have to include "Particle/Particle.h".
+    /// The Particle_t struct is passed back to your callback function, so your application will have to include "Particle/pParticle.h".
     void BirthCallback(P_PARTICLE_CALLBACK callback, ///< Pointer to function of yours to call
                        pdata_t group_data = 0        ///< Arbitrary per-group data of yours to pass into your function
     );
@@ -271,7 +269,7 @@ public:
     /// with the particle group that is current at the time you make the DeathCallback() call. You can optionally pass a pointer to arbitrary
     /// data of your own, which is returned to your callback.
     ///
-    /// The API's internal Particle_t struct is passed back to your callback function, so your application will have to include "Particle/Particle.h".
+    /// The Particle_t struct is passed back to your callback function, so your application will have to include "Particle/pParticle.h".
     void DeathCallback(P_PARTICLE_CALLBACK callback, ///< Pointer to function of yours to call
                        pdata_t group_data = 0        ///< Arbitrary per-group data of yours to pass into your function
     );
@@ -319,10 +317,10 @@ public:
 #define PARG Particle_t &m,
 #include "Particle/pActionDecls.h"
 #undef PARG
-
-#define PARG
-#include "Particle/pActionDecls.h"
-#undef PARG
+    //
+    //#define PARG
+    //#include "Particle/pActionDecls.h"
+    //#undef PARG
 
     /// Delete particles tagged to be killed by inline P.I.KillOld(), P.I.Sink(), and P.I.SinkVelocity()
     void CommitKills();

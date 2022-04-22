@@ -8,15 +8,17 @@
 \mainpage The Particle System API
 
 \section intro Introduction
-<p>The Particle System API (Application Programmer Interface) allows C++ programs to simulate the dynamics of particles. It is intended for special effects in
+The Particle System API (Application Programmer Interface) allows C++ programs to simulate the dynamics of particles. It is intended for special effects in
 interactive and non-interactive graphics applications, not for scientific simulation, although principles of Newtonian physics have been used to implement the
-particle dynamics where applicable. </p> <p>The API consists of four sets of functions: </p> <ul><li><b>Particle Group Calls</b> - A particle group is a system
-of particles that are all acted on together. It can be considered a dynamic geometric object. From the point of view of the graphics system, a particle group is
-just another model to be drawn. These calls create and destroy particle groups, etc. </li> <li><b>Source State Calls</b> - As in OpenGL, some calls actually do
-something and some calls modify the behavior of the subsequent calls that do something. The source state setting calls set the attributes of particles that will
-be created with the Source or Vertex calls. The source state calls are in the PContextSourceState_t part of the PContextState_t structure. </li> <li><b>Actions</b>
-- These implement the particle dynamics. Bounce and Gravity are examples of actions. </li> <li><b>Action List Calls</b> - These create and operate on lists of
-actions.</li></ul>
+particle dynamics where applicable. </p> <p>The API consists of four sets of functions:
+// <ul><li><b>Particle Group Calls</b> - A particle group is a system of particles that are all acted on together. It can be considered a dynamic geometric
+object. From the point of view of the graphics system, a particle group is just another model to be drawn. These calls create and destroy particle groups, etc.
+</li>
+// <li><b>Source State Calls</b> - As in OpenGL, some calls actually do something and some calls modify the behavior of the subsequent calls that do something.
+The source state setting calls set the attributes of particles that will be created with the Source or Vertex calls. The source state calls are in the
+PContextSourceState_t part of the PContextState_t structure. </li>
+// <li><b>Actions</b> - These implement the particle dynamics. Bounce and Gravity are examples of actions. </li>
+// <li><b>Action List Calls</b> - These create and operate on lists of actions.</li></ul>
 
 <p>Following are several basic concepts central to the Particle System API. </p>
 

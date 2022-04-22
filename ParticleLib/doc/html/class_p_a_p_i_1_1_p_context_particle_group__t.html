@@ -172,7 +172,7 @@ Protected Attributes</h2></td></tr>
 
 <p>Specify a particle creation callback. </p>
 <p >Specify a callback function within your code that should be called every time a particle is created. The callback is associated only with the particle group that is current at the time you make the <a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html#a2875a5464c1810fa11a88e057b56cd84" title="Specify a particle creation callback.">BirthCallback()</a> call. You can optionally pass a 32-bit value that could be a handle to arbitrary data of your own, which is returned to your callback.</p>
-<p >The API's internal <a class="el" href="struct_p_a_p_i_1_1_particle__t.html">Particle_t</a> struct is passed back to your callback function, so your application will have to include "Particle/Particle.h". </p>
+<p >The <a class="el" href="struct_p_a_p_i_1_1_particle__t.html">Particle_t</a> struct is passed back to your callback function, so your application will have to include "Particle/pParticle.h". </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">callback</td><td>Pointer to function of yours to call </td></tr>
@@ -277,7 +277,7 @@ Protected Attributes</h2></td></tr>
 
 <p>Specify a particle death callback. </p>
 <p >Specify a callback function within your code that should be called every time a particle is killed. The callback is associated only with the particle group that is current at the time you make the <a class="el" href="class_p_a_p_i_1_1_p_context_particle_group__t.html#a0c0eaac8b9d6b1e5d2520173ee936522" title="Specify a particle death callback.">DeathCallback()</a> call. You can optionally pass a pointer to arbitrary data of your own, which is returned to your callback.</p>
-<p >The API's internal <a class="el" href="struct_p_a_p_i_1_1_particle__t.html">Particle_t</a> struct is passed back to your callback function, so your application will have to include "Particle/Particle.h". </p>
+<p >The <a class="el" href="struct_p_a_p_i_1_1_particle__t.html">Particle_t</a> struct is passed back to your callback function, so your application will have to include "Particle/pParticle.h". </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">callback</td><td>Pointer to function of yours to call </td></tr>
