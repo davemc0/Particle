@@ -1,6 +1,6 @@
-// Example.cpp - An example of the Particle System API in OpenGL.
+// Example.cpp - An example of the Particle System API in OpenGL
 //
-// Copyright 1999-2006 by David K. McAllister
+// Copyright 1999-2006, 2022 by David K. McAllister
 
 #include "Particle/pAPI.h"
 using namespace PAPI;
@@ -11,32 +11,37 @@ using namespace PAPI;
 // This needs to come after GLEW
 #include "GL/freeglut.h"
 
+// For C++17 execution policy to get parallelism of particle actions
+#include <execution>
+
 ParticleContext_t P;
 
-// A fountain spraying up in the middle of the screen
+// A water fountain spraying upward
 void ComputeParticles()
 {
-    // Set up the state.
+    // Set the state of the new particles to be generated
     pSourceState S;
     S.Velocity(PDCylinder(pVec(0.0f, -0.01f, 0.25f), pVec(0.0f, -0.01f, 0.27f), 0.021f, 0.019f));
     S.Color(PDLine(pVec(0.8f, 0.9f, 1.0f), pVec(1.0f, 1.0f, 1.0f)));
 
-    // Generate particles along a very small line in the nozzle.
-    P.Source(100, PDLine(pVec(0, 0, 0), pVec(0, 0, 0.4f)), S);
+    // Generate particles along a very small line in the nozzle
+    P.Source(200, PDLine(pVec(0.f, 0.f, 0.f), pVec(0.f, 0.f, 0.4f)), S);
 
-    // Gravity.
-    P.Gravity(pVec(0, 0, -0.01f));
+    P.ParticleLoop(std::execution::par_unseq, [&](Particle_t& p_) {
+        // Gravity
+        P.Gravity(p_, pVec(0.f, 0.f, -0.01f));
 
-    // Bounce particles off a disc of radius 5.
-    P.Bounce(0.0f, 0.5f, 0, PDDisc(pVec(0, 0, 0), pVec(0, 0, 1), 5));
+        // Bounce particles off a disc of radius 5
+        P.Bounce(p_, 0.f, 0.5f, 0.f, PDDisc(pVec(0.f, 0.f, 0.f), pVec(0.f, 0.f, 1.f), 5.f));
 
-    // Kill particles below Z=-3.
-    P.Sink(false, PDPlane(pVec(0, 0, -3), pVec(0, 0, 1)));
+        // Kill particles below Z=-3
+        P.Sink(p_, false, PDPlane(pVec(0.f, 0.f, -3.f), pVec(0.f, 0.f, 1.f)));
 
-    // Move particles to their new positions.
-    P.Move(true, false);
+        // Move particles to their new positions
+        P.Move(p_, true, false);
+    });
 
-    // Sleep(10);
+    P.CommitKills();
 }
 
 // Draw each particle as a point using vertex arrays
@@ -118,7 +123,7 @@ int main(int argc, char** argv)
     glDepthFunc(GL_LESS);
 
     // Make a particle group
-    int particleHandle = P.GenParticleGroups(1, 80000);
+    int particleHandle = P.GenParticleGroups(1, 50000);
 
     P.CurrentGroup(particleHandle);
     P.TimeStep(0.1f);
