@@ -151,6 +151,14 @@ struct GridShape : public Effect {
     void StartEffect(EffectsManager& Efx);
 };
 
+// Hail hitting a parking lot
+struct Hail : public Effect {
+    Hail(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
+    const std::string GetName() const { return "Hail"; }
+    void DoActions(EffectsManager& Efx);
+    void StartEffect(EffectsManager& Efx);
+};
+
 // It's like a fan cruising around under a floor, blowing up on some ping pong balls
 struct JetSpray : public Effect {
     pVec jet, djet;
@@ -177,14 +185,6 @@ struct Orbit2 : public Effect {
 struct PhotoShape : public Effect {
     PhotoShape(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
     const std::string GetName() const { return "PhotoShape"; }
-    void DoActions(EffectsManager& Efx);
-    void StartEffect(EffectsManager& Efx);
-};
-
-// It kinda looks like rain hitting a parking lot
-struct Rain : public Effect {
-    Rain(EffectsManager& Efx) : Effect(Efx) { StartEffect(Efx); }
-    const std::string GetName() const { return "Rain"; }
     void DoActions(EffectsManager& Efx);
     void StartEffect(EffectsManager& Efx);
 };

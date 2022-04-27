@@ -561,6 +561,38 @@ void GridShape::StartEffect(EffectsManager& Efx)
     SortParticles = false;
 }
 
+// Hail hitting a parking lot
+void Hail::DoActions(EffectsManager& Efx)
+{
+    ParticleContext_t& P = Efx.P;
+    pSourceState S;
+    S.Velocity(PDSphere(pVec(0.f), 1.f));
+    S.Color(PDSphere(pVec(0.95), .05));
+    S.Size(particleSize);
+    S.StartingAge(0, 5);
+    float D = 200;
+    P.Source(particleRate, PDRectangle(pVec(-D / 2, -D / 2, 20), pVec(D, 0, 0), pVec(0, D, 0)), S);
+
+    PATOP
+    P.Gravity(PT Efx.GravityVec);
+    P.Bounce(PT 0.3, 0.3, 0, PREND(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
+    P.Move(PT true, false);
+    P.KillOld(PT particleLifetime);
+    PAEND
+
+    Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1)));
+}
+
+void Hail::StartEffect(EffectsManager& Efx)
+{
+    particleRate = Efx.maxParticles / particleLifetime;
+    PrimType = PRIM_SPHERE_SPRITE;
+    WhiteBackground = false;
+    DepthTest = true;
+    MotionBlur = false;
+    SortParticles = false;
+}
+
 // It's like a fan cruising around under a floor, blowing up on some ping pong balls.
 // Like you see in real life.
 void JetSpray::DoActions(EffectsManager& Efx)
@@ -689,38 +721,6 @@ void PhotoShape::StartEffect(EffectsManager& Efx)
     PrimType = PRIM_GAUSSIAN_SPRITE;
     WhiteBackground = true;
     DepthTest = false;
-    MotionBlur = false;
-    SortParticles = false;
-}
-
-// It kinda looks like rain hitting a parking lot
-void Rain::DoActions(EffectsManager& Efx)
-{
-    ParticleContext_t& P = Efx.P;
-    pSourceState S;
-    S.Velocity(PDSphere(pVec(0.f), 1.f));
-    S.Color(PDSphere(pVec(0.4, 0.4, 0.9), .1));
-    S.Size(particleSize);
-    S.StartingAge(0, 5);
-    float D = 200;
-    P.Source(particleRate, PDRectangle(pVec(-D / 2, -D / 2, 20), pVec(D, 0, 0), pVec(0, D, 0)), S);
-
-    PATOP
-    P.Gravity(PT Efx.GravityVec);
-    P.Bounce(PT 0.3, 0.3, 0, PREND(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1))));
-    P.Move(PT true, false);
-    P.KillOld(PT particleLifetime);
-    PAEND
-
-    Render(PDPlane(pVec(0, 0, 0), pVec(0, 0, 1)));
-}
-
-void Rain::StartEffect(EffectsManager& Efx)
-{
-    particleRate = Efx.maxParticles / particleLifetime;
-    PrimType = PRIM_SPHERE_SPRITE;
-    WhiteBackground = false;
-    DepthTest = true;
     MotionBlur = false;
     SortParticles = false;
 }
@@ -1069,10 +1069,10 @@ void EffectsManager::MakeEffects()
     Effects.push_back(std::shared_ptr<Effect>(new FlameThrower(*this)));
     Effects.push_back(std::shared_ptr<Effect>(new Fountain(*this)));
     Effects.push_back(std::shared_ptr<Effect>(new GridShape(*this)));
+    Effects.push_back(std::shared_ptr<Effect>(new Hail(*this)));
     Effects.push_back(std::shared_ptr<Effect>(new JetSpray(*this)));
     Effects.push_back(std::shared_ptr<Effect>(new Orbit2(*this)));
     Effects.push_back(std::shared_ptr<Effect>(new PhotoShape(*this)));
-    Effects.push_back(std::shared_ptr<Effect>(new Rain(*this)));
     Effects.push_back(std::shared_ptr<Effect>(new Restore(*this)));
     Effects.push_back(std::shared_ptr<Effect>(new Shower(*this)));
     Effects.push_back(std::shared_ptr<Effect>(new Snake(*this)));
