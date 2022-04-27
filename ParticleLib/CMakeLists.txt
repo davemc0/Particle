@@ -24,7 +24,7 @@ set(API_SOURCES
     ../Particle/pDomain.h
     ../Particle/pError.h
     ../Particle/pInlineActionsAPI.h
-    ../Particle/pInternalsIface.h
+    ../Particle/pInternalShadow.h
     ../Particle/pParticle.h
     ../Particle/pSourceState.h
     ../Particle/pVec.h

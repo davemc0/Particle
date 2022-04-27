@@ -9,7 +9,7 @@
 
 #include "Particle/pDeclarations.h"
 #include "Particle/pError.h"
-#include "Particle/pInternalsIface.h"
+#include "Particle/pInternalShadow.h"
 #include "Particle/pParticle.h"
 #include "Particle/pSourceState.h"
 

@@ -13,8 +13,6 @@
 ///     P.I.Move(true, false);
 /// });
 
-// TODO: Fix PInternalState.
-//#include "PInternalState.h"
 #include "Particle/pAPI.h"
 #include "Particle/pActionImpls.h"
 

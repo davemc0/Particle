@@ -7,10 +7,8 @@
 /// This is inefficient, both in terms of minimal opportunities for code optimization, and in terms of memory access.
 
 #include "ActionStructs.h"
-
-// TODO: Fix PInternalState.
+#include "PInternalState.h"
 #include "Particle/pActionImpls.h"
-#include "ParticleLib/PInternalState.h"
 
 #include <algorithm>
 #include <execution>

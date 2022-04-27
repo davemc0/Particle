@@ -1,12 +1,12 @@
-/// PInternalsIface.h
+/// PInternalShadow.h
 ///
 /// Copyright 1997-2007, 2022 by David K. McAllister
 ///
-/// A public interface to the private library internals
+/// A shadow copy of some of the private library internals
 /// Library users need not access this file.
 
-#ifndef PInternalsIface_h
-#define PInternalsIface_h
+#ifndef PInternalShadow_h
+#define PInternalShadow_h
 
 namespace PAPI {
 struct Particle_t;
