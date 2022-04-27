@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['reset_0',['Reset',['../class_p_a_p_i_1_1p_source_state.html#a372de693ad40b3f42839c8ec6ac845f4',1,'PAPI::pSourceState']]],
-  ['rotvelocity_1',['RotVelocity',['../class_p_a_p_i_1_1p_source_state.html#a2daf31d1495ad0ff4229629a6554a9d8',1,'PAPI::pSourceState::RotVelocity(const pVec &amp;v)'],['../class_p_a_p_i_1_1p_source_state.html#a839d9cfe8e399f88ad785b5249284b08',1,'PAPI::pSourceState::RotVelocity(const pDomain &amp;dom)']]]
+  ['newactionlist_0',['NewActionList',['../class_p_a_p_i_1_1_p_context_action_list__t.html#aec2d30f3336b2be2ab34ba3cccc55d53',1,'PAPI::PContextActionList_t']]],
+  ['normalize_1',['normalize',['../class_p_a_p_i_1_1p_vec.html#a134c103a66b4a5e421cdd533c656de02',1,'PAPI::pVec']]]
 ];

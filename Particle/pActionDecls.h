@@ -5,10 +5,10 @@
 /// domain being avoided.
 ///
 /// At present the only domains for which Avoid() is implemented are PDSphere, PDRectangle, PDTriangle, PDDisc and PDPlane.
-void Avoid(PARG float magnitude,   ///< how drastically the particle velocities are modified to avoid the obstacle at each time step.
-           const float epsilon,    ///< added to distance to dampen acceleration
-           const float look_ahead, ///< how far forward along the velocity vector to look for the obstacle
-           const pDomain& dom      ///< the space to avoid
+void Avoid(PARG const float magnitude, ///< how drastically the particle velocities are modified to avoid the obstacle at each time step.
+           const float epsilon,        ///< added to distance to dampen acceleration
+           const float look_ahead,     ///< how far forward along the velocity vector to look for the obstacle
+           const pDomain& dom          ///< the space to avoid
 );
 
 /// Bounce particles off an object defined by a domain.
@@ -31,10 +31,10 @@ void Avoid(PARG float magnitude,   ///< how drastically the particle velocities 
 /// Bounce() doesn't work correctly with small time step sizes for particles sliding along a surface, despite fric_min_vel. The friction and resilience
 /// parameters should not be scaled by dt, since a bounce happens instantaneously. On the other hand, they should be scaled by dt because particles sliding
 /// along a surface will hit more often if dt is smaller. Adjust these parameters manually when you change dt.
-void Bounce(PARG float friction,      ///< tangential component of the outgoing velocity vector is scaled by (1 - friction)
-            const float resilience,   ///< normal component of the outgoing velocity vector is scaled by resilience
-            const float fric_min_vel, ///< only apply friction if tangential velocity is greater than fric_min_vel so particles can glide smoothly
-            const pDomain& dom        ///< bounce off the surface of this domain
+void Bounce(PARG const float friction, ///< tangential component of the outgoing velocity vector is scaled by (1 - friction)
+            const float resilience,    ///< normal component of the outgoing velocity vector is scaled by resilience
+            const float fric_min_vel,  ///< only apply friction if tangential velocity is greater than fric_min_vel so particles can glide smoothly
+            const pDomain& dom         ///< bounce off the surface of this domain
 );
 
 /// Set the secondary position and velocity from current.
@@ -96,7 +96,8 @@ void Gravity(PARG const pVec& dir ///< acceleration vector
 /// For each particle within the jet's domain of influence, dom, Jet() chooses an acceleration vector from the domain acc and applies
 /// it to the particle's velocity.
 void Jet(PARG const pDomain& dom, ///< apply jet to particles in this domain
-         const pDomain& acc);     ///< acceleration vector comes from this domain
+         const pDomain& acc       ///< acceleration vector comes from this domain
+);
 
 /// Apply the particles' velocities to their positions, and age the particles.
 ///
@@ -266,7 +267,7 @@ void Vortex(PARG const pVec& tip,          ///< tip of the vortex
 /// The Follow() action does not affect the last particle in the group. This allows controlled effects where the last particle in the group
 /// is killed after each time step and replaced by a new particle at a slightly different position. See KillOld() to learn how to kill
 /// the last particle in the group after each step.
-void Follow(PARG float magnitude = 1.0f,        ///< scales each particle's acceleration
+void Follow(PARG const float magnitude = 1.0f,  ///< scales each particle's acceleration
             const float epsilon = P_EPS,        ///< added to distance to dampen acceleration
             const float max_radius = P_MAXFLOAT ///< no particle further than max_radius from its predecessor is affected
 );
@@ -319,7 +320,7 @@ void Callback(PARG P_PARTICLE_CALLBACK_ACTION callbackFunc, ///< Pointer to func
 /// In order to kill a particular particle, set StartingAge() to a number that will never be a typical age for any other particle in the
 /// group, for example -1.0. Then emit the particle using Source() or Vertex(). Then do the rest of the particle actions and finally call
 /// KillOld(-0.9, true) to kill the special particle because it is the only one with an age less than -0.9.
-void KillOld(PARG const float age_limit,
+void KillOld(PARG const float age_limit,       ///< max age of particles
              const bool kill_less_than = false ///< true to kill particles younger than age_limit instead of older
 );
 

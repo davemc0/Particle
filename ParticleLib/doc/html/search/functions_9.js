@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['newactionlist_0',['NewActionList',['../class_p_a_p_i_1_1_p_context_action_list__t.html#aec2d30f3336b2be2ab34ba3cccc55d53',1,'PAPI::PContextActionList_t']]],
-  ['normalize_1',['normalize',['../class_p_a_p_i_1_1p_vec.html#a134c103a66b4a5e421cdd533c656de02',1,'PAPI::pVec']]]
+  ['killold_0',['KillOld',['../class_p_a_p_i_1_1_p_context_actions__t.html#a4aa0eaae98dbc2230b81101ed1f2f826',1,'PAPI::PContextActions_t::KillOld(Particle_t &amp;m, const float age_limit, const bool kill_less_than=false)'],['../class_p_a_p_i_1_1_p_context_actions__t.html#a0f8cb1fad158acfe72d21f1f1a89f133',1,'PAPI::PContextActions_t::KillOld(const float age_limit, const bool kill_less_than=false)']]]
 ];

@@ -82,138 +82,157 @@ $(function() {
 <div class="line"><span class="lineno">   10</span><span class="comment">\section intro Introduction</span></div>
 <div class="line"><span class="lineno">   11</span><span class="comment">The Particle System API (Application Programmer Interface) allows C++ programs to simulate the dynamics of particles. It is intended for special effects in</span></div>
 <div class="line"><span class="lineno">   12</span><span class="comment">interactive and non-interactive graphics applications, not for scientific simulation, although principles of Newtonian physics have been used to implement the</span></div>
-<div class="line"><span class="lineno">   13</span><span class="comment">particle dynamics where applicable. &lt;/p&gt; &lt;p&gt;The API consists of four sets of functions:</span></div>
-<div class="line"><span class="lineno">   14</span><span class="comment">// &lt;ul&gt;&lt;li&gt;&lt;b&gt;Particle Group Calls&lt;/b&gt; - A particle group is a system of particles that are all acted on together. It can be considered a dynamic geometric</span></div>
-<div class="line"><span class="lineno">   15</span><span class="comment">object. From the point of view of the graphics system, a particle group is just another model to be drawn. These calls create and destroy particle groups, etc.</span></div>
-<div class="line"><span class="lineno">   16</span><span class="comment">&lt;/li&gt;</span></div>
-<div class="line"><span class="lineno">   17</span><span class="comment">// &lt;li&gt;&lt;b&gt;Source State Calls&lt;/b&gt; - As in OpenGL, some calls actually do something and some calls modify the behavior of the subsequent calls that do something.</span></div>
-<div class="line"><span class="lineno">   18</span><span class="comment">The source state setting calls set the attributes of particles that will be created with the Source or Vertex calls. The source state calls are in the</span></div>
-<div class="line"><span class="lineno">   19</span><span class="comment">PContextSourceState_t part of the PContextState_t structure. &lt;/li&gt;</span></div>
-<div class="line"><span class="lineno">   20</span><span class="comment">// &lt;li&gt;&lt;b&gt;Actions&lt;/b&gt; - These implement the particle dynamics. Bounce and Gravity are examples of actions. &lt;/li&gt;</span></div>
-<div class="line"><span class="lineno">   21</span><span class="comment">// &lt;li&gt;&lt;b&gt;Action List Calls&lt;/b&gt; - These create and operate on lists of actions.&lt;/li&gt;&lt;/ul&gt;</span></div>
-<div class="line"><span class="lineno">   22</span><span class="comment"></span> </div>
-<div class="line"><span class="lineno">   23</span><span class="comment">&lt;p&gt;Following are several basic concepts central to the Particle System API. &lt;/p&gt;</span></div>
+<div class="line"><span class="lineno">   13</span><span class="comment">particle dynamics where applicable.</span></div>
+<div class="line"><span class="lineno">   14</span><span class="comment"></span> </div>
+<div class="line"><span class="lineno">   15</span><span class="comment">The API consists of four sets of functions:</span></div>
+<div class="line"><span class="lineno">   16</span><span class="comment">- &lt;b&gt;Particle Group Calls&lt;/b&gt; - A particle group is a system of particles that are all acted on together. It can be considered a dynamic geometric</span></div>
+<div class="line"><span class="lineno">   17</span><span class="comment">object. From the point of view of the graphics system, a particle group is often treated as just another model to be drawn. These calls create and destroy</span></div>
+<div class="line"><span class="lineno">   18</span><span class="comment">particle groups, etc. Details are in PAPI::PContextParticleGroup_t.</span></div>
+<div class="line"><span class="lineno">   19</span><span class="comment">- &lt;b&gt;Source State Calls&lt;/b&gt; - As in OpenGL, some calls actually do something and some calls modify the behavior of the subsequent calls that do something.</span></div>
+<div class="line"><span class="lineno">   20</span><span class="comment">The source state setting calls set the attributes of particles that will be created with the PAPI::PContextActions_t::Source or PAPI::PContextActions_t::Vertex</span></div>
+<div class="line"><span class="lineno">   21</span><span class="comment">calls. The source state calls are in PAPI::pSourceState.</span></div>
+<div class="line"><span class="lineno">   22</span><span class="comment">- &lt;b&gt;Actions&lt;/b&gt; - These implement the particle dynamics. Bounce and Gravity are examples of actions. The Actions are in the class PAPI::PContextActions_t.</span></div>
+<div class="line"><span class="lineno">   23</span><span class="comment">- &lt;b&gt;Action List Calls&lt;/b&gt; - These create and operate on lists of actions. These are not needed by the new \ref inline_actions API.</span></div>
 <div class="line"><span class="lineno">   24</span><span class="comment"></span> </div>
-<div class="line"><span class="lineno">   25</span><span class="comment">\subsection particles Particles</span></div>
-<div class="line"><span class="lineno">   26</span><span class="comment">&lt;p&gt;For the purposes of the Particle System API, a particle is not just a very tiny speck. Particles can be drawn as anything - water droplets, birds,</span></div>
-<div class="line"><span class="lineno">   27</span><span class="comment">tumbleweeds, boulders, etc.. The Particle System API is generally useful for operating on many similar objects that all move and change according to the same</span></div>
-<div class="line"><span class="lineno">   28</span><span class="comment">basic rules, no matter what the objects and rules are. &lt;/p&gt; &lt;p&gt;A particle in the abstract sense used by the API is merely an entity with a small set of</span></div>
-<div class="line"><span class="lineno">   29</span><span class="comment">attributes such as position and color that ultimately dictate the particle&#39;s behavior and appearance. Particles are declared in pParticle.h or \ref Particle_t.</span></div>
-<div class="line"><span class="lineno">   30</span><span class="comment">Here are the particle attributes: &lt;/p&gt; &lt;table border=&quot;1&quot;&gt;&lt;tr&gt;&lt;td&gt;Position &lt;/td&gt;&lt;td&gt;location of the particle center &lt;/td&gt;&lt;td&gt;3 floats &lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Color</span></div>
-<div class="line"><span class="lineno">   31</span><span class="comment">&lt;/td&gt;&lt;td&gt;color (in any color space) &lt;/td&gt;&lt;td&gt;3 floats &lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Velocity &lt;/td&gt;&lt;td&gt;velocity vector (direction and speed) &lt;/td&gt;&lt;td&gt;3 floats</span></div>
-<div class="line"><span class="lineno">   32</span><span class="comment">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Up &lt;/td&gt;&lt;td&gt;up vector (together with velocity vector, yields an orientation frame) &lt;/td&gt;&lt;td&gt;3 floats &lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Rotational Velocity</span></div>
-<div class="line"><span class="lineno">   33</span><span class="comment">&lt;/td&gt;&lt;td&gt;direction of rotation of the up vector &lt;/td&gt;&lt;td&gt;3 floats &lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Size &lt;/td&gt;&lt;td&gt;how large the particle is for rendering (doesn&#39;t affect</span></div>
-<div class="line"><span class="lineno">   34</span><span class="comment">particle dynamics or collision) &lt;/td&gt;&lt;td&gt;3 floats &lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;PositionB &lt;/td&gt;&lt;td&gt;initial or target position for returning to (see Restore()) &lt;/td&gt;&lt;td&gt;3</span></div>
-<div class="line"><span class="lineno">   35</span><span class="comment">floats &lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;UpB &lt;/td&gt;&lt;td&gt;initial or target orientation for returning to (see Restore()) &lt;/td&gt;&lt;td&gt;3 floats &lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;VelocityB &lt;/td&gt;&lt;td&gt;can</span></div>
-<div class="line"><span class="lineno">   36</span><span class="comment">be used as velocity from last frame for computing a side vector &lt;/td&gt;&lt;td&gt;3 floats &lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Mass &lt;/td&gt;&lt;td&gt;how large the particle is for dynamics</span></div>
-<div class="line"><span class="lineno">   37</span><span class="comment">computations (doesn&#39;t affect collision location) &lt;/td&gt;&lt;td&gt;1 float &lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Age &lt;/td&gt;&lt;td&gt;time since the particle&#39;s creation &lt;/td&gt;&lt;td&gt;1 float</span></div>
-<div class="line"><span class="lineno">   38</span><span class="comment">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Alpha &lt;/td&gt;&lt;td&gt;opacity, or a fourth color channel &lt;/td&gt;&lt;td&gt;1 float &lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Tmp &lt;/td&gt;&lt;td&gt;for a sorting key or for tagging particles</span></div>
-<div class="line"><span class="lineno">   39</span><span class="comment">to kill by setting to P_MAXFLOAT &lt;/td&gt;&lt;td&gt;1 float &lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Data &lt;/td&gt;&lt;td&gt;user data to be passed back to user callbacks &lt;/td&gt;&lt;td&gt;1 uint32</span></div>
-<div class="line"><span class="lineno">   40</span><span class="comment">&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</span></div>
-<div class="line"><span class="lineno">   41</span><span class="comment"></span> </div>
-<div class="line"><span class="lineno">   42</span><span class="comment">\subsection actions Actions</span></div>
-<div class="line"><span class="lineno">   43</span><span class="comment">&lt;p&gt;Actions are the core of the Particle System API. They are the functions in the API that directly manipulate particles in particle groups. They perform</span></div>
-<div class="line"><span class="lineno">   44</span><span class="comment">effects such as gravity, explosions, bouncing, etc. to all particles in the current particle group. A program typically creates and initializes one or more</span></div>
-<div class="line"><span class="lineno">   45</span><span class="comment">particle groups, then during each frame it calls particle actions to animate the particles then gets the particle data and draws the group of particles onto the</span></div>
-<div class="line"><span class="lineno">   46</span><span class="comment">screen. &lt;/p&gt; &lt;p&gt;The Particle System API uses a discrete time approximation to all actions. See TimeStep for information on improving simulation quality by</span></div>
-<div class="line"><span class="lineno">   47</span><span class="comment">varying the time step, &lt;i&gt;dt&lt;/i&gt;. &lt;/p&gt;</span></div>
+<div class="line"><span class="lineno">   25</span><span class="comment">Following are several basic concepts central to the Particle System API.</span></div>
+<div class="line"><span class="lineno">   26</span><span class="comment"></span> </div>
+<div class="line"><span class="lineno">   27</span><span class="comment">\subsection particles Particles</span></div>
+<div class="line"><span class="lineno">   28</span><span class="comment"></span> </div>
+<div class="line"><span class="lineno">   29</span><span class="comment">For the purposes of the Particle System API, a particle is not just a very tiny speck. Particles can be drawn as anything - water droplets, birds,</span></div>
+<div class="line"><span class="lineno">   30</span><span class="comment">tumbleweeds, boulders, etc.. The Particle System API is generally useful for operating on many similar objects that all move and change according to the same</span></div>
+<div class="line"><span class="lineno">   31</span><span class="comment">basic rules, no matter what the objects and rules are.</span></div>
+<div class="line"><span class="lineno">   32</span><span class="comment"></span> </div>
+<div class="line"><span class="lineno">   33</span><span class="comment">A particle in the abstract sense used by the API is merely an entity with a small set of</span></div>
+<div class="line"><span class="lineno">   34</span><span class="comment">attributes such as position and color that ultimately dictate the particle&#39;s behavior and appearance. Particles are declared in pParticle.h or \ref</span></div>
+<div class="line"><span class="lineno">   35</span><span class="comment">PAPI::Particle_t. Here are the particle attributes:</span></div>
+<div class="line"><span class="lineno">   36</span><span class="comment"></span> </div>
+<div class="line"><span class="lineno">   37</span><span class="comment">&lt;table border=&quot;1&quot;&gt;&lt;tr&gt;&lt;td&gt;Position &lt;/td&gt;&lt;td&gt;location of the particle center &lt;/td&gt;&lt;td&gt;3 floats&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Color</span></div>
+<div class="line"><span class="lineno">   38</span><span class="comment">&lt;/td&gt;&lt;td&gt;color (in any color space) &lt;/td&gt;&lt;td&gt;3 floats &lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Velocity &lt;/td&gt;&lt;td&gt;velocity vector (direction and speed) &lt;/td&gt;&lt;td&gt;3 floats</span></div>
+<div class="line"><span class="lineno">   39</span><span class="comment">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Up &lt;/td&gt;&lt;td&gt;up vector (together with velocity vector, yields an orientation frame) &lt;/td&gt;&lt;td&gt;3 floats &lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Rotational Velocity</span></div>
+<div class="line"><span class="lineno">   40</span><span class="comment">&lt;/td&gt;&lt;td&gt;direction of rotation of the up vector &lt;/td&gt;&lt;td&gt;3 floats &lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Size &lt;/td&gt;&lt;td&gt;how large the particle is for rendering (doesn&#39;t affect</span></div>
+<div class="line"><span class="lineno">   41</span><span class="comment">particle dynamics or collision) &lt;/td&gt;&lt;td&gt;3 floats &lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;PositionB &lt;/td&gt;&lt;td&gt;initial or target position for returning to (see Restore()) &lt;/td&gt;&lt;td&gt;3</span></div>
+<div class="line"><span class="lineno">   42</span><span class="comment">floats &lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;UpB &lt;/td&gt;&lt;td&gt;initial or target orientation for returning to (see Restore()) &lt;/td&gt;&lt;td&gt;3 floats &lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;VelocityB &lt;/td&gt;&lt;td&gt;can</span></div>
+<div class="line"><span class="lineno">   43</span><span class="comment">be used as velocity from last frame for computing a side vector &lt;/td&gt;&lt;td&gt;3 floats &lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Mass &lt;/td&gt;&lt;td&gt;how large the particle is for dynamics</span></div>
+<div class="line"><span class="lineno">   44</span><span class="comment">computations (doesn&#39;t affect collision location) &lt;/td&gt;&lt;td&gt;1 float &lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Age &lt;/td&gt;&lt;td&gt;time since the particle&#39;s creation &lt;/td&gt;&lt;td&gt;1 float</span></div>
+<div class="line"><span class="lineno">   45</span><span class="comment">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Alpha &lt;/td&gt;&lt;td&gt;opacity, or a fourth color channel &lt;/td&gt;&lt;td&gt;1 float &lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Tmp &lt;/td&gt;&lt;td&gt;for a sorting key or for tagging particles</span></div>
+<div class="line"><span class="lineno">   46</span><span class="comment">to kill by setting to P_MAXFLOAT &lt;/td&gt;&lt;td&gt;1 float &lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Data &lt;/td&gt;&lt;td&gt;user data to be passed back to user callbacks &lt;/td&gt;&lt;td&gt;1 uint32</span></div>
+<div class="line"><span class="lineno">   47</span><span class="comment">&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</span></div>
 <div class="line"><span class="lineno">   48</span><span class="comment"></span> </div>
 <div class="line"><span class="lineno">   49</span><span class="comment">\subsection actions Actions</span></div>
-<div class="line"><span class="lineno">   50</span><span class="comment">&lt;p&gt;Actions modify the position, color, velocity, size, age, and other attributes of particles. All actions apply to the current particle group, as set by</span></div>
-<div class="line"><span class="lineno">   51</span><span class="comment">CurrentGroup. Some actions will add particles to or delete them from the particle group, and others will modify the particles in other ways. Typically, a series</span></div>
-<div class="line"><span class="lineno">   52</span><span class="comment">of actions will be applied to each particle group once (or more) per rendered frame. &lt;/p&gt; &lt;p&gt;Remember that the amount of effect of an action call depends on the</span></div>
-<div class="line"><span class="lineno">   53</span><span class="comment">time step size, dt, as set by \ref TimeStep.&lt;/p&gt; &lt;p&gt;Some functions have parameters with a default value of P_EPS. P_EPS is a very small floating point constant</span></div>
-<div class="line"><span class="lineno">   54</span><span class="comment">that is most often used as the default value of the epsilon parameter to actions whose influence on a particle is relative to the inverse square of its distance</span></div>
-<div class="line"><span class="lineno">   55</span><span class="comment">from something. If that distance is very small, the amount of influence approaches infinity. Since all actions are computed using Euler&#39;s method, this can cause</span></div>
-<div class="line"><span class="lineno">   56</span><span class="comment">unsatisfying results in which particles are accelerated way too much. So this epsilon parameter is added to the distance before taking its inverse square, thus</span></div>
-<div class="line"><span class="lineno">   57</span><span class="comment">keeping the acceleration within reasonable limits. By varying epsilon, you specify what is reasonable. Larger epsilon make particles accelerate less. &lt;/p&gt; &lt;p&gt;&lt;a</span></div>
-<div class="line"><span class="lineno">   58</span><span class="comment">href=&quot;ParticleLib/doc/html/class_p_a_p_i_1_1_p_context_actions__t.html&quot;&gt;List of Actions&lt;/a&gt;&lt;/p&gt;</span></div>
+<div class="line"><span class="lineno">   50</span><span class="comment"></span> </div>
+<div class="line"><span class="lineno">   51</span><span class="comment">Actions are the core of the Particle System API. They are the functions in the API that directly manipulate particles in particle groups. They perform</span></div>
+<div class="line"><span class="lineno">   52</span><span class="comment">effects such as gravity, explosions, bouncing, etc. to all particles in the current particle group. Actions modify the position, color, velocity, size, age, and</span></div>
+<div class="line"><span class="lineno">   53</span><span class="comment">other attributes of particles. A program typically creates and initializes one or more particle groups, then during each frame it calls particle actions to</span></div>
+<div class="line"><span class="lineno">   54</span><span class="comment">animate the particles then gets the particle data and draws the group of particles onto the screen.</span></div>
+<div class="line"><span class="lineno">   55</span><span class="comment"></span> </div>
+<div class="line"><span class="lineno">   56</span><span class="comment">All actions apply to the current particle group, as set by</span></div>
+<div class="line"><span class="lineno">   57</span><span class="comment">CurrentGroup. Some actions will add particles to or delete them from the particle group, and others will modify the particles in other ways. Typically, a series</span></div>
+<div class="line"><span class="lineno">   58</span><span class="comment">of actions will be applied to each particle group once (or more) per rendered frame.</span></div>
 <div class="line"><span class="lineno">   59</span><span class="comment"></span> </div>
-<div class="line"><span class="lineno">   60</span><span class="comment">\subsection alists Action Lists</span></div>
-<div class="line"><span class="lineno">   61</span><span class="comment">&lt;p&gt;Action lists are blocks of actions that are applied together to a particle group. An action list is conceptually similar to a script or procedure. Action</span></div>
-<div class="line"><span class="lineno">   62</span><span class="comment">lists are implemented and expressed similarly to display lists in OpenGL. An action list encapsulates the specifics of a particular effect and allows complex</span></div>
-<div class="line"><span class="lineno">   63</span><span class="comment">effects to be treated as primitives like actions. An action list can be called from within another action list. &lt;/p&gt; &lt;p&gt;Action lists also allow effects to be</span></div>
-<div class="line"><span class="lineno">   64</span><span class="comment">simulated much more efficiently because the entire set of actions is known at the start, and this knowledge can be used by the implementation of the Particle</span></div>
-<div class="line"><span class="lineno">   65</span><span class="comment">System API. For example, several actions can be applied to one set of particles before moving to the next set of particles, yielding better memory access</span></div>
-<div class="line"><span class="lineno">   66</span><span class="comment">patterns. Also, in future versions common sequences of actions might be detected and replaced by efficient code that handles all those actions in one pass. &lt;/p&gt;</span></div>
-<div class="line"><span class="lineno">   67</span><span class="comment">&lt;p&gt;To take advantage of the up to 50% performance increase of action lists, you need to order your actions carefully. The performance advantage is achieved when</span></div>
-<div class="line"><span class="lineno">   68</span><span class="comment">two or more actions that can be combined are ordered next to each other in the list. Actions that create or delete particles (Vertex(), Source(), Sink*(), and</span></div>
-<div class="line"><span class="lineno">   69</span><span class="comment">Kill*()) and actions that reorder particles (Sort()) cannot be combined. All other actions can be combined to yield the performance advantage. See Effects.cpp</span></div>
-<div class="line"><span class="lineno">   70</span><span class="comment">for several examples of efficient ordering. &lt;/p&gt;</span></div>
-<div class="line"><span class="lineno">   71</span><span class="comment"></span> </div>
-<div class="line"><span class="lineno">   72</span><span class="comment">\subsection alistcalls Action List Calls</span></div>
-<div class="line"><span class="lineno">   73</span><span class="comment">&lt;p&gt;These calls create and operate on action lists, which are scripts of many actions to be applied together as a block to the current particle group. An empty</span></div>
-<div class="line"><span class="lineno">   74</span><span class="comment">action list is first created using GenActionLists, and is then filled or compiled by calling NewActionList, then calling Actions, then calling EndActionList.</span></div>
-<div class="line"><span class="lineno">   75</span><span class="comment">Once the action list is filled, it is run via CallActionList. Thus, an action list is sort of a higher-level action. Complex behaviors can be stored in an</span></div>
-<div class="line"><span class="lineno">   76</span><span class="comment">action list and then called later, even as part of another action list. Action lists cannot be edited. They can only be created or destroyed. To destroy an</span></div>
-<div class="line"><span class="lineno">   77</span><span class="comment">action list, call DeleteActionLists. When particles are created within a NewActionList / EndActionList block, they will receive attributes from the state that</span></div>
-<div class="line"><span class="lineno">   78</span><span class="comment">was current when the action list was created. &lt;/p&gt; &lt;p&gt;When in immediate mode (not creating or calling an action list), particles are created with attributes</span></div>
-<div class="line"><span class="lineno">   79</span><span class="comment">from the current state. However, the time step length, dt, uses the value that is current when CallActionList is executed, not the value of dt when the action</span></div>
-<div class="line"><span class="lineno">   80</span><span class="comment">list was created. This allows dt to be modified without recompiling action lists. Maybe this isn&#39;t a good idea. If it should be the other way in the future, let</span></div>
-<div class="line"><span class="lineno">   81</span><span class="comment">me know. &lt;/p&gt; &lt;p&gt;&lt;a href=&quot;ParticleLib/doc/html/class_p_a_p_i_1_1_p_context_action_list__t.html&quot;&gt;List of Action List Calls &lt;/a&gt;&lt;/p&gt;</span></div>
+<div class="line"><span class="lineno">   60</span><span class="comment">The Particle System API uses a discrete time approximation to all actions. The amount of effect of an action call depends on the</span></div>
+<div class="line"><span class="lineno">   61</span><span class="comment">time step size, dt, as set by \ref PAPI::PContextActionList_t::TimeStep. A smaller time step improves simulation quality.</span></div>
+<div class="line"><span class="lineno">   62</span><span class="comment"></span> </div>
+<div class="line"><span class="lineno">   63</span><span class="comment">Some functions have parameters with a default value of P_EPS. P_EPS is a very small floating point constant</span></div>
+<div class="line"><span class="lineno">   64</span><span class="comment">that is most often used as the default value of the epsilon parameter to actions whose influence on a particle is relative to the inverse square of its distance</span></div>
+<div class="line"><span class="lineno">   65</span><span class="comment">from something. If that distance is very small, the amount of influence approaches infinity. Since all actions are computed using Euler&#39;s method, this can cause</span></div>
+<div class="line"><span class="lineno">   66</span><span class="comment">unsatisfying results in which particles are accelerated way too much. So this epsilon parameter is added to the distance before taking its inverse square, thus</span></div>
+<div class="line"><span class="lineno">   67</span><span class="comment">keeping the acceleration within reasonable limits. By varying epsilon, you specify what is reasonable. Larger epsilon make particles accelerate less.</span></div>
+<div class="line"><span class="lineno">   68</span><span class="comment"></span> </div>
+<div class="line"><span class="lineno">   69</span><span class="comment">The Actions are in the class PAPI::PContextActions_t.</span></div>
+<div class="line"><span class="lineno">   70</span><span class="comment"></span> </div>
+<div class="line"><span class="lineno">   71</span><span class="comment">\subsection domains Domains</span></div>
+<div class="line"><span class="lineno">   72</span><span class="comment">A Domain is a representation of a region of 3D space. For example, the Source action uses a domain to describe the volume in which a particle&#39;s random</span></div>
+<div class="line"><span class="lineno">   73</span><span class="comment">initial position will be. The Avoid(), Sink() and Bounce() actions use domains to describe a volume in space for particles to steer to avoid, die when they</span></div>
+<div class="line"><span class="lineno">   74</span><span class="comment">enter, or to bounce off, respectively. Domains are used as parameters to many functions within the API.</span></div>
+<div class="line"><span class="lineno">   75</span><span class="comment"></span> </div>
+<div class="line"><span class="lineno">   76</span><span class="comment">See PAPI::pDomain and pDomain.h for more.</span></div>
+<div class="line"><span class="lineno">   77</span><span class="comment"></span> </div>
+<div class="line"><span class="lineno">   78</span><span class="comment">\subsection sourcestate Source State Setting Calls</span></div>
+<div class="line"><span class="lineno">   79</span><span class="comment">These calls dictate the properties of particles to be created by Source or Vertex. When particles are created within a NewActionList / EndActionList block,</span></div>
+<div class="line"><span class="lineno">   80</span><span class="comment">they will receive attributes from the state that was current when the action list was created. When in immediate mode (not creating or calling an action list),</span></div>
+<div class="line"><span class="lineno">   81</span><span class="comment">particles are created with attributes from the current state.</span></div>
 <div class="line"><span class="lineno">   82</span><span class="comment"></span> </div>
-<div class="line"><span class="lineno">   83</span><span class="comment">\subsection domains Domains</span></div>
-<div class="line"><span class="lineno">   84</span><span class="comment">&lt;p&gt;A Domain is a representation of a region of 3D space. For example, the Source action uses a domain to describe the volume in which a particle&#39;s random</span></div>
-<div class="line"><span class="lineno">   85</span><span class="comment">initial position will be. The Avoid(), Sink() and Bounce() actions use domains to describe a volume in space for particles to steer to avoid, die when they</span></div>
-<div class="line"><span class="lineno">   86</span><span class="comment">enter, or to bounce off, respectively. Domains are used as parameters to many functions within the API. See pDomain.h for more. &lt;/p&gt;</span></div>
-<div class="line"><span class="lineno">   87</span><span class="comment"></span> </div>
-<div class="line"><span class="lineno">   88</span><span class="comment">\subsection defparams Default Parameters</span></div>
-<div class="line"><span class="lineno">   89</span><span class="comment">&lt;p&gt;Many functions in the Particle System API take arguments with default values. This is a feature of C++. For example, in &lt;code&gt;Color(float r, float g, float</span></div>
-<div class="line"><span class="lineno">   90</span><span class="comment">b, float alpha = 1.0f) &lt;/code&gt;, the parameter alpha has a default value of 1.0. This means that Color can be called with either three parameters or four. When</span></div>
-<div class="line"><span class="lineno">   91</span><span class="comment">called with three parameters, they are the values of r, g, and b; and alpha receives the default value, 1.0. Only parameters at the end of the parameter list</span></div>
-<div class="line"><span class="lineno">   92</span><span class="comment">can have default values. Likewise, when calling functions that have default values for parameters, all values specified will be applied to parameters starting</span></div>
-<div class="line"><span class="lineno">   93</span><span class="comment">with the left. This means that there is no way to specify a value for a parameter at the end of the list without specifying values for all parameters to its</span></div>
-<div class="line"><span class="lineno">   94</span><span class="comment">left. &lt;/p&gt;</span></div>
-<div class="line"><span class="lineno">   95</span><span class="comment"></span> </div>
-<div class="line"><span class="lineno">   96</span><span class="comment">\subsection except Exception Handling</span></div>
-<div class="line"><span class="lineno">   97</span><span class="comment">See pError.h for the list of exceptions thrown by the API.</span></div>
+<div class="line"><span class="lineno">   83</span><span class="comment">See the Source State Setting Calls in the class PAPI::pSourceState.</span></div>
+<div class="line"><span class="lineno">   84</span><span class="comment"></span> </div>
+<div class="line"><span class="lineno">   85</span><span class="comment">\subsection pgroup Particle Group Calls</span></div>
+<div class="line"><span class="lineno">   86</span><span class="comment"></span> </div>
+<div class="line"><span class="lineno">   87</span><span class="comment">A particle group is first created using PAPI::PContextParticleGroup_t::GenParticleGroups, which will create a sequentially-numbered set of particle groups and</span></div>
+<div class="line"><span class="lineno">   88</span><span class="comment">return the identifying number of the first generated particle group. You specify which group is current using PAPI::PContextParticleGroup_t::CurrentGroup.</span></div>
+<div class="line"><span class="lineno">   89</span><span class="comment">Unless otherwise stated, all other commands operate on the current particle group. The maximum number of particles in the group is specified using</span></div>
+<div class="line"><span class="lineno">   90</span><span class="comment">PAPI::PContextParticleGroup_t::SetMaxParticles. The particle group is then acted upon using the Actions (PAPI::PContextActions_t).</span></div>
+<div class="line"><span class="lineno">   91</span><span class="comment"></span> </div>
+<div class="line"><span class="lineno">   92</span><span class="comment">After the actions have been applied, the particles are rendered. This is done at the same stage of the application&#39;s execution as drawing other geometry. To</span></div>
+<div class="line"><span class="lineno">   93</span><span class="comment">draw a particle group in a graphics API, the application calls PAPI::PContextParticleGroup_t::GetParticles or PAPI::PContextParticleGroup_t::GetParticlePointer</span></div>
+<div class="line"><span class="lineno">   94</span><span class="comment">functions to get the vertex data, then sends it to the graphics API. When a particle group is no longer needed, it is deleted using</span></div>
+<div class="line"><span class="lineno">   95</span><span class="comment">PAPI::PContextParticleGroup_t::DeleteParticleGroups.</span></div>
+<div class="line"><span class="lineno">   96</span><span class="comment"></span> </div>
+<div class="line"><span class="lineno">   97</span><span class="comment">See the particle group calls in PAPI::PContextParticleGroup_t.</span></div>
 <div class="line"><span class="lineno">   98</span><span class="comment"></span> </div>
-<div class="line"><span class="lineno">   99</span><span class="comment">\section reference API Reference</span></div>
-<div class="line"><span class="lineno">  100</span><span class="comment"></span> </div>
-<div class="line"><span class="lineno">  101</span><span class="comment">&lt;p&gt;The following sections describe each API call, divided into the four kinds of calls. Click the link in each section to go to the Doxygen documentation for</span></div>
-<div class="line"><span class="lineno">  102</span><span class="comment">that set of API calls. &lt;/p&gt;</span></div>
+<div class="line"><span class="lineno">   99</span><span class="comment">\subsection alists Action Lists</span></div>
+<div class="line"><span class="lineno">  100</span><span class="comment">Action lists are blocks of actions that are applied together to a particle group. An action list is conceptually similar to a script or procedure. Action</span></div>
+<div class="line"><span class="lineno">  101</span><span class="comment">lists are implemented and expressed similarly to display lists in OpenGL. An action list encapsulates the specifics of a particular effect and allows complex</span></div>
+<div class="line"><span class="lineno">  102</span><span class="comment">effects to be treated as primitives like actions. An action list can be called from within another action list.</span></div>
 <div class="line"><span class="lineno">  103</span><span class="comment"></span> </div>
-<div class="line"><span class="lineno">  104</span><span class="comment">\subsection sourcestate Source State Setting Calls</span></div>
-<div class="line"><span class="lineno">  105</span><span class="comment">&lt;p&gt;These calls dictate the properties of particles to be created by Source or Vertex. When particles are created within a NewActionList / EndActionList block,</span></div>
-<div class="line"><span class="lineno">  106</span><span class="comment">they will receive attributes from the state that was current when the action list was created. When in immediate mode (not creating or calling an action list),</span></div>
-<div class="line"><span class="lineno">  107</span><span class="comment">particles are created with attributes from the current state. &lt;/p&gt; &lt;p&gt;&lt;a href=&quot;ParticleLib/doc/html/class_p_a_p_i_1_1_p_context_source_state__t.html&quot;&gt;List of</span></div>
-<div class="line"><span class="lineno">  108</span><span class="comment">Source State Setting Calls &lt;/a&gt;&lt;/p&gt;</span></div>
-<div class="line"><span class="lineno">  109</span><span class="comment"></span> </div>
-<div class="line"><span class="lineno">  110</span><span class="comment">\subsection pgroup Particle Group Calls</span></div>
-<div class="line"><span class="lineno">  111</span><span class="comment"></span> </div>
-<div class="line"><span class="lineno">  112</span><span class="comment">See PContextParticleGroup_t or \ref PContextParticleGroup_t huh.</span></div>
-<div class="line"><span class="lineno">  113</span><span class="comment">&lt;p&gt;A particle group is first created using GenParticleGroups, which will create a sequentially-numbered set of particle groups and return the identifying number</span></div>
-<div class="line"><span class="lineno">  114</span><span class="comment">of the first generated particle group. You specify which group is current using CurrentGroup. Unless otherwise stated, all other commands operate on the current</span></div>
-<div class="line"><span class="lineno">  115</span><span class="comment">particle group. The maximum number of particles in the group is specified using SetMaxParticles. The particle group is then acted upon using the &lt;a</span></div>
-<div class="line"><span class="lineno">  116</span><span class="comment">href=&quot;ParticleLib/doc/html/class_p_a_p_i_1_1_p_context_actions__t.html&quot;&gt;Actions &lt;/a&gt;. &lt;/p&gt; &lt;p&gt;After the actions have been applied, the particles are rendered.</span></div>
-<div class="line"><span class="lineno">  117</span><span class="comment">This is done at the same stage of the application&#39;s execution as drawing other geometry. To draw a particle group in OpenGL, the application calls GetParticles</span></div>
-<div class="line"><span class="lineno">  118</span><span class="comment">or GetParticlePointer functions to get the vertex data, then sends it to OpenGL. When a particle group is no longer needed, it is deleted using</span></div>
-<div class="line"><span class="lineno">  119</span><span class="comment">DeleteParticleGroups. &lt;/p&gt; &lt;p&gt;&lt;a href=&quot;ParticleLib/doc/html/class_p_a_p_i_1_1_p_context_particle_group__t.html&quot;&gt;List of Particle Group Calls &lt;/a&gt;&lt;/p&gt;</span></div>
-<div class="line"><span class="lineno">  120</span><span class="comment"></span> </div>
-<div class="line"><span class="lineno">  121</span><span class="comment">\section other Other Stuff</span></div>
-<div class="line"><span class="lineno">  122</span><span class="comment">&lt;ul&gt;</span></div>
-<div class="line"><span class="lineno">  123</span><span class="comment">&lt;li&gt;Change log is &lt;a href=&quot;../../ChangeLog.html&quot;&gt;[here]&lt;/a&gt;.</span></div>
-<div class="line"><span class="lineno">  124</span><span class="comment">&lt;li&gt;Future work is &lt;a href=&quot;../../ToDo.html&quot;&gt;[here]&lt;/a&gt;.</span></div>
-<div class="line"><span class="lineno">  125</span><span class="comment">&lt;li&gt;Project is hosted &lt;a href=&quot;https://github.com/davemc0/Particle&quot;&gt;[here]&lt;/a&gt;.</span></div>
-<div class="line"><span class="lineno">  126</span><span class="comment">&lt;/ul&gt;</span></div>
+<div class="line"><span class="lineno">  104</span><span class="comment">When using the \ref legacy_actions API, rather than the more performant \ref inline_actions API, action lists also allow effects to be simulated</span></div>
+<div class="line"><span class="lineno">  105</span><span class="comment">much more efficiently. This is because the entire set of actions is known at the start, and this knowledge can be used by the implementation of the Particle</span></div>
+<div class="line"><span class="lineno">  106</span><span class="comment">System API. For example, several actions can be applied to one set of particles before moving to the next set of particles, yielding better memory access</span></div>
+<div class="line"><span class="lineno">  107</span><span class="comment">patterns. Also, in future versions common sequences of actions might be detected and replaced by efficient code that handles all those actions in one pass.</span></div>
+<div class="line"><span class="lineno">  108</span><span class="comment"></span> </div>
+<div class="line"><span class="lineno">  109</span><span class="comment">To take advantage of the up to 50% performance increase of action lists, you need to order your actions carefully. The performance advantage is achieved when</span></div>
+<div class="line"><span class="lineno">  110</span><span class="comment">two or more actions that can be combined are ordered next to each other in the list. Actions that create (Vertex(), Source()) or delete (Sink*(), and</span></div>
+<div class="line"><span class="lineno">  111</span><span class="comment">KillOld()) particles, and actions that reorder particles (Sort()) cannot be combined. All other actions can be combined to yield the performance advantage. See</span></div>
+<div class="line"><span class="lineno">  112</span><span class="comment">Effects.cpp for several examples of efficient ordering.</span></div>
+<div class="line"><span class="lineno">  113</span><span class="comment"></span> </div>
+<div class="line"><span class="lineno">  114</span><span class="comment">Action List Calls create and operate on action lists. An empty</span></div>
+<div class="line"><span class="lineno">  115</span><span class="comment">action list is first created using PAPI::PContextActionList_t::GenActionLists, and is then filled or compiled by calling</span></div>
+<div class="line"><span class="lineno">  116</span><span class="comment">PAPI::PContextActionList_t::NewActionList, then calling Actions, then calling PAPI::PContextActionList_t::EndActionList. Once the action list is filled, it is</span></div>
+<div class="line"><span class="lineno">  117</span><span class="comment">run via PAPI::PContextActionList_t::CallActionList. Thus, an action list is sort of a higher-level action. Complex behaviors can be stored in an action list and</span></div>
+<div class="line"><span class="lineno">  118</span><span class="comment">then called later, even as part of another action list. Action lists cannot be edited. They can only be created or destroyed. To destroy an action list, call</span></div>
+<div class="line"><span class="lineno">  119</span><span class="comment">PAPI::PContextActionList_t::DeleteActionLists. When particles are created within a NewActionList / EndActionList block, they will receive attributes from the</span></div>
+<div class="line"><span class="lineno">  120</span><span class="comment">state that was current when the action list was created.</span></div>
+<div class="line"><span class="lineno">  121</span><span class="comment"></span> </div>
+<div class="line"><span class="lineno">  122</span><span class="comment">When in immediate mode (not creating or calling an action list), particles are created with attributes</span></div>
+<div class="line"><span class="lineno">  123</span><span class="comment">from the current state. However, the time step length, dt, uses the value that is current when CallActionList is executed, not the value of dt when the action</span></div>
+<div class="line"><span class="lineno">  124</span><span class="comment">list was created. This allows dt to be modified without recompiling action lists.</span></div>
+<div class="line"><span class="lineno">  125</span><span class="comment"></span> </div>
+<div class="line"><span class="lineno">  126</span><span class="comment">See the Action List Calls in the class PAPI::PContextActionList_t.</span></div>
 <div class="line"><span class="lineno">  127</span><span class="comment"></span> </div>
-<div class="line"><span class="lineno">  128</span><span class="comment">\subsection acks Acknowledgements</span></div>
-<div class="line"><span class="lineno">  129</span><span class="comment">&lt;ul&gt;&lt;li&gt;Code for some of the particle actions and several concepts regarding the structure of the API are thanks to Jonathan P. Leech. See also:</span></div>
-<div class="line"><span class="lineno">  130</span><span class="comment">&lt;/li&gt;&lt;li&gt;Jonathan Leech and Russell M. Taylor II, &quot;Interactive Modeling Using Particle Systems&quot;, Proceedings of the 2nd Conference on Discrete Element Methods,</span></div>
-<div class="line"><span class="lineno">  131</span><span class="comment">MIT, spring 1993, pp. 105-116. &lt;/li&gt;&lt;li&gt;Thanks to Mark B. Allen of NASA Ames Research Center for finding bugs, making suggestions and implementing the particle</span></div>
-<div class="line"><span class="lineno">  132</span><span class="comment">length attribute. &lt;/li&gt;&lt;li&gt;Thanks to Jason Pratt of CMU Stage 3 research group (makers of ALICE) for adding the PDTriangle domain. This is a powerful feature</span></div>
-<div class="line"><span class="lineno">  133</span><span class="comment">that should have been there the whole time. &lt;/li&gt;&lt;/ul&gt;</span></div>
-<div class="line"><span class="lineno">  134</span><span class="comment">*/</span></div>
-<div class="line"><span class="lineno">  135</span> </div>
-<div class="line"><span class="lineno">  136</span><span class="preprocessor">#</span><span class="preprocessor">ifndef</span> <span class="preprocessor">particle_api_h</span></div>
-<div class="line"><span class="lineno">  137</span><span class="preprocessor">#</span><span class="preprocessor">define</span> <span class="preprocessor">particle_api_h</span></div>
-<div class="line"><span class="lineno">  138</span> </div>
-<div class="line"><span class="lineno">  139</span><span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&quot;Particle/pAPIContext.h&quot;</span></div>
-<div class="line"><span class="lineno">  140</span> </div>
-<div class="line"><span class="lineno">  141</span><span class="comment">// Only application code should include this. It contains the definitions of the inline action API functions.</span></div>
-<div class="line"><span class="lineno">  142</span><span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&quot;Particle/pInlineActionsAPI.h&quot;</span></div>
-<div class="line"><span class="lineno">  143</span> </div>
-<div class="line"><span class="lineno">  144</span><span class="preprocessor">#</span><span class="preprocessor">endif</span></div>
+<div class="line"><span class="lineno">  128</span><span class="comment">\subsection defparams Default Parameters</span></div>
+<div class="line"><span class="lineno">  129</span><span class="comment">Many functions in the Particle System API take arguments with default values. This is a feature of C++. For example, in \code</span></div>
+<div class="line"><span class="lineno">  130</span><span class="comment">Color(float r, float g, float b, float alpha = 1.0f) \endcode,</span></div>
+<div class="line"><span class="lineno">  131</span><span class="comment">the parameter alpha has a default value of 1.0. This means that Color can be called with either three parameters or four. When</span></div>
+<div class="line"><span class="lineno">  132</span><span class="comment">called with three parameters, they are the values of r, g, and b; and alpha receives the default value, 1.0. Only parameters at the end of the parameter list</span></div>
+<div class="line"><span class="lineno">  133</span><span class="comment">can have default values. Likewise, when calling functions that have default values for parameters, all values specified will be applied to parameters starting</span></div>
+<div class="line"><span class="lineno">  134</span><span class="comment">with the left. This means that there is no way to specify a value for a parameter at the end of the list without specifying values for all parameters to its</span></div>
+<div class="line"><span class="lineno">  135</span><span class="comment">left.</span></div>
+<div class="line"><span class="lineno">  136</span><span class="comment"></span> </div>
+<div class="line"><span class="lineno">  137</span><span class="comment">\subsection except Exception Handling</span></div>
+<div class="line"><span class="lineno">  138</span><span class="comment">See pError.h for the list of exceptions thrown by the API.</span></div>
+<div class="line"><span class="lineno">  139</span><span class="comment"></span> </div>
+<div class="line"><span class="lineno">  140</span><span class="comment">\section other Other Stuff</span></div>
+<div class="line"><span class="lineno">  141</span><span class="comment">- Change log is &lt;a href=&quot;../../ChangeLog.html&quot;&gt;[here]&lt;/a&gt;.</span></div>
+<div class="line"><span class="lineno">  142</span><span class="comment">- Future work is &lt;a href=&quot;../../ToDo.html&quot;&gt;[here]&lt;/a&gt;.</span></div>
+<div class="line"><span class="lineno">  143</span><span class="comment">- Project is hosted &lt;a href=&quot;https://github.com/davemc0/Particle&quot;&gt;[here]&lt;/a&gt;.</span></div>
+<div class="line"><span class="lineno">  144</span><span class="comment"></span> </div>
+<div class="line"><span class="lineno">  145</span><span class="comment">\subsection acks Acknowledgements</span></div>
+<div class="line"><span class="lineno">  146</span><span class="comment">- Code for some of the particle actions and several concepts regarding the structure of the API are thanks to Jonathan P. Leech. See also:</span></div>
+<div class="line"><span class="lineno">  147</span><span class="comment">Jonathan Leech and Russell M. Taylor II, &quot;Interactive Modeling Using Particle Systems&quot;, Proceedings of the 2nd Conference on Discrete Element Methods,</span></div>
+<div class="line"><span class="lineno">  148</span><span class="comment">MIT, spring 1993, pp. 105-116.</span></div>
+<div class="line"><span class="lineno">  149</span><span class="comment">- Thanks to Mark B. Allen of NASA Ames Research Center for finding bugs, making suggestions and implementing the particle</span></div>
+<div class="line"><span class="lineno">  150</span><span class="comment">length attribute.</span></div>
+<div class="line"><span class="lineno">  151</span><span class="comment">- Thanks to Jason Pratt of CMU Stage 3 research group (makers of ALICE) for adding the PDTriangle domain. This is a powerful feature</span></div>
+<div class="line"><span class="lineno">  152</span><span class="comment">that should have been there the whole time.</span></div>
+<div class="line"><span class="lineno">  153</span><span class="comment">*/</span></div>
+<div class="line"><span class="lineno">  154</span> </div>
+<div class="line"><span class="lineno">  155</span><span class="preprocessor">#</span><span class="preprocessor">ifndef</span> <span class="preprocessor">particle_api_h</span></div>
+<div class="line"><span class="lineno">  156</span><span class="preprocessor">#</span><span class="preprocessor">define</span> <span class="preprocessor">particle_api_h</span></div>
+<div class="line"><span class="lineno">  157</span> </div>
+<div class="line"><span class="lineno">  158</span><span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&quot;Particle/pAPIContext.h&quot;</span></div>
+<div class="line"><span class="lineno">  159</span> </div>
+<div class="line"><span class="lineno">  160</span><span class="comment">// Only application code should include this. It contains the definitions of the inline action API functions.</span></div>
+<div class="line"><span class="lineno">  161</span><span class="preprocessor">#</span><span class="preprocessor">include</span> <span class="preprocessor">&quot;Particle/pInlineActionsAPI.h&quot;</span></div>
+<div class="line"><span class="lineno">  162</span> </div>
+<div class="line"><span class="lineno">  163</span><span class="preprocessor">#</span><span class="preprocessor">endif</span></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

@@ -36,13 +36,21 @@ void StartParticleLoop(std::shared_ptr<PInternalState_t> PS, PInternalShadow_t& 
     PASSERT(!PS->get_in_new_list() && !PS->get_in_call_list(), "Can't call ParticleLoop in an action list");
 
     PS->set_in_particle_loop(true);
-    PSh.dt = PS->get_dt();
+
     ParticleGroup& pg = PS->getPGroups()[PS->get_pgroup_id()];
+    PSh.dt = PS->get_dt();
     PSh.ibegin = &*pg.begin();
     PSh.iend = &*pg.begin() + (pg.end() - pg.begin());
+    PSh.in_new_list = PS->get_in_new_list();
+    PSh.in_particle_loop = true;
 }
 
-void EndParticleLoop(std::shared_ptr<PInternalState_t> PS, PInternalShadow_t& PSh) { PS->set_in_particle_loop(false); }
+void EndParticleLoop(std::shared_ptr<PInternalState_t> PS, PInternalShadow_t& PSh)
+{
+    PS->set_in_particle_loop(false);
+    PSh.in_particle_loop = false;
+    PSh.in_new_list = PS->get_in_new_list();
+}
 
 PInternalState_t::PInternalState_t() : in_call_list(false), in_new_list(false), in_particle_loop(false), dt(1.0f), pgroup_id(-1), alist_id(-1)
 {

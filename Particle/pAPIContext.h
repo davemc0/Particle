@@ -288,10 +288,7 @@ protected:
     void InternalSetup(std::shared_ptr<PInternalState_t> Sr); // Calls this after construction to set up the PS pointer
 };
 
-/// This class contains the Action API. It includes the legacy, less performant, but perhaps more elegant Action API.
-/// It also includes the inline actions API. This allows an action to be applied to a particle using a function call that will be inlined.
-/// This enables a new programming model with a normally parallel for_each loop around a per-particle list of actions.
-/// It also enables the inline actions functions to be called from CUDA threads, or equivalent, allowing GPU acceleration.
+/// This class contains the Action API.
 ///
 /// Actions modify the position, color, velocity, size, age, and other attributes of
 /// particles. All actions apply to the current particle group, as set by CurrentGroup().
@@ -300,7 +297,7 @@ protected:
 /// applied to each particle group once (or more) per rendered frame.
 ///
 /// Remember that the amount of effect of an action call depends on the time step size,
-/// dt, as set by \ref TimeStep. See TimeStep() for an explanation of time steps.
+/// dt, as set by \ref PAPI::PContextActionList_t::TimeStep().
 ///
 /// Some functions have parameters with a default value of the constant P_EPS. P_EPS is a very small
 /// floating point constant that is most often used as the default value of the epsilon
@@ -311,16 +308,36 @@ protected:
 /// epsilon parameter is added to the distance before taking its inverse square, thus
 /// keeping the acceleration within reasonable limits. By varying epsilon, you specify
 /// what is reasonable. Larger epsilon make particles accelerate less.
+///
+/// \subsection inline_actions Inline Actions
+/// The inline actions API calls take a Particle_t as the first argument. The actions modify this particle using a function call that will be inlined.
+/// This enables a very efficient programming model with a (normally) parallel std::for_each loop around a per-particle list of actions.
+/// It also enables the inline actions functions to be called from CUDA, HIP, or other threads, allowing GPU acceleration.
+///
+/// The inline actions are called only from within a call to ParticleLoop(). For example: \code
+///
+/// P.ParticleLoop(std::execution::par_unseq, [&](Particle_t& p_) {
+///     P.Gravity(p_, Efx.GravityVec);
+///     P.Bounce(p_, 0.f, 0.5f, 0.f, PDDisc(pVec(0, 0, 1.f), pVec(0, 0, 1.f), 5));
+///     P.Move(p_, true, false);
+///     P.Sink(p_, false, PDPlane(pVec(0, 0, -3), pVec(0, 0, 1)));
+///     P.SinkVelocity(p_, true, PDSphere(pVec(0, 0, 0), 0.01));
+/// });
+/// P.CommitKills();
+/// \endcode
+///
+/// \subsection legacy_actions Legacy Actions
+/// The legacy, less performant, but perhaps more elegant Action API is still available.
+/// Other than not taking a Particle_t as the first parameter, the call signatures of the legacy API match those of the inline API.
 class PContextActions_t {
 public:
-    /// The inline actions API calls take a Particle_t as the first argument. Otherwise the call signatures match those of the legacy API.
 #define PARG Particle_t &m,
 #include "Particle/pActionDecls.h"
 #undef PARG
-    //
-    //#define PARG
-    //#include "Particle/pActionDecls.h"
-    //#undef PARG
+
+#define PARG
+#include "Particle/pActionDecls.h"
+#undef PARG
 
     /// Delete particles tagged to be killed by inline P.I.KillOld(), P.I.Sink(), and P.I.SinkVelocity()
     void CommitKills();
@@ -370,15 +387,27 @@ public:
     /// For example, you can specify a geometrical model using Vertex calls, and then explode or deform it.
     void Vertex(const pVec& v,             ///< position of particle to create
                 const pSourceState& SrcSt, ///< all other particle attributes are chosen from this source state
-                pdata_t data = 0           ///< application data to be passed to the birth and death callbacks
+                const pdata_t data = 0     ///< application data to be passed to the birth and death callbacks
     );
 
+    /// <summary>
+    /// Loop over particles executing all actions expressed in function f
+    /// </summary>
+    /// <typeparam name="UnaryFunction"></typeparam>
+    /// <param name="f">a lambda function expressing all operations to be performed on each particle</param>
     template <class UnaryFunction> void ParticleLoop(UnaryFunction f)
     {
         StartParticleLoop(PS, PSh);
         std::for_each(PSh.get_pgroup_begin(), PSh.get_pgroup_end(), f);
         EndParticleLoop(PS, PSh);
     }
+
+    /// <summary>
+    /// Loop over particles executing all actions expressed in function f using the given execution policy for CPU parallelization
+    /// </summary>
+    /// <typeparam name="UnaryFunction"></typeparam>
+    /// <param name="f">a lambda function expressing all operations to be performed on each particle</param>
+    /// <param name="policy">execution policy to be used for parallelization, for example std::execution::par_unseq</param>
     template <class ExPol, class UnaryFunction> void ParticleLoop(ExPol&& policy, UnaryFunction f)
     {
         StartParticleLoop(PS, PSh);

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['x_0',['x',['../class_p_a_p_i_1_1p_vec.html#a407b4289458be55db0b67384923b40e8',1,'PAPI::pVec::x() const'],['../class_p_a_p_i_1_1p_vec.html#a759ff81a54ee56140250b8dd79bd626a',1,'PAPI::pVec::x()']]]
+  ['upvec_0',['UpVec',['../class_p_a_p_i_1_1p_source_state.html#af3cb8671682e8d5a289c48569800e9ec',1,'PAPI::pSourceState::UpVec(const pVec &amp;up)'],['../class_p_a_p_i_1_1p_source_state.html#af163d15968b962b55df7fda1eddeb1cc',1,'PAPI::pSourceState::UpVec(const pDomain &amp;dom)']]]
 ];

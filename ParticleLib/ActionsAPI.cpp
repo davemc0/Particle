@@ -11,7 +11,7 @@
 
 namespace PAPI {
 #ifdef _DEBUG
-#define P_CHECK_ERR PASSERT(!PS->in_particle_loop, "Cannot call this non-inline action while inside ParticleLoop")
+#define P_CHECK_ERR PASSERT(!PS->get_in_particle_loop(), "Cannot call this non-inline action while inside ParticleLoop")
 #else
 #define P_CHECK_ERR
 #endif

@@ -23,7 +23,7 @@ namespace PAPI {
 #ifdef _DEBUG
 #define P_CHECK_ERR                                                                       \
     PASSERT(!PSh.get_in_new_list(), "Can't call inline action while making action list"); \
-    PASSERT(PS->in_particle_loop, "Can only call inline action while inside ParticleLoop")
+    PASSERT(PSh.get_in_particle_loop(), "Can only call inline action while inside ParticleLoop")
 #else
 #define P_CHECK_ERR
 #endif

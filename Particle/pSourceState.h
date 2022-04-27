@@ -20,6 +20,7 @@ namespace PAPI {
 /// with attributes from the current state.
 class pSourceState {
 public:
+    // TODO: Make these private.
     std::shared_ptr<pDomain> Up_;
     std::shared_ptr<pDomain> Vel_;
     std::shared_ptr<pDomain> RotVel_;
@@ -33,6 +34,7 @@ public:
     float Mass_;
     bool vertexB_tracks_;
 
+public:
     PINLINE pSourceState() :
         Up_(new PDPoint(pVec(0, 1, 0))), Vel_(new PDPoint(pVec(0, 0, 0))), RotVel_(new PDPoint(pVec(0, 0, 0))), VertexB_(new PDPoint(pVec(0, 0, 0))),
         Size_(new PDPoint(pVec(1, 1, 1))), Color_(new PDPoint(pVec(1, 1, 1))), Alpha_(new PDPoint(pVec(1, 1, 1)))
