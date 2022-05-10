@@ -5,10 +5,10 @@
 /// domain being avoided.
 ///
 /// At present the only domains for which Avoid() is implemented are PDSphere, PDRectangle, PDTriangle, PDDisc and PDPlane.
-void Avoid(PARG const float magnitude, ///< how drastically the particle velocities are modified to avoid the obstacle at each time step.
-           const float epsilon,        ///< added to distance to dampen acceleration
-           const float look_ahead,     ///< how far forward along the velocity vector to look for the obstacle
-           const pDomain& dom          ///< the space to avoid
+PDECL void Avoid(PARG const float magnitude, ///< how drastically the particle velocities are modified to avoid the obstacle at each time step.
+                 const float epsilon,        ///< added to distance to dampen acceleration
+                 const float look_ahead,     ///< how far forward along the velocity vector to look for the obstacle
+                 const pDomain& dom          ///< the space to avoid
 );
 
 /// Bounce particles off an object defined by a domain.
@@ -31,17 +31,17 @@ void Avoid(PARG const float magnitude, ///< how drastically the particle velocit
 /// Bounce() doesn't work correctly with small time step sizes for particles sliding along a surface, despite fric_min_vel. The friction and resilience
 /// parameters should not be scaled by dt, since a bounce happens instantaneously. On the other hand, they should be scaled by dt because particles sliding
 /// along a surface will hit more often if dt is smaller. Adjust these parameters manually when you change dt.
-void Bounce(PARG const float friction, ///< tangential component of the outgoing velocity vector is scaled by (1 - friction)
-            const float resilience,    ///< normal component of the outgoing velocity vector is scaled by resilience
-            const float fric_min_vel,  ///< only apply friction if tangential velocity is greater than fric_min_vel so particles can glide smoothly
-            const pDomain& dom         ///< bounce off the surface of this domain
+PDECL void Bounce(PARG const float friction, ///< tangential component of the outgoing velocity vector is scaled by (1 - friction)
+                  const float resilience,    ///< normal component of the outgoing velocity vector is scaled by resilience
+                  const float fric_min_vel,  ///< only apply friction if tangential velocity is greater than fric_min_vel so particles can glide smoothly
+                  const pDomain& dom         ///< bounce off the surface of this domain
 );
 
 /// Set the secondary position and velocity from current.
-void CopyVertexB(PARG const bool copy_pos = true, ///< If true, sets particle's PositionB to the current position of that particle. This makes each
-                                                  ///< particle remember this position so it can later return to it using the Restore() action.
-                 const bool copy_vel = false      ///< If true, sets particle's velocityB to the current velocity of that particle. Compute particle orientation
-                                                  ///< by copying velocity before other actions. Then velocity X velocityB yields a tangent vector.
+PDECL void CopyVertexB(PARG const bool copy_pos = true, ///< If true, sets particle's PositionB to the current position of that particle. This makes each
+                                                        ///< particle remember this position so it can later return to it using the Restore() action.
+                       const bool copy_vel = false      ///< If true, sets particle's velocityB to the current velocity of that particle. Compute particle
+                                                   ///< orientation by copying velocity before other actions. Then velocity X velocityB yields a tangent vector.
 );
 
 /// Simulate air by dampening particle velocities.
@@ -50,9 +50,9 @@ void CopyVertexB(PARG const bool copy_pos = true, ///< If true, sets particle's 
 /// Typically, the three components of damping will have the same value.
 ///
 /// There are no bounds on the damping constants. Thus, by giving values greater than 1.0 they may be used to speed up particles instead of slow them down.
-void Damping(PARG const pVec& damping,        ///< component-wise multiply this vector by the velocity vector
-             const float min_vel = 0.0f,      ///< only dampen if velocity magnitude is greater than min_vel
-             const float max_vel = P_MAXFLOAT ///< only dampen if velocity magnitude is less than max_vel
+PDECL void Damping(PARG const pVec& damping,        ///< component-wise multiply this vector by the velocity vector
+                   const float min_vel = 0.0f,      ///< only dampen if velocity magnitude is greater than min_vel
+                   const float max_vel = P_MAXFLOAT ///< only dampen if velocity magnitude is less than max_vel
 );
 
 /// Simulate air by dampening rotational velocities.
@@ -61,9 +61,9 @@ void Damping(PARG const pVec& damping,        ///< component-wise multiply this 
 /// the respective damping constant. Typically, the three components of damping will have the same value.
 ///
 /// There are no bounds on the damping constants. Thus, by giving values greater than 1.0 they may be used to speed up particles instead of slow them down.
-void RotDamping(PARG const pVec& damping,        ///< component-wise multiply this vector by the rotational velocity vector
-                const float min_vel = 0.0f,      ///< only dampen if velocity magnitude is greater than min_vel
-                const float max_vel = P_MAXFLOAT ///< only dampen if velocity magnitude is less than max_vel
+PDECL void RotDamping(PARG const pVec& damping,        ///< component-wise multiply this vector by the rotational velocity vector
+                      const float min_vel = 0.0f,      ///< only dampen if velocity magnitude is greater than min_vel
+                      const float max_vel = P_MAXFLOAT ///< only dampen if velocity magnitude is less than max_vel
 );
 
 /// Exert force on each particle away from explosion center.
@@ -77,26 +77,26 @@ void RotDamping(PARG const pVec& damping,        ///< component-wise multiply th
 /// Explosion(). For Explosion() calls in action lists, this means you will need to recreate the action list each time step.
 ///
 /// You can set up a standing wave by not incrementing the radius.
-void Explosion(PARG const pVec& center,    ///< center point of shock wave
-               const float radius,         ///< current radius of wave peak
-               const float magnitude,      ///< scales the acceleration applied to particles
-               const float sigma,          ///< standard deviation of the gaussian; the sharpness or broadness of the strength of the wave.
-               const float epsilon = P_EPS ///< added to distance to dampen acceleration
+PDECL void Explosion(PARG const pVec& center,    ///< center point of shock wave
+                     const float radius,         ///< current radius of wave peak
+                     const float magnitude,      ///< scales the acceleration applied to particles
+                     const float sigma,          ///< standard deviation of the gaussian; the sharpness or broadness of the strength of the wave.
+                     const float epsilon = P_EPS ///< added to distance to dampen acceleration
 );
 
 /// Accelerate particles in the given direction.
 ///
 /// The gravity acceleration vector is simply added to the velocity vector of each particle at each time step. The magnitude of the
 /// gravity vector is the acceleration due to gravity.
-void Gravity(PARG const pVec& dir ///< acceleration vector
+PDECL void Gravity(PARG const pVec& dir ///< acceleration vector
 );
 
 /// For particles in the domain of influence, accelerate them with a domain.
 ///
 /// For each particle within the jet's domain of influence, dom, Jet() chooses an acceleration vector from the domain acc and applies
 /// it to the particle's velocity.
-void Jet(PARG const pDomain& dom, ///< apply jet to particles in this domain
-         const pDomain& acc       ///< acceleration vector comes from this domain
+PDECL void Jet(PARG const pDomain& dom, ///< apply jet to particles in this domain
+               const pDomain& acc       ///< acceleration vector comes from this domain
 );
 
 /// Apply the particles' velocities to their positions, and age the particles.
@@ -107,27 +107,27 @@ void Jet(PARG const pDomain& dom, ///< apply jet to particles in this domain
 ///
 /// The velocity is multiplied by the time step length, dt, before being added to the position. This implements Euler's method of numerical
 /// integration with a constant but specifiable step size. See TimeStep() for more on varying the time step size.
-void Move(PARG const bool move_velocity = true,      ///< apply velocity to position.
-          const bool move_rotational_velocity = true ///< apply rotational velocity to Up vector. This is an optimization.
+PDECL void Move(PARG const bool move_velocity = true,      ///< apply velocity to position.
+                const bool move_rotational_velocity = true ///< apply rotational velocity to Up vector. This is an optimization.
 );
 
 /// Accelerate particles toward the closest point on the given line.
 ///
 /// For each particle, this action computes the vector to the closest point on the line, and accelerates the particle in that direction.
-void OrbitLine(PARG const pVec& p,                 ///< a point on the line
-               const pVec& axis,                   ///< any vector parallel to the line
-               const float magnitude = 1.0f,       ///< scales each particle's acceleration
-               const float epsilon = P_EPS,        ///< added to distance to dampen acceleration
-               const float max_radius = P_MAXFLOAT ///< no particle further than max_radius from the line is affected
+PDECL void OrbitLine(PARG const pVec& p,                 ///< a point on the line
+                     const pVec& axis,                   ///< any vector parallel to the line
+                     const float magnitude = 1.0f,       ///< scales each particle's acceleration
+                     const float epsilon = P_EPS,        ///< added to distance to dampen acceleration
+                     const float max_radius = P_MAXFLOAT ///< no particle further than max_radius from the line is affected
 );
 
 /// Accelerate particles toward the given center point.
 ///
 /// For each particle, this action computes the vector to the center point, and accelerates the particle in the vector direction.
-void OrbitPoint(PARG const pVec& center,            ///< accelerate toward this point
-                const float magnitude = 1.0f,       ///< scales each particle's acceleration
-                const float epsilon = P_EPS,        ///< added to distance to dampen acceleration
-                const float max_radius = P_MAXFLOAT ///< no particle further than max_radius from the center is affected
+PDECL void OrbitPoint(PARG const pVec& center,            ///< accelerate toward this point
+                      const float magnitude = 1.0f,       ///< scales each particle's acceleration
+                      const float epsilon = P_EPS,        ///< added to distance to dampen acceleration
+                      const float max_radius = P_MAXFLOAT ///< no particle further than max_radius from the center is affected
 );
 
 /// Accelerate particles in random directions.
@@ -135,7 +135,7 @@ void OrbitPoint(PARG const pVec& center,            ///< accelerate toward this 
 /// For each particle, chooses an acceleration vector from the specified domain and adds it to the particle's velocity.
 /// Reducing the time step, dt, will make a higher probability of being near the original velocity after unit time. Smaller dt approach
 /// a normal distribution of velocity vectors instead of a square wave distribution.
-void RandomAccel(PARG const pDomain& dom ///< choose acceleration from this domain
+PDECL void RandomAccel(PARG const pDomain& dom ///< choose acceleration from this domain
 );
 
 /// Immediately displace position by a random amount.
@@ -147,21 +147,21 @@ void RandomAccel(PARG const pDomain& dom ///< choose acceleration from this doma
 /// Since this action changes particle positions, rather than changing their velocities and depending on the Move() action to change the
 /// positions, unsatisfying results may occur when used with the Avoid() or Bounce() actions.
 /// In particular, particles may be displaced to the opposite side of the surface without bouncing off it.
-void RandomDisplace(PARG const pDomain& dom ///< choose position offset from this domain
+PDECL void RandomDisplace(PARG const pDomain& dom ///< choose position offset from this domain
 );
 
 /// Replace particle velocity with a random velocity.
 ///
 /// Sets each particle's velocity vector to a random vector in the specified domain.
 /// This function is not affected by dt.
-void RandomVelocity(PARG const pDomain& dom ///< choose velocity from this domain
+PDECL void RandomVelocity(PARG const pDomain& dom ///< choose velocity from this domain
 );
 
 /// Immediately assign a random rotational velocity.
 ///
 /// Sets each particle's rotational velocity vector to a random vector in the specified domain.
 /// This function is not affected by dt.
-void RandomRotVelocity(PARG const pDomain& dom ///< choose rotational velocity from this domain
+PDECL void RandomRotVelocity(PARG const pDomain& dom ///< choose rotational velocity from this domain
 );
 
 /// Over time, restore particles to their target positionB and upB.
@@ -181,9 +181,9 @@ void RandomRotVelocity(PARG const pDomain& dom ///< choose rotational velocity f
 ///
 /// Restore(0) is the opposite of CopyVertexB(); it sets each particle's position to be equal to its positionB. However, this has the side
 /// effect of setting each particle's velocity to 0.
-void Restore(PARG const float time, ///< how long more until particles should arrive at target position and orientation
-             const bool vel = true, ///< restore positions
-             const bool rvel = true ///< restore up vectors
+PDECL void Restore(PARG const float time, ///< how long more until particles should arrive at target position and orientation
+                   const bool vel = true, ///< restore positions
+                   const bool rvel = true ///< restore up vectors
 );
 
 /// Clamp particle velocities to the given range.
@@ -192,8 +192,8 @@ void Restore(PARG const float time, ///< how long more until particles should ar
 /// velocity is scaled to within those bounds, while preserving the velocity vector's direction.
 ///
 /// The vector [0,0,0] is an exception because it has no direction. Such vectors are not modified by SpeedClamp().
-void SpeedClamp(PARG const float min_speed, ///< set velocity vectors below min_speed to min_speed
-                const float max_speed       ///< set velocity vectors above max_speed to max_speed
+PDECL void SpeedClamp(PARG const float min_speed, ///< set velocity vectors below min_speed to min_speed
+                      const float max_speed       ///< set velocity vectors above max_speed to max_speed
 );
 
 /// Change color of all particles toward the specified color.
@@ -203,9 +203,9 @@ void SpeedClamp(PARG const float min_speed, ///< set velocity vectors below min_
 ///
 /// This action makes all colors tend toward the specified, uniform color.
 /// The value of scale will usually be very small (less than 0.01) to yield a gradual transition.
-void TargetColor(PARG const pVec& color, ///< target color
-                 const float alpha,      ///< target alpha value
-                 const float scale       ///< what percent of the way from the current color to the target color to transition in unit time
+PDECL void TargetColor(PARG const pVec& color, ///< target color
+                       const float alpha,      ///< target alpha value
+                       const float scale       ///< what percent of the way from the current color to the target color to transition in unit time
 );
 
 /// Change sizes of all particles toward the specified size.
@@ -218,8 +218,8 @@ void TargetColor(PARG const pVec& color, ///< target color
 /// Please send me suggestions (perhaps with sample implementations).
 ///
 /// The value of scale will usually be very small (less than 0.01) to yield a gradual transition.
-void TargetSize(PARG const pVec& size, ///< target size
-                const pVec& scale      ///< what percent of the way from the current size to the target size to transition in unit time
+PDECL void TargetSize(PARG const pVec& size, ///< target size
+                      const pVec& scale      ///< what percent of the way from the current size to the target size to transition in unit time
 );
 
 /// Change velocity of all particles toward the specified velocity.
@@ -230,8 +230,8 @@ void TargetSize(PARG const pVec& size, ///< target size
 ///
 /// This action makes all velocities tend toward the specified, uniform velocity.
 /// The value of scale will usually be very small (less than 0.01) to yield a gradual transition.
-void TargetVelocity(PARG const pVec& vel, ///< target velocity
-                    const float scale     ///< percent of the way from the current velocity to the target velocity to transition in unit time
+PDECL void TargetVelocity(PARG const pVec& vel, ///< target velocity
+                          const float scale     ///< percent of the way from the current velocity to the target velocity to transition in unit time
 );
 
 /// Change rotational velocity of all particles toward the specified rotational velocity.
@@ -242,20 +242,20 @@ void TargetVelocity(PARG const pVec& vel, ///< target velocity
 ///
 /// This action makes all rotational velocities tend toward the specified, uniform rotational velocity.
 /// The value of scale will usually be very small (less than 0.01) to yield a gradual transition.
-void TargetRotVelocity(PARG const pVec& rvel, ///< rotational velocity
-                       const float scale      ///< percent of the way from the current to the target rotational velocity to transition in unit time
+PDECL void TargetRotVelocity(PARG const pVec& rvel, ///< rotational velocity
+                             const float scale      ///< percent of the way from the current to the target rotational velocity to transition in unit time
 );
 
 /// Accelerate particles in a vortex-like way.
 ///
 /// The vortex is a complicated action to use, but when done correctly it makes particles fly around like in a tornado.
-void Vortex(PARG const pVec& tip,          ///< tip of the vortex
-            const pVec& axis,              ///< the ray along the center of the vortex
-            const float tightnessExponent, ///< exponent that curves the vortex silhouette; 1.0 is a cone; greater curves inward
-            const float max_radius,        ///< no particle further than max_radius from the axis is affected
-            const float inSpeed,           ///< inward acceleration of particles OUTSIDE the vortex
-            const float upSpeed,           ///< vertical acceleration of particles INSIDE the vortex. Can be negative to apply gravity.
-            const float aroundSpeed        ///< acceleration around vortex of particles INSIDE the vortex.
+PDECL void Vortex(PARG const pVec& tip,          ///< tip of the vortex
+                  const pVec& axis,              ///< the ray along the center of the vortex
+                  const float tightnessExponent, ///< exponent that curves the vortex silhouette; 1.0 is a cone; greater curves inward
+                  const float max_radius,        ///< no particle further than max_radius from the axis is affected
+                  const float inSpeed,           ///< inward acceleration of particles OUTSIDE the vortex
+                  const float upSpeed,           ///< vertical acceleration of particles INSIDE the vortex. Can be negative to apply gravity.
+                  const float aroundSpeed        ///< acceleration around vortex of particles INSIDE the vortex.
 );
 
 //////////////////////////////////////////////////////////////////
@@ -267,18 +267,18 @@ void Vortex(PARG const pVec& tip,          ///< tip of the vortex
 /// The Follow() action does not affect the last particle in the group. This allows controlled effects where the last particle in the group
 /// is killed after each time step and replaced by a new particle at a slightly different position. See KillOld() to learn how to kill
 /// the last particle in the group after each step.
-void Follow(PARG const float magnitude = 1.0f,  ///< scales each particle's acceleration
-            const float epsilon = P_EPS,        ///< added to distance to dampen acceleration
-            const float max_radius = P_MAXFLOAT ///< no particle further than max_radius from its predecessor is affected
+PDECL void Follow(PARG const float magnitude = 1.0f,  ///< scales each particle's acceleration
+                  const float epsilon = P_EPS,        ///< added to distance to dampen acceleration
+                  const float max_radius = P_MAXFLOAT ///< no particle further than max_radius from its predecessor is affected
 );
 
 /// Accelerate each particle toward each other particle.
 ///
 /// Each particle is accelerated toward each other particle.
 /// This action is more computationally intensive than the others are because each particle is affected by each other particle.
-void Gravitate(PARG const float magnitude = 1.0f,  ///< scales each particle's acceleration
-               const float epsilon = P_EPS,        ///< added to distance to dampen acceleration
-               const float max_radius = P_MAXFLOAT ///< no particle further than max_radius from another particle is affected
+PDECL void Gravitate(PARG const float magnitude = 1.0f,  ///< scales each particle's acceleration
+                     const float epsilon = P_EPS,        ///< added to distance to dampen acceleration
+                     const float max_radius = P_MAXFLOAT ///< no particle further than max_radius from another particle is affected
 );
 
 /// Modify each particle's velocity to be similar to that of its neighbors.
@@ -286,9 +286,9 @@ void Gravitate(PARG const float magnitude = 1.0f,  ///< scales each particle's a
 /// Each particle is accelerated toward the weighted mean of the velocities of the other particles in the group.
 ///
 /// Using an epsilon similar in size to magnitude can increase the range of influence of nearby particles on this particle.
-void MatchVelocity(PARG const float magnitude = 1.0f,  ///< scales each particle's acceleration
-                   const float epsilon = P_EPS,        ///< added to distance to dampen acceleration
-                   const float max_radius = P_MAXFLOAT ///< no particle further than max_radius from another particle is affected
+PDECL void MatchVelocity(PARG const float magnitude = 1.0f,  ///< scales each particle's acceleration
+                         const float epsilon = P_EPS,        ///< added to distance to dampen acceleration
+                         const float max_radius = P_MAXFLOAT ///< no particle further than max_radius from another particle is affected
 );
 
 /// Modify each particle's rotational velocity to be similar to that of its neighbors.
@@ -296,9 +296,9 @@ void MatchVelocity(PARG const float magnitude = 1.0f,  ///< scales each particle
 /// Each particle is accelerated toward the weighted mean of the rotational velocities of the other particles in the group.
 ///
 /// Using an epsilon similar in size to magnitude can increase the range of influence of nearby particles on this particle.
-void MatchRotVelocity(PARG const float magnitude = 1.0f,  ///< scales each particle's acceleration
-                      const float epsilon = P_EPS,        ///< added to distance to dampen acceleration
-                      const float max_radius = P_MAXFLOAT ///< no particle further than max_radius from another particle is affected
+PDECL void MatchRotVelocity(PARG const float magnitude = 1.0f,  ///< scales each particle's acceleration
+                            const float epsilon = P_EPS,        ///< added to distance to dampen acceleration
+                            const float max_radius = P_MAXFLOAT ///< no particle further than max_radius from another particle is affected
 );
 
 //////////////////////////////////////////////////////////////////
@@ -307,8 +307,8 @@ void MatchRotVelocity(PARG const float magnitude = 1.0f,  ///< scales each parti
 /// Call an arbitrary user-provided function on each particle in the group.
 ///
 /// The function will receive both your call data and the full Particle_t struct, which contains per-particle user data.
-void Callback(PARG P_PARTICLE_CALLBACK_ACTION callbackFunc, ///< Pointer to function of yours to call.
-              const pdata_t call_data = 0                   ///< Arbitrary data of yours to pass into your function
+PDECL void Callback(PARG P_PARTICLE_CALLBACK_ACTION callbackFunc, ///< Pointer to function of yours to call.
+                    const pdata_t call_data = 0                   ///< Arbitrary data of yours to pass into your function
 );
 
 /// Get rid of older particles.
@@ -320,15 +320,15 @@ void Callback(PARG P_PARTICLE_CALLBACK_ACTION callbackFunc, ///< Pointer to func
 /// In order to kill a particular particle, set StartingAge() to a number that will never be a typical age for any other particle in the
 /// group, for example -1.0. Then emit the particle using Source() or Vertex(). Then do the rest of the particle actions and finally call
 /// KillOld(-0.9, true) to kill the special particle because it is the only one with an age less than -0.9.
-void KillOld(PARG const float age_limit,       ///< max age of particles
-             const bool kill_less_than = false ///< true to kill particles younger than age_limit instead of older
+PDECL void KillOld(PARG const float age_limit,       ///< max age of particles
+                   const bool kill_less_than = false ///< true to kill particles younger than age_limit instead of older
 );
 
 /// Kill particles that have positions on wrong side of the specified domain.
 ///
 /// If kill_inside is true, deletes all particles inside the given domain. If kill_inside is false, deletes all particles outside the given domain.
-void Sink(PARG const bool kill_inside, ///< true to kill particles inside the domain
-          const pDomain& kill_pos_dom  ///< kill particles in this domain
+PDECL void Sink(PARG const bool kill_inside, ///< true to kill particles inside the domain
+                const pDomain& kill_pos_dom  ///< kill particles in this domain
 );
 
 /// Kill particles that have velocities on wrong side of the specified domain.
@@ -337,6 +337,6 @@ void Sink(PARG const bool kill_inside, ///< true to kill particles inside the do
 /// particles whose velocity vectors are outside the given domain.
 /// This allows particles to die when they turn around, get too fast or too slow, etc. For example, use a sphere domain centered at the
 /// origin with a radius equal to the minimum velocity to kill particles that are too slow.
-void SinkVelocity(PARG const bool kill_inside, ///< true to kill particles with velocities inside the domain
-                  const pDomain& kill_vel_dom  ///< kill particles with velocities in this domain
+PDECL void SinkVelocity(PARG const bool kill_inside, ///< true to kill particles with velocities inside the domain
+                        const pDomain& kill_vel_dom  ///< kill particles with velocities in this domain
 );

@@ -35,7 +35,7 @@ public:
     bool vertexB_tracks_;
 
 public:
-    PINLINE pSourceState() :
+    PINLINEH pSourceState() :
         Up_(new PDPoint(pVec(0, 1, 0))), Vel_(new PDPoint(pVec(0, 0, 0))), RotVel_(new PDPoint(pVec(0, 0, 0))), VertexB_(new PDPoint(pVec(0, 0, 0))),
         Size_(new PDPoint(pVec(1, 1, 1))), Color_(new PDPoint(pVec(1, 1, 1))), Alpha_(new PDPoint(pVec(1, 1, 1)))
     {
@@ -46,7 +46,7 @@ public:
         vertexB_tracks_ = true;
     }
 
-    pSourceState& operator=(const pSourceState& src)
+    PINLINEH pSourceState& operator=(const pSourceState& src)
     {
         Up_ = src.Up_->copy();
         Vel_ = src.Vel_->copy();
@@ -89,7 +89,7 @@ public:
     /// The particle color does not necessarily need to be used to represent color. It can be interpreted as an arbitrary three-vector.
     ///
     /// The default color is 1,1,1,1 (opaque white).
-    PINLINE void Color(const pDomain& cdom) ///< The color domain.
+    PINLINEH void Color(const pDomain& cdom) ///< The color domain.
     {
         Color_ = std::shared_ptr<pDomain>(cdom.copy());
         Alpha_ = std::shared_ptr<pDomain>(new PDPoint(pVec(1)));
@@ -105,8 +105,8 @@ public:
     /// The particle color does not necessarily need to be used to represent color. It can be interpreted as an arbitrary three-vector.
     ///
     /// The default color is 1,1,1,1 (opaque white).
-    PINLINE void Color(const pDomain& cdom, ///< The color domain.
-                       const pDomain& adom  ///< The X dimension of the alpha domain is used for alpha.
+    PINLINEH void Color(const pDomain& cdom, ///< The color domain.
+                        const pDomain& adom  ///< The X dimension of the alpha domain is used for alpha.
     )
     {
         Color_ = cdom.copy();
@@ -125,7 +125,7 @@ public:
     /// This call is short-hand for Size(PDPoint(size)).
     ///
     /// The default size is 1,1,1.
-    PINLINE void Size(const pVec& size) { Size_ = std::shared_ptr<pDomain>(new PDPoint(size)); }
+    PINLINEH void Size(const pVec& size) { Size_ = std::shared_ptr<pDomain>(new PDPoint(size)); }
 
     /// Specify the domain for the size of particles to be created.
     ///
@@ -137,7 +137,7 @@ public:
     /// another as length, and another as density.
     ///
     /// The default size is 1,1,1.
-    PINLINE void Size(const pDomain& dom) { Size_ = dom.copy(); }
+    PINLINEH void Size(const pDomain& dom) { Size_ = dom.copy(); }
 
     /// Specify the mass of particles to be created.
     ///
@@ -147,7 +147,7 @@ public:
     PINLINE void Mass(const float mass) { Mass_ = mass; }
 
     /// Specify the initial rotational velocity vector of particles to be created.
-    PINLINE void RotVelocity(const pVec& v) { RotVel_ = std::shared_ptr<pDomain>(new PDPoint(v)); }
+    PINLINEH void RotVelocity(const pVec& v) { RotVel_ = std::shared_ptr<pDomain>(new PDPoint(v)); }
 
     /// Specify the domain for the initial rotational velocity vector of particles to be created.
     ///
@@ -155,7 +155,7 @@ public:
     /// velocity vector, the Up vector, and the cross product of those, which you compute yourself.
     ///
     /// The default rotational velocity is 0,0,0.
-    PINLINE void RotVelocity(const pDomain& dom) { RotVel_ = dom.copy(); }
+    PINLINEH void RotVelocity(const pDomain& dom) { RotVel_ = dom.copy(); }
 
     /// Specify the initial age of particles to be created.
     ///
@@ -177,7 +177,7 @@ public:
     /// This call is short-hand for UpVec(PDPoint(v)).
     ///
     /// The default Up vector is 0,1,0.
-    PINLINE void UpVec(const pVec& up) { Up_ = std::shared_ptr<pDomain>(new PDPoint(up)); }
+    PINLINEH void UpVec(const pVec& up) { Up_ = std::shared_ptr<pDomain>(new PDPoint(up)); }
 
     /// Specify the domain for the initial up vector of particles to be created.
     ///
@@ -185,45 +185,45 @@ public:
     /// velocity vector, the Up vector, and the cross product of those, which you compute yourself.
     ///
     /// The default Up vector is 0,1,0.
-    PINLINE void UpVec(const pDomain& dom) { Up_ = dom.copy(); }
+    PINLINEH void UpVec(const pDomain& dom) { Up_ = dom.copy(); }
 
     /// Specify the initial velocity vector of particles to be created.
     ///
     /// This call is short-hand for Velocity(PDPoint(vel)).
     ///
     /// The default Velocity vector is 0,0,0.
-    PINLINE void Velocity(const pVec& vel) { Vel_ = std::shared_ptr<pDomain>(new PDPoint(vel)); }
+    PINLINEH void Velocity(const pVec& vel) { Vel_ = std::shared_ptr<pDomain>(new PDPoint(vel)); }
 
     /// Specify the domain for the initial velocity vector of particles to be created.
     ///
     /// The default Velocity vector is 0,0,0.
-    PINLINE void Velocity(const pDomain& dom) { Vel_ = dom.copy(); }
+    PINLINEH void Velocity(const pDomain& dom) { Vel_ = dom.copy(); }
 
     /// Specify the initial secondary position of new particles.
     ///
     /// The PositionB attribute is used to store a destination position for the particle. This is designed for actions such as Restore().
     ///
     /// The default PositionB is 0,0,0.
-    PINLINE void VertexB(const pVec& v) { VertexB_ = std::shared_ptr<pDomain>(new PDPoint(v)); }
+    PINLINEH void VertexB(const pVec& v) { VertexB_ = std::shared_ptr<pDomain>(new PDPoint(v)); }
 
     /// Specify the domain for the initial secondary position of new particles.
     ///
     /// The PositionB attribute is used to store a destination position for the particle. This is designed for actions such as Restore().
     ///
     /// The default PositionB is 0,0,0.
-    PINLINE void VertexB(const pDomain& dom) { VertexB_ = dom.copy(); }
+    PINLINEH void VertexB(const pDomain& dom) { VertexB_ = dom.copy(); }
 
     /// Specify that the initial secondary position of new particles be the same as their position.
     ///
     /// If true, the PositionB attribute of new particles comes from their position, rather than from the VertexB domain.
     ///
     /// The default value of VertexBTracks is true.
-    PINLINE void VertexBTracks(const bool track_vertex = true) { vertexB_tracks_ = track_vertex; }
+    PINLINEH void VertexBTracks(const bool track_vertex = true) { vertexB_tracks_ = track_vertex; }
 
     /// Reset all particle creation state to default values.
     ///
     /// All state set by the pSourceState functions will be reset.
-    PINLINE void Reset() { *this = pSourceState(); }
+    PINLINEH void Reset() { *this = pSourceState(); }
 };
 }; // namespace PAPI
 

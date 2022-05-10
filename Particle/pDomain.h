@@ -54,11 +54,10 @@ enum pDomainType_E {
 /// as a way to communicate the domain to the API. The API's action commands will then perform operations on the domain, such as generating particles within it.
 class pDomain {
 public:
-#define P_N_FLOATS_IN_DOMAIN 30
     pDomainType_E Which;
-    virtual bool Within(const pVec&) const = 0; ///< Returns true if the given point is within the domain.
-    virtual pVec Generate() const = 0;          ///< Returns a random point in the domain.
-    virtual float Size() const = 0;             ///< Returns the size of the domain (length, area, or volume).
+    PINLINE virtual bool Within(const pVec&) const = 0; ///< Returns true if the given point is within the domain.
+    PINLINE virtual pVec Generate() const = 0;          ///< Returns a random point in the domain.
+    PINLINE virtual float Size() const = 0;             ///< Returns the size of the domain (length, area, or volume).
 
     virtual std::shared_ptr<pDomain> copy() const = 0; // Returns a pointer to a heap-allocated copy of the derived class
 };
@@ -90,17 +89,18 @@ PINLINE void NewBasis(const pVec& u, const pVec& v, pVec& s1, pVec& s2)
 /// Thus, to properly distribute probability of Generate() choosing each domain, it is wise to only combine domains that have the same
 /// dimensionality. Note that thin shelled cylinders, cones, and spheres, where InnerRadius==OuterRadius, are considered 2D, not 3D.
 /// Thin shelled discs (circles) are considered 1D. Points are 0D.
+#ifndef __CUDA_ARCH__
 struct PDUnion : public pDomain {
     std::vector<std::shared_ptr<pDomain>> Doms;
     float TotalSize;
 
-    PDUnion() /// Use this one to create an empty PDUnion then call .insert() to add each item to it.
+    PINLINE PDUnion() /// Use this one to create an empty PDUnion then call .insert() to add each item to it.
     {
         Which = PDUnion_e;
         TotalSize = 0.0f;
     }
 
-    PDUnion(const pDomain& A, const pDomain& B)
+    PINLINE PDUnion(const pDomain& A, const pDomain& B)
     {
         Which = PDUnion_e;
         TotalSize = A.Size() + B.Size();
@@ -108,7 +108,7 @@ struct PDUnion : public pDomain {
         Doms.push_back(B.copy());
     }
 
-    PDUnion(const pDomain& A, const pDomain& B, const pDomain& C)
+    PINLINE PDUnion(const pDomain& A, const pDomain& B, const pDomain& C)
     {
         Which = PDUnion_e;
         TotalSize = A.Size() + B.Size() + C.Size();
@@ -120,7 +120,7 @@ struct PDUnion : public pDomain {
     /// Makes a copy of all the subdomains and point to the copies.
     ///
     /// Note that the Generate() function goes faster if you supply DomList with the largest domains first.
-    PDUnion(const std::vector<std::shared_ptr<pDomain>>& DomList)
+    PINLINE PDUnion(const std::vector<std::shared_ptr<pDomain>>& DomList)
     {
         Which = PDUnion_e;
         TotalSize = 0.0f;
@@ -131,7 +131,7 @@ struct PDUnion : public pDomain {
     }
 
     /// Makes a copy of all the subdomains and point to the copies.
-    PDUnion(const PDUnion& P)
+    PINLINE PDUnion(const PDUnion& P)
     {
         Which = PDUnion_e;
         TotalSize = 0.0f;
@@ -142,20 +142,20 @@ struct PDUnion : public pDomain {
     }
 
     /// Insert another domain into this PDUnion.
-    void insert(const pDomain& A)
+    PINLINE void insert(const pDomain& A)
     {
         TotalSize += A.Size();
         Doms.push_back(A.copy());
     }
 
-    bool Within(const pVec& pos) const /// Returns true if pos is within any of the domains.
+    PINLINE bool Within(const pVec& pos) const /// Returns true if pos is within any of the domains.
     {
         for (std::vector<std::shared_ptr<pDomain>>::const_iterator it = Doms.begin(); it != Doms.end(); it++)
             if ((*it)->Within(pos)) return true;
         return false;
     }
 
-    pVec Generate() const /// Generate a point in any subdomain, chosen by the ratio of their sizes.
+    PINLINE pVec Generate() const /// Generate a point in any subdomain, chosen by the ratio of their sizes.
     {
         float Choose = pRandf() * TotalSize, PastProb = 0.0f;
         for (std::vector<std::shared_ptr<pDomain>>::const_iterator it = Doms.begin(); it != Doms.end(); it++) {
@@ -165,10 +165,11 @@ struct PDUnion : public pDomain {
         throw PErrInternalError("Sizes didn't add up to TotalSize in PDUnion::Generate().");
     }
 
-    float Size() const { return TotalSize; }
+    PINLINE float Size() const { return TotalSize; }
 
     std::shared_ptr<pDomain> copy() const { return std::shared_ptr<pDomain>(new PDUnion(*this)); }
 };
+#endif
 
 /// A single point.
 ///
@@ -395,7 +396,9 @@ struct PDDisc : public pDomain {
 
     PINLINE PDDisc(const pVec& Center, const pVec Normal, const float OuterRadius, const float InnerRadius = 0.0f)
     {
+#ifndef __CUDA_ARCH__
         if (InnerRadius < 0 || OuterRadius < 0) throw PErrInvalidValue("Can't have negative radius.");
+#endif
 
         Which = PDDisc_e;
         PDDisc_Cons(Center, Normal, OuterRadius, InnerRadius);
@@ -581,7 +584,9 @@ struct PDCylinder : public pDomain {
 
     PINLINE PDCylinder(const pVec& e0, const pVec& e1, const float OuterRadius, const float InnerRadius = 0.0f)
     {
+#ifndef __CUDA_ARCH__
         if (InnerRadius < 0 || OuterRadius < 0) throw PErrInvalidValue("Can't have negative radius.");
+#endif
 
         Which = PDCylinder_e;
         PDCylinder_Cons(e0, e1, OuterRadius, InnerRadius);
@@ -694,7 +699,9 @@ struct PDCone : public pDomain {
 
     PINLINE PDCone(const pVec& e0, const pVec& e1, const float OuterRadius, const float InnerRadius = 0.0f)
     {
+#ifndef __CUDA_ARCH__
         if (InnerRadius < 0 || OuterRadius < 0) throw PErrInvalidValue("Can't have negative radius.");
+#endif
 
         Which = PDCone_e;
         PDCone_Cons(e0, e1, OuterRadius, InnerRadius);
@@ -812,7 +819,9 @@ struct PDSphere : public pDomain {
 
     PINLINE PDSphere(const pVec& Center, const float OuterRadius, const float InnerRadius = 0.0f)
     {
+#ifndef __CUDA_ARCH__
         if (InnerRadius < 0 || OuterRadius < 0) throw PErrInvalidValue("Can't have negative radius.");
+#endif
 
         Which = PDSphere_e;
         PDSphere_Cons(Center, OuterRadius, InnerRadius);

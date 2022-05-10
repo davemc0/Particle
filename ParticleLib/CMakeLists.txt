@@ -40,10 +40,22 @@ source_group("API" FILES ${API_SOURCES})
 
 add_library(Particle STATIC ${SOURCES})
 
-# Push good flags out to library users
-# Warning level, all warnings as errors, optimization
-target_compile_options(Particle PUBLIC /W3 /WX /fp:fast /Ot /Oi /Oy /GL /Gy /GF /Qpar /arch:AVX512)
-target_link_options(Particle INTERFACE /LTCG)
+# Push good flags out to library users: build in parallel, warning level, all warnings as errors, optimization
+target_compile_options(DMcTools PUBLIC
+    $<$<COMPILE_LANGUAGE:CXX>:/MP>
+    $<$<COMPILE_LANGUAGE:CXX>:/W3>
+    $<$<COMPILE_LANGUAGE:CXX>:/WX>
+    $<$<COMPILE_LANGUAGE:CXX>:/GF>
+    $<$<COMPILE_LANGUAGE:CXX>:/GL>
+    $<$<COMPILE_LANGUAGE:CXX>:/Gy>
+    $<$<COMPILE_LANGUAGE:CXX>:/Oi>
+    $<$<COMPILE_LANGUAGE:CXX>:/Ot>
+    $<$<COMPILE_LANGUAGE:CXX>:/Oy>
+    $<$<COMPILE_LANGUAGE:CXX>:/Qpar>
+    $<$<COMPILE_LANGUAGE:CXX>:/arch:AVX512>
+    $<$<COMPILE_LANGUAGE:CXX>:/fp:fast>
+)
+target_link_options(DMcTools INTERFACE $<$<LINK_LANGUAGE:CXX>:/LTCG>)
 
 target_include_directories(Particle
     PRIVATE "."

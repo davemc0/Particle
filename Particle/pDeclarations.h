@@ -16,7 +16,11 @@ const int P_VERSION = 300;
 typedef unsigned int pdata_t;
 
 /// A very large float value used as a default arg passed into functions
+#ifdef __CUDA_ARCH__
+__constant__ float P_MAXFLOAT = 1.0e16f; // Actually this must be < sqrt(MAXFLOAT) since we store this value squared.
+#else
 const float P_MAXFLOAT = 1.0e16f; // Actually this must be < sqrt(MAXFLOAT) since we store this value squared.
+#endif
 
 /// A very small float value added to some physical calculations to dampen them and improve stability
 const float P_EPS = 1e-3f;

@@ -14,15 +14,36 @@
 #define M_PI 3.1415926535897932384626433f
 #endif
 
+#ifdef __CUDACC__
+#include <curand.h>
+#include <curand_kernel.h>
+
+#define PCONSTANT __constant__ const
+#ifdef __CUDA_ARCH__
+#define PINLINE __host__ __device__
+#define PINLINEH __host__
+#define PINLINEX
+#else
+#define PINLINE __forceinline __host__ __device__
+#define PINLINEH __forceinline __host__
+#define PINLINEX __forceinline
+#endif
+#else
+#define PCONSTANT const
 #ifdef WIN32
 #define PINLINE __forceinline
+#define PINLINEH __forceinline
+#define PINLINEX __forceinline
 #else
 #define PINLINE inline
+#define PINLINEH inline
+#define PINLINEX inline
+#endif
 #endif
 
 namespace PAPI {
-const float P_SQRT2PI = 2.506628274631000502415765284811045253006f;
-const float P_ONEOVERSQRT2PI = (1.f / P_SQRT2PI);
+PCONSTANT float P_SQRT2PI = 2.506628274631000502415765284811045253006f;
+PCONSTANT float constexpr P_ONEOVERSQRT2PI = (1.f / 2.506628274631000502415765284811045253006f);
 
 PINLINE float fsqr(float f) { return f * f; }
 
@@ -30,9 +51,18 @@ PINLINE float fsqr(float f) { return f * f; }
 PINLINE float pRandf() { return drand48(); }
 PINLINE void pSRandf(int x) { srand48(x); }
 #else
+#ifdef __CUDA_ARCH__
+PINLINE float pRandf(curandState& st) { return curand_uniform(&st); }
+PINLINE curandState pSRandf(int x)
+{
+    int i = threadIdx.x + blockIdx.x * blockDim.x;
+    curand_init(clock64(), i, 0, &st);
+}
+#else
 const float P_ONEOVER_RAND_MAX = (1.0f / ((float)RAND_MAX));
-PINLINE float pRandf() { return ((float)rand()) * P_ONEOVER_RAND_MAX; }
-PINLINE void pSRandf(int x) { srand(x); }
+PINLINEH float pRandf() { return ((float)rand()) * P_ONEOVER_RAND_MAX; }
+PINLINEH void pSRandf(int x) { srand(x); }
+#endif
 #endif
 
 PINLINE bool pSameSign(const float& a, const float& b) { return a * b >= 0.0f; }
@@ -66,16 +96,16 @@ class pVec {
 public:
     PINLINE pVec(float ax, float ay, float az) : vx(ax), vy(ay), vz(az) {}
     PINLINE pVec(float a) : vx(a), vy(a), vz(a) {}
-    PINLINE pVec() = default;
+    PINLINEX pVec() = default;
     PINLINE pVec(float* v) : vx(v[0]), vy(v[1]), vz(v[2]) {}
 
-    const float& x() const { return vx; }
-    const float& y() const { return vy; }
-    const float& z() const { return vz; }
+    PINLINE const float& x() const { return vx; }
+    PINLINE const float& y() const { return vy; }
+    PINLINE const float& z() const { return vz; }
 
-    float& x() { return vx; }
-    float& y() { return vy; }
-    float& z() { return vz; }
+    PINLINE float& x() { return vx; }
+    PINLINE float& y() { return vy; }
+    PINLINE float& z() { return vz; }
 
     PINLINE float length() const { return sqrtf(vx * vx + vy * vy + vz * vz); }
 
@@ -150,7 +180,7 @@ public:
         return *this;
     }
 
-    bool isNan() { return std::isnan(x()) || std::isnan(y()) || std::isnan(z()); }
+    PINLINEH bool isNan() { return std::isnan(x()) || std::isnan(y()) || std::isnan(z()); }
 
     // Component-wise absolute value
     friend PINLINE pVec Abs(const pVec& a) { return pVec(fabs(a.x()), fabs(a.y()), fabs(a.z())); }
@@ -163,16 +193,13 @@ public:
         return pVec(a.y() * b.z() - a.z() * b.y(), a.z() * b.x() - a.x() * b.z(), a.x() * b.y() - a.y() * b.x());
     }
 
-    friend PINLINE std::ostream& operator<<(std::ostream& os, const pVec& v)
+    friend PINLINEH std::ostream& operator<<(std::ostream& os, const pVec& v)
     {
         os << &v << '[' << v.x() << ", " << v.y() << ", " << v.z() << ']';
 
         return os;
     }
 };
-
-// To offset [0 .. 1] vectors to [-.5 .. .5]
-static pVec vHalf(0.5, 0.5, 0.5);
 
 PINLINE pVec pRandVec() { return pVec(pRandf(), pRandf(), pRandf()); }
 

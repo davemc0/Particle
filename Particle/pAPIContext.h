@@ -13,6 +13,8 @@
 #include "Particle/pParticle.h"
 #include "Particle/pSourceState.h"
 
+#include <algorithm>
+
 namespace PAPI {
 
 class PInternalState_t; // The API-internal struct containing the context's state. Don't try to use it.
@@ -331,12 +333,18 @@ protected:
 /// Other than not taking a Particle_t as the first parameter, the call signatures of the legacy API match those of the inline API.
 class PContextActions_t {
 public:
+    // Inline API
+#define PDECL PINLINEH
 #define PARG Particle_t &m,
 #include "Particle/pActionDecls.h"
+#undef PDECL
 #undef PARG
 
+    // Legacy API
 #define PARG
+#define PDECL
 #include "Particle/pActionDecls.h"
+#undef PDECL
 #undef PARG
 
     /// Delete particles tagged to be killed by inline P.I.KillOld(), P.I.Sink(), and P.I.SinkVelocity()

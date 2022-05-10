@@ -21,4 +21,7 @@ add_subdirectory(${PROJECT_ROOT_DIR}/Benchmark ${CMAKE_CURRENT_BINARY_DIR}/Bench
 add_subdirectory(${PROJECT_ROOT_DIR}/Example ${CMAKE_CURRENT_BINARY_DIR}/Example)
 add_subdirectory(${PROJECT_ROOT_DIR}/Playground ${CMAKE_CURRENT_BINARY_DIR}/Playground)
 
+# TODO: Check for CUDA before building this
+add_subdirectory(${PROJECT_ROOT_DIR}/CudaExample ${CMAKE_CURRENT_BINARY_DIR}/CudaExample)
+
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Playground)

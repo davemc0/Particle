@@ -3,25 +3,25 @@
 /// Copyright 1997-2007, 2022 by David K. McAllister
 ///
 /// This file contains inline implementations of the actions as applied to a single particle.
-/// It is included into Actions.cpp for the standard for-loop based API.
-/// The hope is that it can be used to make a per-particle API that can enable all the code to operate on a given particle to be inlined.
-/// Once it's inlined the C++ application code could have its own for loop wrapped around this.
+/// It is included into Actions.cpp for the legacy API.
+///
+/// It is included into pInlineActionsAPI.h for the inline API.
 /// This approach should provide good optimization in several ways:
 /// 1) optimized computation through inlining
 /// 2) much better memory access since each particle would only be visited once, and
 /// 3) Multi-core and AVX optimization through std::for_each(std::execution::par_unseq, ...).
 ///
-/// This approach should also enable CUDA kernels to easily express and compute one particle per thread.
+/// It is included directly into CUDA kernels to easily express and compute one particle per thread.
 
-// Classes of nonstraightforward cases:
+// Nonstraightforward cases:
 // Actions that kill particles
 // Actions that use domains (maybe not difficult)
 // Actions that refer to other particles
 // Actions that call callbacks
 // Actions that call action lists
 
-#ifndef implactions_h
-#define implactions_h
+#ifndef actionimpls_h
+#define actionimpls_h
 
 #include "Particle/pDeclarations.h"
 #include "Particle/pParticle.h"
@@ -32,7 +32,6 @@ using namespace PAPI;
 PINLINE void PAAvoidTriangle_Impl(Particle_t& m, const float dt, const PDTriangle& dom, const float look_ahead, const float magnitude, const float epsilon)
 {
     float magdt = magnitude * dt;
-    // ^^^ Above values do not vary per particle.
 
     const pVec& u = dom.u;
     const pVec& v = dom.v;
@@ -345,6 +344,13 @@ PINLINE void PABounceRectangle_Impl(Particle_t& m, const float dt, const PDRecta
     m.vel = vt * fric - vn * resilience;
 }
 
+template <class _Ty> PINLINE void myswap(_Ty& l, _Ty& r)
+{
+    _Ty tmp = l;
+    l = r;
+    r = tmp;
+}
+
 PINLINE void PABounceBox_Impl(Particle_t& m, const float dt, const PDBox& dom, const float friction, const float resilience, const float fric_min_vel)
 {
     float oneMinusFriction = 1.f - friction;
@@ -361,13 +367,13 @@ PINLINE void PABounceBox_Impl(Particle_t& m, const float dt, const PDBox& dom, c
     pVec vn(0.f), vt(m.vel);
     if (oldIn) { // Bounce off the inside
         // Does it handle bouncing off two walls on the same time step?
-        if (pnext.x() < dom.p0.x() || pnext.x() > dom.p1.x()) { std::swap(vn.x(), vt.x()); }
-        if (pnext.y() < dom.p0.y() || pnext.y() > dom.p1.y()) { std::swap(vn.y(), vt.y()); }
-        if (pnext.z() < dom.p0.z() || pnext.z() > dom.p1.z()) { std::swap(vn.z(), vt.z()); }
+        if (pnext.x() < dom.p0.x() || pnext.x() > dom.p1.x()) { myswap(vn.x(), vt.x()); }
+        if (pnext.y() < dom.p0.y() || pnext.y() > dom.p1.y()) { myswap(vn.y(), vt.y()); }
+        if (pnext.z() < dom.p0.z() || pnext.z() > dom.p1.z()) { myswap(vn.z(), vt.z()); }
     } else { // Bounce off the outside
-        if (pnext.x() > dom.p0.x() || pnext.x() < dom.p1.x()) { std::swap(vn.x(), vt.x()); }
-        if (pnext.y() > dom.p0.y() || pnext.y() < dom.p1.y()) { std::swap(vn.y(), vt.y()); }
-        if (pnext.z() > dom.p0.z() || pnext.z() < dom.p1.z()) { std::swap(vn.z(), vt.z()); }
+        if (pnext.x() > dom.p0.x() || pnext.x() < dom.p1.x()) { myswap(vn.x(), vt.x()); }
+        if (pnext.y() > dom.p0.y() || pnext.y() < dom.p1.y()) { myswap(vn.y(), vt.y()); }
+        if (pnext.z() > dom.p0.z() || pnext.z() < dom.p1.z()) { myswap(vn.z(), vt.z()); }
     }
 
     // Compute new velocity, applying resilience and, unless tangential velocity < fric_min_vel, friction
@@ -392,7 +398,6 @@ PINLINE void PABouncePlane_Impl(Particle_t& m, const float dt, const PDPlane& do
     if (pSameSign(distold, distnew)) return;
 
     float nv = dot(dom.nrm, m.vel);
-    float t = -distold / nv; // Time until hit
 
     // A hit, a very palpable hit. Compute tangential and normal components of velocity
     pVec vn = dom.nrm * nv; // Normal Vn = (V.N)N
@@ -599,7 +604,7 @@ PINLINE void PAOrbitLine_Impl(Particle_t& m, const float dt, const pVec p, const
     float magdt = magnitude * dt;
     float max_radiusSqr = fsqr(max_radius);
     pVec axisNrm(axis);
-    axisNrm.normalize(); // Do we need this? Should we make it user responsibilty?
+    axisNrm.normalize(); // TODO: Do we need this? Should we make it user responsibilty?
     // ^^^ Above values do not vary per particle.
 
     // Figure direction to particle from base of line.
